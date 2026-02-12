@@ -17,11 +17,28 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-    ];
+    protected $guarded = [];
+
+// Pour voir ses propres annonces
+    public function annonces() {
+        return $this->hasMany(Annonce::class);
+    }
+
+    public function avisRecus()
+    {
+        return $this->hasMany(Avis::class, 'vendeur_id');
+    }
+
+    public function noteMoyenne()
+    {
+        return $this->avisRecus()->avg('note') ?: 0; // Retourne 0 si pas encore d'avis
+    }
+
+// Pour voir ses favoris (Très important pour ta page profil !)
+    public function favoris() {
+        return $this->belongsToMany(Annonce::class, 'favoris');
+    }
+
 
     /**
      * The attributes that should be hidden for serialization.

@@ -22,14 +22,29 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'username' => ['required', 'string', 'max:255', 'unique:'.User::class, "alpha_dash"],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+
+            // On enlève les fausses règles 'avatar', 'bio', etc.
+            'avatar'       => ['nullable', 'string', 'max:255'],
+            'bio'          => ['nullable', 'string'],
+            'avis'          => ['nullable', 'decimal'],
+            'localisation' => ['nullable', 'string', 'max:255'],
+            'date_naissance' => ['nullable', 'date'],
         ]);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->string('password')),
+            'name'           => $request->name,
+            'username'           => $request->username,
+            'email'          => $request->email,
+            'password'       => Hash::make($request->password),
+            'avatar'         => $request->avatar,
+            'bio'            => $request->bio,
+            'avis'           => $request->avis,
+            'localisation'   => $request->localisation,
+            'date_naissance' => $request->date_naissance,
+            'role'           => 'user',
         ]);
 
         event(new Registered($user));
