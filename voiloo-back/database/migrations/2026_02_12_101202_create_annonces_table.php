@@ -13,8 +13,14 @@ return new class extends Migration
     {
         Schema::create('annonces', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('categorie_id')->constrained();
+            $table->string('titre');
+            $table->text('description');
+            $table->decimal('prix', 10, 2);
+            $table->string('ville');
+            $table->string('code_postal', 5);
             $table->timestamps();
-
         });
     }
 
