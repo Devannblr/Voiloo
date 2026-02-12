@@ -34,7 +34,10 @@
   font-style: normal;
   font-display: swap;
 }
-
+*::selection{
+    background: var(--color-primary);
+    color: var(--color-white);
+}
 :root {
   /* Colors */
   --color-primary: #FFD359;

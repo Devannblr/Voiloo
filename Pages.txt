@@ -1,0 +1,26 @@
+Pages :
+Accueil -> information de qui somme nous, ce qu'on fait, pourquoi ils devraient nous rejoindre etc 
+Explorer -> explore le monde en fonction des régions, ville ou compétences.
+Payement -> Payer les créateurs (page facultatif si l'annonceur précise payement par espèce) [A faire V2/V3]
+panier ou page de récapitulatif ( a modifier on fera surement un payement ciblé par personne) [A faire V2/V3]
+//les pages ci-dessus sont accessible avec et sans connexion
+
+(Connecté)
+Profil -> gerer les informations personnelles (mail, nom/prénom, age, mdp, lieu, etc...)
+Nom, prénom, mail, mdp, date_de_naissance, genre
+Ajout annonce -> permet d'ajouter des annonces en fonction de la compétences ou du besoin (Informatique, babySitter, etc)
+Espace privé création site -> permet de créer son site facilement pour le partager
+Dashboard pour avoir des retours de son site si besoin
+espace message pour communiquer avec les clients
+
+
+(non connecté)
+se connecter -> page de connexion simple
+s'inscrire -> page d'inscription simple
+
+
+(Autre accessible a tous)
+Page mention légale
+Page aide + FAQ
+Page Condition d'utilisation
+

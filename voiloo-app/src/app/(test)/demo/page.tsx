@@ -26,6 +26,7 @@ import {
     Trash2,
     X,
 } from "lucide-react";
+import {DisplayCard} from "@/components/Modules/DisplayCard";
 
 export default function DemoPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -48,6 +49,15 @@ export default function DemoPage() {
                     <P className="max-w-2xl mx-auto">
                         Kit UI complet avec tous les composants Base pour construire l'interface Voiloo.
                     </P>
+                </div>
+
+                <div className="mb-16 text-center">
+                    <H1>
+                        Ne cherchez pas plus loin.
+                    </H1>
+                    <H3 className="mb-4">
+                        Tout ce dont vous avez besoin est près de <TextAccent>chez vous !</TextAccent>
+                    </H3>
                 </div>
 
                 {/* Typography */}
@@ -250,6 +260,7 @@ export default function DemoPage() {
                                 </div>
                             </CardBody>
                         </Card>
+                        <DisplayCard title={"Test"}/>
                     </div>
                 </section>
 
