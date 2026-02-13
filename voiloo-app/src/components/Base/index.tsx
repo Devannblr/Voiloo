@@ -1,5 +1,5 @@
 // Typography
-export { H1, H2, H3, H4, P, Small, TextAccent, Price, Label } from './Typography';
+export { H1, H2, H3, H4, P, Small, TextAccent, Price, Label, Rating } from './Typography';
 
 // Forms
 export { Button } from './Button';

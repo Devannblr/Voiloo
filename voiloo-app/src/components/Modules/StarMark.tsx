@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Star, StarHalf } from 'lucide-react';
-import {Price, Small} from "@/components/Base";
+import {Rating, Small} from "@/components/Base";
 
 type StarMarkSize = 'sm' | 'md' | 'lg';
 // On définit deux variantes claires
 type StarMarkVariant = 'rating' | 'display';
 
 interface StarMarkProps {
-    variant?: StarMarkVariant; // Nouveau : pour choisir le mode
+    variant?: StarMarkVariant;
     value?: number;
     max?: number;
     size?: StarMarkSize;
@@ -38,7 +38,7 @@ export const StarMark = ({
         <div className="flex items-center gap-2">
             {/* 1. Affichage de la note textuelle si on est en mode affichage */}
             {isReadOnly && value > 0 && (
-                <Price>{value.toFixed(1)}</Price>
+                <Rating>{value.toFixed(1)}</Rating>
             )}
 
             <div className="flex items-center gap-1">

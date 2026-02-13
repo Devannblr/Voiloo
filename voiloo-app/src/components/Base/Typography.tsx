@@ -57,6 +57,12 @@ export const Price = ({ children, className = '' }: TypographyProps) => (
     </span>
 );
 
+export const Rating = ({ children, className = '' }: TypographyProps) => (
+    <span className={`text-sm font-bold text-primary-dark ${className}`}>
+        {children}
+    </span>
+);
+
 export const Label = ({ children, className = '' }: TypographyProps) => (
     <span className={`text-sm font-medium text-dark ${className}`}>
         {children}

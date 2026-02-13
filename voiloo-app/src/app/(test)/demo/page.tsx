@@ -13,7 +13,7 @@ import {
     // Navigation
     Link, IconButton,
     // Data Display
-    Avatar, AvatarGroup,
+    Avatar, AvatarGroup, Rating,
 } from '@/components/Base';
 import {
     Eye,
@@ -27,11 +27,13 @@ import {
     X,
 } from "lucide-react";
 import {DisplayCard} from "@/components/Modules/DisplayCard";
+import {StarMark} from "@/components/Modules/StarMark";
 
 export default function DemoPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [inputValue, setInputValue] = useState('');
+    const [userRating, setUserRating] = useState(0); // Pour le mode interactif
 
     const handleLoadingDemo = () => {
         setIsLoading(true);
@@ -74,6 +76,33 @@ export default function DemoPage() {
                             <Label>Label</Label>
                             <TextAccent>Accent Text</TextAccent>
                             <Price>49,99 €</Price>
+                            <Rating>4.5</Rating>
+                        </div>
+                        <div className="space-y-6">
+                            {/* Cas 1 : Le Noteur (Interactif) */}
+                            <div className="flex flex-col gap-2">
+                                <Label>Tester le noteur (cliquable) :</Label>
+                                <div className="flex items-center gap-4">
+                                    <StarMark
+                                        variant="rating"
+                                        value={userRating}
+                                        onChange={setUserRating}
+                                        size="md"
+                                    />
+                                    <Rating>{userRating > 0 ? userRating : "Pas encore de note"}</Rating>
+                                </div>
+                            </div>
+
+                            {/* Cas 2 : L'affichage (Statique) */}
+                            <div className="flex flex-col gap-2">
+                                <Label>Exemple d'affichage (moyenne) :</Label>
+                                <StarMark
+                                    variant="display"
+                                    value={4.5}
+                                    nb_avis={128}
+                                    size="sm"
+                                />
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -260,7 +289,16 @@ export default function DemoPage() {
                                 </div>
                             </CardBody>
                         </Card>
-                        <DisplayCard title={"Test"}/>
+                        <DisplayCard
+                            name="Mikella"
+                            job="Prothésiste Ongulaire"
+                            rating={4.8}
+                            nb_avis={12}
+                            price="50-60€"
+                            city="Dole"
+                            avatarSrc="/poulet.jpg"
+                            images={["/ongleLaora.jpg", "/ongleMikella.jpg", "/ongleLilie.jpg"]}
+                        />
                     </div>
                 </section>
 
