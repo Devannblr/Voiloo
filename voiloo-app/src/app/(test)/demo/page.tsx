@@ -15,7 +15,7 @@ import {
     // Data Display
     Avatar, AvatarGroup, Rating,
 } from '@/components/Base';
-import {MailInput, PasswordInput} from "@/components/Modules";
+import {DoubleSearchInput, MailInput, PasswordInput, PhoneInput} from "@/components/Modules";
 import {
     Eye,
     Plus,
@@ -25,10 +25,15 @@ import {
     Share2,
     Menu,
     Trash2,
-    X,
+    X, Settings,
 } from "lucide-react";
 import {DisplayCard} from "@/components/Modules/DisplayCard";
 import {StarMark} from "@/components/Modules/StarMark";
+import {CategoryCard} from "@/components/Modules/CategoryCard";
+import {CtaCard} from "@/components/Modules/CtaCard"
+import {FaqSection} from "@/components/Modules/Faq";
+import {AboutSection, ProfilCard} from "@/components/Modules/ProfilCard";
+import {QuickLinksCard} from "@/components/Modules/ProfilCard";
 
 export default function DemoPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -37,6 +42,38 @@ export default function DemoPage() {
     const [passwordValue, setpasswordValue] = useState('');
     const [email, setEmail] = useState('');
     const [pass, setPass] = useState('');
+    const [phone, setPhone] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [location, setLocation] = useState('');
+    const faqData = [
+        {
+            question: "Comment trouver un service sur Voiloo ?",
+            answer: "Utilisez la barre de recherche en haut de la page pour indiquer le service recherché et votre ville. Vous pourrez ensuite filtrer les résultats selon vos besoins."
+        },
+        {
+            question: "Est-ce que le paiement est sécurisé ?",
+            answer: "Oui, toutes les transactions sont chiffrées et nous utilisons des partenaires de paiement reconnus pour garantir la sécurité de vos fonds."
+        },
+        {
+            question: "Que faire en cas de litige ?",
+            answer: "Notre support client est disponible 7j/7 pour intervenir et trouver une solution amiable entre le prestataire et le client."
+        }
+    ];
+    const [userData, setUserData] = useState({
+        name: "Mikella Colart",
+        username: "mikiki",
+        location: "Dole, France",
+        joinDate: "Février 2026",
+        avatar: "/poulet.jpg",
+        intent: "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Alias cupiditate dolor eos, error eveniet expedita fugiat illo itaque labore maiores minus molestiae porro possimus provident qui sit veniam voluptas voluptates.",
+        activity: "Etudiante",
+    });
+
+    // 2. La fonction déclenchée lors du clic sur le bouton
+    const handleSearch = () => {
+        console.log("Recherche de :", searchQuery, "à :", location);
+        // Ici tu feras ta redirection ou ton appel API
+    };
     const [userRating, setUserRating] = useState(0); // Pour le mode interactif
 
     const handleLoadingDemo = () => {
@@ -53,7 +90,7 @@ export default function DemoPage() {
     };
 
     return (
-        <div className="min-h-screen bg-white py-12">
+    <div className="min-h-screen bg-white py-12">
             <Container>
                 {/* Header */}
                 <div className="mb-16 text-center">
@@ -166,6 +203,35 @@ export default function DemoPage() {
                         </Button>
                     </div>
                 </section>
+                <Divider className="my-12" />
+
+                {/* Cards Link */}
+                <section className="mb-16 ">
+                    <H2 className="mb-8">Cards Link</H2>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <CategoryCard
+                            title="Proximité"
+                            description="Le bon service, au bon endroit, au bon moment."
+                            href="/proximite"
+                        />
+                        <CategoryCard
+                            title="Digital & Informatique"
+                            description="Sites, dépannage, formation"
+                            href="/digital"
+                        />
+                        <CategoryCard
+                            title="Etudiant & Passionné"
+                            description="Compétences, motivation et tarifs adaptés."
+                            href="/etudiants"
+                        />
+                    </div>
+                    <CtaCard
+                        title={"Rejoignez Voiloo"}
+                        description="Trouvez ou proposez des services près de chez vous, simplement et en toute confiance."
+                        href="/signin"
+                    />
+                </section>
 
                 <Divider className="my-12" />
 
@@ -200,6 +266,22 @@ export default function DemoPage() {
                                 value={pass}
                                 onChange={(e) => setPass(e.target.value)}
                                 required
+                            />
+
+                            <PhoneInput
+                                value={phone}
+                                onChange={(e) => setPhone(e.target.value)}
+                                placeholder="Votre portable"
+                                leftIcon={<div className="text-xs font-bold">+33</div>}
+                            />
+
+                            <DoubleSearchInput
+                                whatValue={searchQuery}
+                                onWhatChange={setSearchQuery}
+                                whereValue={location}
+                                onWhereChange={setLocation}
+                                onSearch={handleSearch}
+                                className="max-w-3xl mx-auto" // Pour centrer et limiter la largeur
                             />
                             <Input
                                 label="Avec erreur"
@@ -258,7 +340,7 @@ export default function DemoPage() {
                 <section className="mb-16">
                     <H2 className="mb-8">Cards</H2>
 
-                    <div className="grid md:grid-cols-3 gap-6">
+                    <div className="grid md:grid-cols-3 gap-6 mb-6">
                         <Card hover>
                             <CardImage
                                 src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=400&h=300&fit=crop"
@@ -327,6 +409,45 @@ export default function DemoPage() {
                             avatarSrc="/poulet.jpg"
                             images={["/ongleLaora.jpg", "/ongleMikella.jpg", "/ongleLilie.jpg"]}
                         />
+                        <ProfilCard
+                            user={userData}
+                            onUpdate={(newData) => {
+                                setUserData(newData);
+                                console.log("Données mises à jour dans la DB simulée :", newData);
+                            }}
+                        />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch mx-auto">
+
+                        {/* Colonne de GAUCHE (Paramètres + Profil) - occupe 8 colonnes (plus large) */}
+                        <div className="md:col-span-8 flex flex-col">
+                            {/* On met le bouton Paramètre juste au dessus de la ProfilCard, aligné à droite de sa zone */}
+                            <div className="flex justify-end mb-2">
+                                <Button variant="ghost" size="sm" leftIcon={<Settings size={16} className="text-primary"/>}>
+                                    Paramètre du compte
+                                </Button>
+                            </div>
+
+                            <ProfilCard
+                                user={userData}
+                                onUpdate={setUserData}
+                            />
+                        </div>
+
+                        {/* Colonne de DROITE (Liens rapides) - occupe 4 colonnes (plus petite) */}
+                        <div className="md:col-span-4 flex flex-col">
+                            {/* Espaceur pour que le haut de la QuickLinksCard soit aligné avec le haut de la ProfilCard */}
+                            <div className="h-[32px] mb-2 hidden md:block" />
+
+                            <QuickLinksCard />
+                        </div>
+                        {/* Colonne de DROITE (Liens rapides) - occupe 4 colonnes (plus petite) */}
+                        <div className="md:col-span-12 flex flex-col">
+                            <AboutSection
+                                user={userData}
+                                onUpdate={setUserData}
+                            />
+                        </div>
                     </div>
                 </section>
 
@@ -458,6 +579,8 @@ export default function DemoPage() {
                         <Link href="#" variant="primary">Primary Link</Link>
                         <Link href="#" variant="muted">Muted Link</Link>
                         <Link href="#" variant="nav">Nav Link</Link>
+                        <Link href="#" variant="primary" rightIcon={<Plus size={20}/>}>Link Icon Right</Link>
+                        <Link href="#" variant="primary" leftIcon={<Plus size={20}/>}>Link Icon Left</Link>
                         <Link href="https://google.com" external>External Link</Link>
                     </div>
 
@@ -522,7 +645,14 @@ export default function DemoPage() {
                         </ModalFooter>
                     </Modal>
                 </section>
+                <Divider className="my-12" />
 
+                {/* 3. Utilisation de la section FAQ */}
+                <FaqSection
+                    items={faqData}
+                    title="Questions fréquentes"
+                    description="Tout ce que vous devez savoir pour démarrer."
+                />
                 {/* Footer */}
                 <div className="text-center py-12 bg-cream rounded-2xl">
                     <TextAccent className="text-2xl">Voiloo</TextAccent>

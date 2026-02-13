@@ -10,6 +10,8 @@ interface LinkProps {
     variant?: LinkVariant;
     external?: boolean;
     className?: string;
+    leftIcon?: React.ReactNode;
+    rightIcon?: React.ReactNode;
     underline?: 'always' | 'hover' | 'none';
 }
 
@@ -32,6 +34,8 @@ export const Link = ({
     variant = 'default',
     external = false,
     className = '',
+    leftIcon,
+    rightIcon,
     underline = 'hover',
 }: LinkProps) => {
     const baseStyles = `
@@ -57,7 +61,17 @@ export const Link = ({
 
     return (
         <NextLink href={href} className={baseStyles}>
+            {leftIcon && (
+                <div>
+                    {leftIcon}
+                </div>
+            )}
             {children}
+            {rightIcon && (
+                <div>
+                    {rightIcon}
+                </div>
+            )}
         </NextLink>
     );
 };
