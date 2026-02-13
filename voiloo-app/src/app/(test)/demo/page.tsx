@@ -15,6 +15,7 @@ import {
     // Data Display
     Avatar, AvatarGroup, Rating,
 } from '@/components/Base';
+import {MailInput, PasswordInput} from "@/components/Modules";
 import {
     Eye,
     Plus,
@@ -33,11 +34,22 @@ export default function DemoPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [inputValue, setInputValue] = useState('');
+    const [passwordValue, setpasswordValue] = useState('');
+    const [email, setEmail] = useState('');
+    const [pass, setPass] = useState('');
     const [userRating, setUserRating] = useState(0); // Pour le mode interactif
 
     const handleLoadingDemo = () => {
         setIsLoading(true);
         setTimeout(() => setIsLoading(false), 2000);
+    };
+    const getPasswordError = (value: string) => {
+        if (!value) return undefined;
+        if (value.length < 8) return "Minimum 8 caractères";
+        if (!/[A-Z]/.test(value)) return "Ajoutez une majuscule";
+        if (!/\d/.test(value)) return "Ajoutez un chiffre";
+        if (!/[!@#$%^&*(),.?":{}|<>]/.test(value)) return "Ajoutez un symbole (!@#$)";
+        return undefined;
     };
 
     return (
@@ -172,14 +184,30 @@ export default function DemoPage() {
                                 label="Mot de passe"
                                 type="password"
                                 placeholder="••••••••"
-                                hint="Minimum 8 caractères"
-                                rightIcon={<Eye/>}
+                                value={passwordValue}
+                                onChange={(e) => setpasswordValue(e.target.value)}
+                                error={getPasswordError(passwordValue)}
+                                hint={"Doit contenir 8+ car., une majuscule, un chiffre et un symbole."}
+                                required={true}
+                            />
+                            <MailInput
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                            />
+
+                            <PasswordInput
+                                value={pass}
+                                onChange={(e) => setPass(e.target.value)}
+                                required
                             />
                             <Input
                                 label="Avec erreur"
                                 value={inputValue}
                                 onChange={(e) => setInputValue(e.target.value)}
-                                error={inputValue.length < 3 && inputValue.length > 0 ? "Minimum 3 caractères" : undefined}
+                                error={
+                                    inputValue.length < 3 && inputValue.length > 0 ? "Minimum 3 caractères" : undefined
+                                }
                                 placeholder="Tapez quelque chose..."
                             />
                             <Input

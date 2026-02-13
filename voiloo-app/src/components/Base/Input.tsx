@@ -7,6 +7,7 @@ interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, '
     label?: string;
     error?: string;
     hint?: string;
+    required?: boolean;
     size?: InputSize;
     leftIcon?: React.ReactNode;
     rightIcon?: React.ReactNode;
@@ -28,6 +29,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
                                                                    className = '',
                                                                    id,
                                                                    type,
+                                                                   required,
                                                                    ...props
                                                                }, ref) => {
     const generatedId = useId();
@@ -46,12 +48,15 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
         setShowPassword((prev) => !prev);
     };
 
+
     return (
         <div className="w-full">
             {label && (
                 <label
                     htmlFor={inputId}
-                    className="block text-sm font-medium text-dark mb-1.5"
+                    className={`block text-sm font-medium text-dark mb-1.5 ${
+                        required ? "after:content-['*'] after:ml-0.5 after:text-error" : ""
+                    }`}
                 >
                     {label}
                 </label>
