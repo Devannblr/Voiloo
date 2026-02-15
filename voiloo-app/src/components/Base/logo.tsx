@@ -2,58 +2,44 @@
 
 import React from 'react';
 import { Link } from '@/components/Base';
+import LogoLong from '../../../public/logoLong.svg';
+import LogoSolo from '../../../public/logoSolo.svg';
 
 interface LogoProps {
     variant?: 'long' | 'solo';
     size?: number;
     className?: string;
     href?: string;
-    // On sépare les couleurs pour avoir le contrôle précis
-    voiColor?: string; // ex: "bg-white"
-    ooColor?: string;  // ex: "bg-[#FFD359]"
+    voilColor?: string;
+    ooColor?: string;
 }
 
 export const Logo = ({
-                         variant = 'long',
-                         size = 130,
-                         className = "",
-                         href = "/",
-                         voiColor = "bg-white",
-                         ooColor = "bg-[#FFD359]"
-                     }: LogoProps) => {
+    variant = 'long',
+    size = 130,
+    className = "",
+    href = "",
+    voilColor = "#FFFFFF",
+    ooColor = "#FFD359"
+}: LogoProps) => {
 
-    const logoContent = (
-        <div
-            className={`flex items-center ${className}`}
-            style={{ width: size, aspectRatio: variant === 'long' ? '2471 / 743' : '1 / 1' }}
-        >
-            {variant === 'long' && (
-                <div
-                    style={{
-                        width: '74%', // Proportion du texte dans ton viewBox
-                        height: '100%',
-                        maskImage: `url(/logo-voil.svg)`,
-                        WebkitMaskImage: `url(/logo-voil.svg)`,
-                        maskRepeat: 'no-repeat',
-                        maskSize: 'contain',
-                        WebkitMaskSize: 'contain'
-                    }}
-                    className={`${voiColor}`}
-                />
-            )}
-            <div
-                style={{
-                    width: variant === 'long' ? '26%' : '100%', // Proportion de l'infini
-                    height: '100%',
-                    maskImage: `url(/logo-oo.svg)`,
-                    WebkitMaskImage: `url(/logo-oo.svg)`,
-                    maskRepeat: 'no-repeat',
-                    maskSize: 'contain',
-                    WebkitMaskSize: 'contain'
-                }}
-                className={`${ooColor}`}
-            />
-        </div>
+    const logoContent = variant === 'long' ? (
+        <LogoLong
+            width={size}
+            height="auto"
+            className={className}
+            style={{
+                '--voil-color': voilColor,
+                '--oo-color': ooColor,
+            } as React.CSSProperties}
+        />
+    ) : (
+        <LogoSolo
+            width={size}
+            height={size}
+            className={className}
+            style={{ color: ooColor }}
+        />
     );
 
     if (href) {

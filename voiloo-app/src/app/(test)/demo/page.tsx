@@ -34,6 +34,8 @@ import {CtaCard} from "@/components/Modules/CtaCard"
 import {FaqSection} from "@/components/Modules/Faq";
 import {AboutSection, ProfilCard} from "@/components/Modules/ProfilCard";
 import {QuickLinksCard} from "@/components/Modules/ProfilCard";
+import {HeaderMobile} from "@/components/Layouts/headerMobile";
+import {Logo} from "@/components/Base/logo";
 
 export default function DemoPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -90,7 +92,7 @@ export default function DemoPage() {
     };
 
     return (
-    <div className="min-h-screen bg-white py-12">
+    <div className="min-h-screen bg-white py-12 md:pb-12 relative">
             <Container>
                 {/* Header */}
                 <div className="mb-16 text-center">
@@ -658,6 +660,29 @@ export default function DemoPage() {
                     <TextAccent className="text-2xl">Voiloo</TextAccent>
                     <P className="mt-2">Design System v1.0</P>
                 </div>
+
+                {/* Modal */}
+                <section className="mb-16 flex flex-col gap-2">
+                    <H2 className="mb-8 ">Logo</H2>
+                    <div className="bg-dark p-3">
+                    <Logo />
+                    </div>
+
+                    <Logo voilColor="var(--dark)" ooColor="#FFD359" />
+
+                    <div className="bg-dark p-3">
+                        <Logo voilColor="#FFFFFF" ooColor="#FFFFFF" />
+                    </div>
+
+                    <Logo variant="solo" ooColor="var(--color-primary)" />
+                    <Logo voilColor={"#965dfd"} ooColor={"#00FFFF"} />
+                    <Logo voilColor={"var(--dark)"} ooColor={"#FF0000"} />
+
+                    <Logo variant="solo" size={40} />
+                    <Logo variant="solo" size={40} ooColor={"#00FFFF"}/>
+                    <Logo variant="solo" size={40} ooColor={"#FF0000"}/>
+
+                </section>
             </Container>
         </div>
     );

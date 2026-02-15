@@ -1,12 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-    Button,
     Container,
-    IconButton, Input, Link,
-    Small,
-    TextAccent
+    Input, Link,
 } from '@/components/Base';
 import {
     Search,
@@ -18,19 +15,50 @@ import {
 import {Logo} from "@/components/Base/logo";
 
 export const Header = () => {
+    const [visible, setVisible] = useState(true);
+    const lastScrollY = useRef(0);
+    const scrollDownAccum = useRef(0);
+    const HIDE_THRESHOLD = 200;
+
+    useEffect(() => {
+        const handleScroll = () => {
+            const currentY = window.scrollY;
+            const delta = currentY - lastScrollY.current;
+
+            if (currentY < 50) {
+                setVisible(true);
+                scrollDownAccum.current = 0;
+            } else if (delta > 0) {
+                // Scroll vers le bas -> accumule avant de cacher
+                scrollDownAccum.current += delta;
+                if (scrollDownAccum.current > HIDE_THRESHOLD) {
+                    setVisible(false);
+                }
+            } else {
+                // Scroll vers le haut -> on montre direct
+                scrollDownAccum.current = 0;
+                setVisible(true);
+            }
+
+            lastScrollY.current = currentY;
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
     return (
-        <header className="w-full bg-[#1A1A1A] text-white py-3">
+        <header className={`w-full bg-dark text-white py-3 hidden md:block sticky top-0 z-[100] transition-transform duration-300 ${visible ? 'translate-y-0' : '-translate-y-full'}`}>
             <Container>
                 {/* Grid à 3 colonnes : Logo (auto) | Recherche (remplit l'espace) | Actions (auto) */}
                 <div className="grid grid-cols-[auto_1fr_auto] items-center gap-4 md:gap-8">
 
                     {/* 1. BLOC GAUCHE : Logo & Menu */}
                     <div className="flex items-center gap-6">
-                        <Logo variant="long" voiColor="bg-white" ooColor="text-primary" size={150} />
+                        <Logo voilColor="var(--color-white)" ooColor="var(--color-primary)" />
 
-                        <button className="hidden md:flex items-center gap-1 font-semibold hover:text-gray-300 transition-colors text-sm">
-                            Explorer <ChevronDown size={16} />
-                        </button>
+                        <Link href="#" className={"text-white"} variant="nav" rightIcon={<ChevronDown size={20}/>}>Explorer</Link>
+
                     </div>
 
                     {/* 2. BLOC CENTRE : Recherche (Barre pilule) */}
@@ -51,14 +79,14 @@ export const Header = () => {
 
                         {/* Action Message */}
                         <div className="flex flex-col items-center cursor-pointer group">
-                            <MessageSquare size={22} className="group-hover:text-[#E6C767] transition-colors" />
+                            <MessageSquare size={22} className="group-hover:text-primary transition-colors" />
                             <span className="text-[10px] font-bold mt-1 uppercase">Message</span>
                         </div>
 
                         {/* Action Profil */}
                         <div className="flex flex-col items-center cursor-pointer group">
-                            <div className="p-0.5 rounded-full border-2 border-transparent group-hover:border-[#E6C767] transition-all">
-                                <User size={22} className="group-hover:text-[#E6C767]" />
+                            <div className="p-0.5 rounded-full border-2 border-transparent group-hover:border-primary transition-all">
+                                <User size={22} className="group-hover:text-primary" />
                             </div>
                             <span className="text-[10px] font-bold mt-1 uppercase">Profil</span>
                         </div>
