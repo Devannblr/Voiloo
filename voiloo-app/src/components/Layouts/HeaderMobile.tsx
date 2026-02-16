@@ -6,9 +6,9 @@ import { Search, Heart, Plus, MessageSquare, User } from "lucide-react";
 import Link from "next/link";
 
 export const HeaderMobile = () => {
-    const iconBase = "text-primary hover:bg-white/10";
+    const iconBase = "text-primary pointer-events-none";
     const textBase = "capitalize -mt-1 tracking-tighter text-white";
-    const itemContainer = "flex flex-col items-center flex-1";
+    const itemContainer = "flex flex-col items-center flex-1 rounded-lg active:bg-white/10 transition-colors hover:bg-beige active:bg-beige";
 
     return (
         /* Utilisation de "max-md:flex" au lieu de juste "flex" pour être sûr
