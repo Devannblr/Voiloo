@@ -108,7 +108,7 @@ export const Header = () => {
                                     icon={<User size={22} />}
                                     variant="ghost"
                                     className="text-white hover:text-primary"
-                                    href="/profile"
+                                    href="/profil"
                                 />
                                 {/* Bouton de déconnexion pour tes tests */}
                                 <IconButton

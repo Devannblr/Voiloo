@@ -2,72 +2,99 @@
 
 import { useState, useEffect } from 'react';
 import { useApi } from '@/hooks/useApi';
-import {
-    Container,
-    Loader,
-    Button,
-} from '@/components/Base';
-import {
-    ProfilCard,
-    AboutSection,
-    QuickLinksCard
-} from '@/components/Modules/ProfilCard';
+import { Container, Loader, Button, Link } from '@/components/Base';
+import { ProfilCard, AboutSection, QuickLinksCard } from '@/components/Modules/ProfilCard';
 import { Settings, ArrowLeft } from "lucide-react";
-import Link from 'next/link';
 
-export default function ProfilePage() {
+export default function ProfilPage() {
     const { request, isLoading } = useApi();
     const [userData, setUserData] = useState<any>(null);
 
-    // --- 1. CHARGEMENT DES DONNÉES ---
+    const fetchProfil = async () => {
+        try {
+            const data = await request('/user');
+            const clean = {
+                ...data,
+                name: data.name ?? "",
+                username: data.username ?? "",
+                localisation: data.localisation ?? "",
+                activity: data.activity ?? "",
+                bio: data.bio ?? "",
+                avatar: data.avatar ?? "/poulet.jpg"
+            };
+            setUserData(clean);
+
+            if (!clean.localisation) getGeoLocation();
+        } catch (err) {
+            console.error("Erreur fetch profil:", err);
+        }
+    };
+
+    const getGeoLocation = () => {
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                try {
+                    const { latitude, longitude } = position.coords;
+                    const res = await fetch(
+                        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+                    );
+                    const data = await res.json();
+                    const city = data.address.city || data.address.town || data.address.village || "";
+                    const country = data.address.country || "";
+                    const loc = city && country ? `${city}, ${country}` : city || country;
+
+                    if (loc) handleUpdate({ localisation: loc });
+                } catch (e) {
+                    console.error("Géo-erreur", e);
+                }
+            });
+        }
+    };
+
     useEffect(() => {
-        const fetchProfile = async () => {
-            try {
-                const data = await request('/user');
-
-                // --- SÉCURISATION CONTRE LES VALEURS NULL ---
-                // On s'assure que chaque champ est au moins une chaîne vide
-                const formattedData = {
-                    ...data,
-                    name: data.name ?? "",
-                    username: data.username ?? "",
-                    location: data.location ?? "",
-                    activity: data.activity ?? "",
-                    intent: data.intent ?? "",
-                    avatar: data.avatar ?? "/poulet.jpg"
-                };
-
-                setUserData(formattedData);
-            } catch (err) {
-                console.error("Erreur lors de la récupération du profil:", err);
-            }
-        };
-
-        fetchProfile();
+        fetchProfil();
     }, []);
 
-    // --- 2. MISE À JOUR DES DONNÉES ---
     const handleUpdate = async (newData: any) => {
         try {
-            // Mise à jour locale (Optimistic UI)
-            setUserData((prev: any) => ({ ...prev, ...newData }));
+            let response;
 
-            await request('/user/update', {
-                method: 'PUT',
-                body: JSON.stringify(newData),
-            });
+            if (newData instanceof FormData) {
+                // ✅ Upload d'avatar avec FormData
+                response = await request('/user/update', {
+                    method: 'POST', // POST pour multipart
+                    body: newData
+                    // Le hook gère automatiquement les headers
+                });
 
-            console.log("Profil mis à jour avec succès");
+            } else {
+                // ✅ Mise à jour de texte avec JSON
+                // Mise à jour optimiste de l'UI
+                setUserData((prev: any) => ({ ...prev, ...newData }));
+
+                response = await request('/user/update', {
+                    method: 'PUT',
+                    body: JSON.stringify(newData)
+                    // Le hook ajoute automatiquement Content-Type: application/json
+                });
+            }
+
+            // Rafraîchir les données après succès
+            if (response.user) {
+                await fetchProfil();
+            }
+
         } catch (err) {
-            console.error("Erreur lors de la sauvegarde :", err);
+            console.error("Erreur update:", err);
+            // Annuler le changement optimiste en cas d'erreur
+            fetchProfil();
         }
     };
 
     if (!userData) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-                <Loader variant="spinner" size="lg" color="primary" />
-                <span className="text-gray-500 font-medium italic">Chargement de votre profil Voiloo...</span>
+            <div className="min-h-screen flex items-center justify-center">
+                <Loader size="lg" />
             </div>
         );
     }
@@ -76,9 +103,12 @@ export default function ProfilePage() {
         <main className="min-h-screen bg-white py-12">
             <Container>
                 <div className="mb-8 flex justify-between items-center">
-                    <Link href="/dashboard" className="flex items-center gap-2 text-gray-500 hover:text-dark transition-colors">
-                        <ArrowLeft size={18} />
-                        <span className="text-sm font-medium">Retour au tableau de bord</span>
+                    <Link
+                        href="/"
+                        variant="muted"
+                        leftIcon={<ArrowLeft size={20}/>}
+                    >
+                        Revenir à l'accueil
                     </Link>
                 </div>
 
@@ -95,32 +125,13 @@ export default function ProfilePage() {
                                     Paramètres du compte
                                 </Button>
                             </div>
-
-                            <ProfilCard
-                                user={userData}
-                                onUpdate={handleUpdate}
-                            />
+                            <ProfilCard user={userData} onUpdate={handleUpdate} />
                         </div>
-
-                        <AboutSection
-                            user={userData}
-                            onUpdate={handleUpdate}
-                        />
+                        <AboutSection user={userData} onUpdate={handleUpdate} />
                     </div>
-
                     <div className="md:col-span-4 sticky top-24">
                         <div className="h-[48px] hidden md:block" />
                         <QuickLinksCard />
-
-                        <div className="mt-6 p-6 bg-beige/10 rounded-2xl border border-beige/30">
-                            <h3 className="text-[10px] uppercase font-bold tracking-widest text-gray-400 mb-2">
-                                État du compte
-                            </h3>
-                            <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-success" />
-                                <span className="text-sm font-bold text-dark">Vérifié & Actif</span>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </Container>

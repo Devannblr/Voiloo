@@ -1,3 +1,4 @@
+// hooks/useApi.ts
 import { useState } from 'react';
 
 export const useApi = () => {
@@ -8,25 +9,36 @@ export const useApi = () => {
         setIsLoading(true);
         setError(null);
 
-        // URL de ton back-end Laravel
         const API_URL = "http://localhost:8000/api";
-
-        // On récupère le token Sanctum stocké lors du login/signup
         const token = typeof window !== 'undefined' ? localStorage.getItem('voiloo_token') : null;
 
-        const headers = {
-            'Content-Type': 'application/json',
+        // ⚠️ CORRECTION CRITIQUE : Ne pas forcer Content-Type pour FormData
+        const isFormData = options.body instanceof FormData;
+
+        const headers: HeadersInit = {
             'Accept': 'application/json',
             ...(token && { 'Authorization': `Bearer ${token}` }),
-            ...options.headers,
         };
 
+        // ✅ Ajouter Content-Type SEULEMENT si ce n'est pas du FormData
+        if (!isFormData) {
+            headers['Content-Type'] = 'application/json';
+        }
+
+        // Fusionner avec les headers personnalisés (sans écraser)
+        if (options.headers) {
+            Object.assign(headers, options.headers);
+        }
+
         try {
-            const response = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
+            const response = await fetch(`${API_URL}${endpoint}`, {
+                ...options,
+                headers
+            });
+
             const data = await response.json();
 
             if (!response.ok) {
-                // Gestion des erreurs de validation Laravel (422)
                 throw new Error(data.message || "Une erreur est survenue");
             }
 
