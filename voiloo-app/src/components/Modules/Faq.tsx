@@ -1,5 +1,5 @@
 // Fichier : components/Modules/Faq.tsx
-
+'use client';
 import React, { useState } from 'react';
 import { H2, H3, P, Container } from '@/components/Base';
 import { ChevronDown } from 'lucide-react';

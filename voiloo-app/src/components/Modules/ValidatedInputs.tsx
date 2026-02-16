@@ -108,7 +108,7 @@ export const DoubleSearchInput = ({ whatValue, whereValue, onWhatChange, onWhere
                 <input type="text" value={whereValue} onChange={(e) => onWhereChange(e.target.value)} placeholder="Où ?" className="w-full py-3 bg-transparent focus:outline-none text-dark" />
             </div>
             {onSearch && (
-                <button onClick={onSearch} className="w-full md:w-auto px-6 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark transition-colors">
+                <button onClick={onSearch} className="w-full md:w-auto px-6 py-3 bg-primary text-dark font-bold rounded-xl hover:bg-primary-dark transition-colors">
                     Trouver
                 </button>
             )}

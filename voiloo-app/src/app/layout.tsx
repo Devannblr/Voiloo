@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import {Header} from "@/components/Layouts/Header";
-import {HeaderMobile} from "@/components/Layouts/headerMobile";
+import {HeaderMobile} from "@/components/Layouts/HeaderMobile";
+import {Footer} from "@/components/Layouts/Footer";
 
 export const metadata: Metadata = {
     title: "Voiloo - Freelances & Services locaux",
@@ -15,9 +16,10 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="fr">
-            <body className="antialiased pb-16 md:pb-0 relative">
+            <body className="antialiased pb-8 md:pb-0 relative">
             <Header/>
                 {children}
+            <Footer/>
             <HeaderMobile/>
             </body>
         </html>

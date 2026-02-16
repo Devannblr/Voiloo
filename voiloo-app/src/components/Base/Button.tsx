@@ -1,5 +1,8 @@
+'use client';
+
 import React from 'react';
 import { Loader2 } from 'lucide-react';
+import Link from "next/link";
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
 type ButtonSize = 'sm' | 'md' | 'lg';
@@ -10,6 +13,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     size?: ButtonSize;
     isLoading?: boolean;
     fullWidth?: boolean;
+    href?: string;
     leftIcon?: React.ReactNode;
     rightIcon?: React.ReactNode;
 }
@@ -29,32 +33,34 @@ const sizeStyles: Record<ButtonSize, string> = {
 };
 
 export const Button = ({
-    children,
-    variant = 'primary',
-    size = 'md',
-    isLoading = false,
-    fullWidth = false,
-    leftIcon,
-    rightIcon,
-    disabled,
-    className = '',
-    ...props
-}: ButtonProps) => {
-    return (
-        <button
-            className={`
-                inline-flex items-center justify-center font-semibold rounded-lg
-                transition-all duration-200 ease-out
-                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2
-                disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none
-                ${variantStyles[variant]}
-                ${sizeStyles[size]}
-                ${fullWidth ? 'w-full' : ''}
-                ${className}
-            `}
-            disabled={disabled || isLoading}
-            {...props}
-        >
+                           children,
+                           variant = 'primary',
+                           size = 'md',
+                           isLoading = false,
+                           fullWidth = false,
+                           leftIcon,
+                           rightIcon,
+                           disabled,
+                           href, // On enlève le par défaut "" pour tester s'il existe vraiment
+                           className = '',
+                           ...props
+                       }: ButtonProps) => {
+
+    // On centralise les classes pour ne pas les répéter
+    const combinedClasses = `
+        inline-flex items-center justify-center font-semibold rounded-lg
+        transition-all duration-200 ease-out
+        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2
+        disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none
+        ${variantStyles[variant]}
+        ${sizeStyles[size]}
+        ${fullWidth ? 'w-full' : ''}
+        ${className}
+    `;
+
+    // Le contenu du bouton (Icônes + Texte)
+    const content = (
+        <>
             {isLoading ? (
                 <Loader2 className="animate-spin h-5 w-5" />
             ) : (
@@ -64,6 +70,26 @@ export const Button = ({
                     {rightIcon && <span className="flex-shrink-0">{rightIcon}</span>}
                 </>
             )}
+        </>
+    );
+
+    // SI HREF EST PRÉSENT : On rend un Link stylé
+    if (href) {
+        return (
+            <Link href={href} className={combinedClasses}>
+                {content}
+            </Link>
+        );
+    }
+
+    // SINON : On rend le bouton standard
+    return (
+        <button
+            className={combinedClasses}
+            disabled={disabled || isLoading}
+            {...props}
+        >
+            {content}
         </button>
     );
 };
