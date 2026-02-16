@@ -2,7 +2,7 @@ import React, { forwardRef, useId } from 'react';
 import { Check } from 'lucide-react';
 
 interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {
-    label?: string;
+    label?: React.ReactNode;
     error?: string;
 }
 
