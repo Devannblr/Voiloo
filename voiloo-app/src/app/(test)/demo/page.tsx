@@ -34,7 +34,6 @@ import {CtaCard} from "@/components/Modules/CtaCard"
 import {FaqSection} from "@/components/Modules/Faq";
 import {AboutSection, ProfilCard} from "@/components/Modules/ProfilCard";
 import {QuickLinksCard} from "@/components/Modules/ProfilCard";
-import {HeaderMobile} from "@/components/Layouts/headerMobile";
 import {Logo} from "@/components/Base/logo";
 
 export default function DemoPage() {
@@ -664,14 +663,16 @@ export default function DemoPage() {
                 {/* Modal */}
                 <section className="mb-16 flex flex-col gap-2">
                     <H2 className="mb-8 ">Logo</H2>
-                    <div className="bg-dark p-3">
+                    <div className="bg-dark p-3 flex gap-2">
                     <Logo />
+                        <Logo voilColor="var(--color-dark)" ooColor="var(--color-primary)" />
+
                     </div>
 
-                    <Logo voilColor="var(--dark)" ooColor="#FFD359" />
+                    <Logo voilColor="var(--color-dark)" ooColor="var(--color-primary)" />
 
                     <div className="bg-dark p-3">
-                        <Logo voilColor="#FFFFFF" ooColor="#FFFFFF" />
+                        <Logo voilColor="var(--color-white)" ooColor="var(--color-white)" />
                     </div>
 
                     <Logo variant="solo" ooColor="var(--color-primary)" />
