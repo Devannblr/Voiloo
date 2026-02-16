@@ -12,7 +12,10 @@ class AnnonceController extends Controller
      */
     public function index()
     {
-        //
+        // On récupère les annonces avec les images et les infos du freelance (user)
+        $annonces = Annonce::with(['user', 'images'])->latest()->get();
+
+        return response()->json($annonces);
     }
 
     /**

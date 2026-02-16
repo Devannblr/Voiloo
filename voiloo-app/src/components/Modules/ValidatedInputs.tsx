@@ -58,29 +58,50 @@ export const MailInput = forwardRef<HTMLInputElement, ValidatedInputProps>((prop
 
 export const PasswordInput = forwardRef<HTMLInputElement, ValidatedInputProps>(({ showChecklist, ...props }, ref) => {
     const val = props.value || "";
-    if (!showChecklist) return <Input {...props} ref={ref} type="password" label={props.label || "Mot de passe"} error={getPasswordError(val)} />;
 
+    // Définition des critères
     const criteria = [
         { label: "8+ car.", met: val.length >= 8 },
         { label: "Maj.", met: /[A-Z]/.test(val) },
         { label: "Chiffre", met: /\d/.test(val) },
-        { label: "Symbole", met: /[!@#$%^&*]/.test(val) },
+        { label: "Symbole", met: /[!@#$%^&*(),.?":{}|<>]/.test(val) },
     ];
+
+    // Calcul du nombre de critères remplis
+    const strengthScore = criteria.filter(c => c.met).length;
+
+    // Déterminer la couleur globale en fonction du score
+    const getStrengthColor = () => {
+        if (strengthScore === 0) return 'bg-gray-200';
+        if (strengthScore === 1) return 'bg-red-500';    // Très faible
+        if (strengthScore === 2) return 'bg-orange-500'; // Faible
+        if (strengthScore === 3) return 'bg-yellow-500'; // Moyen
+        return 'bg-success';                            // Parfait (4/4)
+    };
+
+    const strengthColor = getStrengthColor();
+
+    if (!showChecklist) return <Input {...props} ref={ref} type="password" label={props.label || "Mot de passe"} error={getPasswordError(val)} />;
+
     return (
         <div className="flex flex-col gap-2">
             <Input {...props} ref={ref} type="password" label={props.label || "Mot de passe"} />
+
+            {/* Barre de progression visuelle */}
             <div className="flex gap-2 px-1">
                 {criteria.map((c, i) => (
                     <div key={i} className="flex flex-col flex-1 gap-1">
-                        <div className={`h-1 rounded-full transition-all duration-300 ${c.met ? 'bg-success' : 'bg-gray-200'}`} />
-                        <span className={`text-[10px] uppercase font-bold tracking-tighter ${c.met ? 'text-success' : 'text-gray-400'}`}>{c.label}</span>
+                        {/* La couleur change pour TOUTES les barres remplies selon le score global */}
+                        <div className={`h-1 rounded-full transition-all duration-500 ${c.met ? strengthColor : 'bg-gray-200'}`} />
+                        <span className={`text-[10px] uppercase font-bold tracking-tighter transition-colors duration-500 ${c.met ? strengthColor.replace('bg-', 'text-') : 'text-gray-400'}`}>
+                            {c.label}
+                        </span>
                     </div>
                 ))}
             </div>
         </div>
     );
 });
-
 export const PhoneInput = forwardRef<HTMLInputElement, ValidatedInputProps>(({ onChange, value, ...props }, ref) => {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const raw = e.target.value;

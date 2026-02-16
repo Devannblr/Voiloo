@@ -32,4 +32,18 @@ class Annonce extends Model
     {
         return $this->hasMany(Avis::class);
     }
+    // Pour calculer la moyenne des avis automatiquement
+    public function getAverageRatingAttribute()
+    {
+        return round($this->avis()->avg('note') ?? 0, 1);
+    }
+
+    // Pour compter le nombre d'avis
+    public function getAvisCountAttribute()
+    {
+        return $this->avis()->count();
+    }
+
+    // On demande à Laravel d'inclure ces données dans le JSON
+    protected $appends = ['average_rating', 'avis_count'];
 }

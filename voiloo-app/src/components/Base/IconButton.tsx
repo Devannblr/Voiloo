@@ -1,15 +1,20 @@
+'use client';
+
 import React from 'react';
 import { Loader2 } from 'lucide-react';
+import Link from 'next/link'; // Import du Link Next.js
 
 type IconButtonVariant = 'default' | 'primary' | 'ghost' | 'danger';
 type IconButtonSize = 'sm' | 'md' | 'lg';
 
+// Ajout de href dans les props
 interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     icon: React.ReactNode;
     variant?: IconButtonVariant;
     size?: IconButtonSize;
-    label: string; // Required for accessibility
+    label: string;
     isLoading?: boolean;
+    href?: string; // Prop optionnelle pour la navigation
 }
 
 const variantStyles: Record<IconButtonVariant, string> = {
@@ -32,41 +37,65 @@ const iconSizeStyles: Record<IconButtonSize, string> = {
 };
 
 export const IconButton = ({
-    icon,
-    variant = 'default',
-    size = 'md',
-    label,
-    isLoading = false,
-    disabled,
-    className = '',
-    ...props
-}: IconButtonProps) => {
+                               icon,
+                               variant = 'default',
+                               size = 'md',
+                               label,
+                               isLoading = false,
+                               disabled,
+                               href,
+                               className = '',
+                               ...props
+                           }: IconButtonProps) => {
+
+    // Logique de clonage de l'icône pour lui injecter la taille
     const iconWithSize = React.isValidElement(icon)
         ? React.cloneElement(icon as React.ReactElement<{ className?: string }>, {
             className: `${iconSizeStyles[size]} ${(icon.props as { className?: string }).className || ''}`.trim(),
         })
         : icon;
 
+    // Styles communs pour le bouton et le lien
+    const combinedClassName = `
+        inline-flex items-center justify-center rounded-lg
+        transition-all duration-200 ease-out
+        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2
+        disabled:opacity-50 disabled:cursor-not-allowed
+        ${variantStyles[variant]}
+        ${sizeStyles[size]}
+        ${className}
+    `.trim();
+
+    const content = isLoading ? (
+        <Loader2 className={`animate-spin ${iconSizeStyles[size]}`} />
+    ) : (
+        iconWithSize
+    );
+
+    // Si href est présent, on rend un Link Next.js
+    if (href && !disabled && !isLoading) {
+        return (
+            <Link
+                href={href}
+                className={combinedClassName}
+                aria-label={label}
+                title={label} // Petit plus pour le hover desktop
+            >
+                {content}
+            </Link>
+        );
+    }
+
+    // Sinon, on rend un bouton classique
     return (
         <button
-            className={`
-                inline-flex items-center justify-center rounded-lg
-                transition-all duration-200 ease-out
-                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2
-                disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none
-                ${variantStyles[variant]}
-                ${sizeStyles[size]}
-                ${className}
-            `}
+            type="button"
+            className={combinedClassName}
             disabled={disabled || isLoading}
             aria-label={label}
             {...props}
         >
-            {isLoading ? (
-                <Loader2 className={`animate-spin ${iconSizeStyles[size]}`} />
-            ) : (
-                iconWithSize
-            )}
+            {content}
         </button>
     );
 };
