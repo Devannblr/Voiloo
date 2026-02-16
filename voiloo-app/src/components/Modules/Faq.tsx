@@ -1,12 +1,9 @@
-// Fichier : components/Modules/Faq.tsx
 'use client';
 import React, { useState } from 'react';
 import { H2, H3, P, Container } from '@/components/Base';
 import { ChevronDown } from 'lucide-react';
 
-// --- 1. L'ÉLÉMENT (Interne, non exporté) ---
-// On ne l'exporte pas car on veut forcer l'utilisation de la section complète
-// pour garder la même mise en page partout sur Voiloo.
+// --- 1. L'ÉLÉMENT INTERNE ---
 const FaqItem = ({ question, answer }: { question: string; answer: string }) => {
     const [isOpen, setIsOpen] = useState(false);
 
@@ -36,10 +33,9 @@ const FaqItem = ({ question, answer }: { question: string; answer: string }) => 
     );
 };
 
-// --- 2. LE LAYOUT (Exporté) ---
-// C'est lui que tu appelles dans tes pages.
+// --- 2. LE LAYOUT ---
 export const FaqSection = ({
-                               items,
+                               items = [], // Valeur par défaut pour éviter les erreurs si undefined
                                title = "Questions fréquentes",
                                description = "Tout ce que vous devez savoir pour utiliser Voiloo sereinement."
                            }: {
@@ -47,6 +43,9 @@ export const FaqSection = ({
     title?: string;
     description?: string;
 }) => {
+    // Correction de la condition : on check si la liste est vide
+    const hasItems = items && items.length > 0;
+
     return (
         <section className="py-20">
             <Container>
@@ -56,9 +55,18 @@ export const FaqSection = ({
                 </div>
 
                 <div className="max-w-4xl mx-auto bg-white p-8 md:p-10 rounded-2xl border border-beige/50 shadow-sm">
-                    {items.map((item, index) => (
-                        <FaqItem key={index} {...item} />
-                    ))}
+                    {hasItems ? (
+                        items.map((item, index) => (
+                            <FaqItem key={index} {...item} />
+                        ))
+                    ) : (
+                        // Le message qui s'affiche si aucune question n'est trouvée
+                        <div className="py-10 text-center">
+                            <P className="text-gray-400 italic">
+                                Pas encore de questions ici. On arrive bientôt ! ⏳
+                            </P>
+                        </div>
+                    )}
                 </div>
             </Container>
         </section>
