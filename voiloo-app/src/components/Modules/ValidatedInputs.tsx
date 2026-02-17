@@ -46,7 +46,7 @@ const getPasswordError = (val: string) => {
     if (val.length < 8) return "8 caractères min.";
     if (!/[A-Z]/.test(val)) return "Majuscule requise";
     if (!/\d/.test(val)) return "Chiffre requis";
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(val)) return "Symbole requis";
+    if (!/[!@#$%^&*(),.?":{}|<>-]/.test(val)) return "Symbole requis";
     return undefined;
 };
 

@@ -230,7 +230,7 @@ export default function DemoPage() {
                     <CtaCard
                         title={"Rejoignez Voiloo"}
                         description="Trouvez ou proposez des services près de chez vous, simplement et en toute confiance."
-                        href="/signin"
+                        href="/register"
                     />
                 </section>
 

@@ -23,7 +23,7 @@ export const Footer = () => {
 
                     {/* Colonne 1 : Pitch */}
                     <div className="flex flex-col gap-4">
-                        <Logo voilColor="var(--color-white)" ooColor="var(--color-primary)" />
+                        <Logo voilColor="var(--color-white)" ooColor="var(--color-primary)" href={"/"}/>
                         <p className="text-sm text-white/60 leading-relaxed">
                             La plateforme qui connecte les talents locaux. Simple, visuel, direct.
                         </p>
@@ -73,7 +73,7 @@ export const Footer = () => {
 
                 {/* VERSION MOBILE */}
                 <div className="md:hidden flex flex-col items-center gap-8 mb-8 text-center">
-                    <Logo voilColor="var(--color-white)" ooColor="var(--color-primary)" />
+                    <Logo voilColor="var(--color-white)" ooColor="var(--color-primary)"  href={"/"}/>
                     <div className={colBase}>
                         <Link href="/faq" className={linkStyle}>FAQ</Link>
                         <Link href="/contact" className={linkStyle}>Contact</Link>

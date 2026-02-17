@@ -70,7 +70,7 @@ export const FreelanceGrid = () => {
                     <CtaCard
                         title="Rejoignez Voiloo"
                         description="Trouvez ou proposez des services près de chez vous, simplement et en toute confiance."
-                        href="/signup"
+                        href="/register"
                     />
                 </div>
             </Container>

@@ -29,7 +29,7 @@ export const HeroSection = () => {
         <section className="w-full bg-dark pt-12 pb-20 md:pt-20 md:pb-32 text-white overflow-hidden">
             <Container>
                 <div className="w-full md:hidden mb-12 flex justify-center">
-                    <Logo size={200}/>
+                    <Logo size={200} />
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
