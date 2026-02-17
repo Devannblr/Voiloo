@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useApi } from '@/hooks/useApi';
 import { Button, Input, P } from '@/components/Base';
-import {PasswordInput} from "@/components/Modules";
+import { PasswordInput } from "@/components/Modules";
 
 export default function SignupForm() {
     const { request, isLoading, error } = useApi();
-
+    const [passwordConfirm, setPasswordConfirm] = useState("");
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -15,12 +15,11 @@ export default function SignupForm() {
         username: '',
     });
 
-    // États de validation
     const [isUserAvailable, setIsUserAvailable] = useState<boolean | null>(null);
     const [isEmailAvailable, setIsEmailAvailable] = useState<boolean | null>(null);
     const [isChecking, setIsChecking] = useState({ user: false, email: false });
 
-    // --- 1. VÉRIFICATION USERNAME (GET) ---
+    // --- VÉRIFICATION USERNAME ---
     useEffect(() => {
         const checkUser = async () => {
             const cleanName = formData.username.trim();
@@ -43,7 +42,7 @@ export default function SignupForm() {
         return () => clearTimeout(timer);
     }, [formData.username]);
 
-    // --- 2. VÉRIFICATION EMAIL (GET pour éviter 419 CSRF) ---
+    // --- VÉRIFICATION EMAIL ---
     useEffect(() => {
         const checkEmail = async () => {
             if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
@@ -52,7 +51,6 @@ export default function SignupForm() {
             }
             setIsChecking(prev => ({ ...prev, email: true }));
             try {
-                // Utilisation de GET avec query param ?email=
                 const res = await fetch(`http://localhost:8000/api/check-email?email=${encodeURIComponent(formData.email)}`);
                 const data = await res.json();
                 setIsEmailAvailable(data.available);
@@ -66,9 +64,24 @@ export default function SignupForm() {
         return () => clearTimeout(timer);
     }, [formData.email]);
 
+    // --- LOGIQUE DE SOUMISSION SÉCURISÉE ---
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (isUserAvailable === false || isEmailAvailable === false) return;
+
+        // 1. Bloquer si les vérifications sont en cours
+        if (isChecking.user || isChecking.email) return;
+
+        // 2. Bloquer si les dispos sont fausses OU nulles (pas encore vérifiées)
+        if (isUserAvailable !== true || isEmailAvailable !== true) {
+            alert("Veuillez vérifier vos identifiants et email.");
+            return;
+        }
+
+        // 3. Bloquer si les mots de passe ne correspondent pas
+        if (formData.password !== passwordConfirm) {
+            alert("Les mots de passe ne correspondent pas.");
+            return;
+        }
 
         try {
             const data = await request('/register', {
@@ -85,26 +98,32 @@ export default function SignupForm() {
         }
     };
 
+    // Variable pour désactiver le bouton proprement
+    const isInvalid =
+        !formData.name ||
+        isUserAvailable !== true ||
+        isEmailAvailable !== true ||
+        formData.password !== passwordConfirm ||
+        formData.password.length < 8 ||
+        isChecking.user ||
+        isChecking.email;
+
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
             {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm border border-red-100">{error}</div>}
 
-            {/* Nom complet */}
-            <div>
-                <Input
-                    label={"Nom complet"}
-                    type="text"
-                    placeholder="Jean Dupont"
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    required
-                />
-            </div>
+            <Input
+                label="Nom complet"
+                type="text"
+                placeholder="Jean Dupont"
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                required
+            />
 
-            {/* Identifiant avec leftIcon @ */}
             <div>
                 <Input
-                    label={"Identifiant unique"}
+                    label="Identifiant unique"
                     type="text"
                     placeholder="ton_pseudo"
                     leftIcon={<span className="font-bold text-gray-400">@</span>}
@@ -120,13 +139,11 @@ export default function SignupForm() {
                     required
                 />
                 {isUserAvailable === false && <P className="text-red-500 text-xs mt-1">Ce pseudo est déjà pris.</P>}
-                {isChecking.user && <P className="text-gray-400 text-xs mt-1 italic">Vérification pseudo...</P>}
             </div>
 
-            {/* Email */}
             <div>
                 <Input
-                    label={"Email"}
+                    label="Email"
                     type="email"
                     placeholder="jean@example.com"
                     value={formData.email}
@@ -138,24 +155,37 @@ export default function SignupForm() {
                     required
                 />
                 {isEmailAvailable === false && <P className="text-red-500 text-xs mt-1">Cet email est déjà utilisé.</P>}
-                {isChecking.email && <P className="text-gray-400 text-xs mt-1 italic">Vérification email...</P>}
             </div>
 
-            {/* Mot de passe */}
-            <div>
+            <div className="space-y-4">
                 <PasswordInput
+                    label="Mot de passe"
                     placeholder="••••••••"
                     value={formData.password}
                     onChange={(e) => setFormData({...formData, password: e.target.value})}
                     required
                     showChecklist={true}
                 />
+
+                <Input
+                    label="Confirmer Mot de passe"
+                    type="password"
+                    placeholder="••••••••"
+                    value={passwordConfirm}
+                    onChange={(e) => setPasswordConfirm(e.target.value)}
+                    error={
+                        passwordConfirm && passwordConfirm !== formData.password
+                            ? "Les mots de passe ne correspondent pas."
+                            : undefined
+                    }
+                    required
+                />
             </div>
 
             <Button
                 type="submit"
-                className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 disabled:opacity-50"
-                disabled={isLoading || isUserAvailable === false || isEmailAvailable === false || isChecking.user || isChecking.email}
+                className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 disabled:opacity-50 disabled:cursor-not-ALLOWED"
+                disabled={isLoading || isInvalid}
             >
                 {isLoading ? 'Création...' : 'Créer mon compte'}
             </Button>

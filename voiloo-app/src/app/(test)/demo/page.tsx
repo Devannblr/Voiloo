@@ -63,10 +63,10 @@ export default function DemoPage() {
     const [userData, setUserData] = useState({
         name: "Mikella Colart",
         username: "mikiki",
-        location: "Dole, France",
+        localisation: "Dole, France",
         joinDate: "Février 2026",
         avatar: "/poulet.jpg",
-        intent: "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Alias cupiditate dolor eos, error eveniet expedita fugiat illo itaque labore maiores minus molestiae porro possimus provident qui sit veniam voluptas voluptates.",
+        bio: "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Alias cupiditate dolor eos, error eveniet expedita fugiat illo itaque labore maiores minus molestiae porro possimus provident qui sit veniam voluptas voluptates.",
         activity: "Etudiante",
     });
 
