@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
@@ -14,8 +15,8 @@ use App\Http\Controllers\Api\CategoryController;
 
 // --- Routes Publiques ---
 Route::get('/categories', [CategoryController::class, 'index']);
-// Route::get('/annonces', [AnnonceController::class, 'index']); // Attention : AnnonceController n'est pas importé en haut
-// Route::get('/annonces/{id}', [AnnonceController::class, 'show']);
+Route::get('/annonces', [AnnonceController::class, 'index']); // Attention : AnnonceController n'est pas importé en haut
+Route::get('/annonces/{id}', [AnnonceController::class, 'show']);
 
 // --- Authentification ---
 Route::post('/register', [AuthController::class, 'register']);
@@ -27,11 +28,11 @@ Route::get('/check-email', [AuthController::class, 'checkEmail']);
 // --- Routes Protégées ---
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/user', [AuthController::class, 'user']);
+    Route::get('/user', [UserController::class, 'user']);
 
     // --- LA CORRECTION EST ICI ---
     // On autorise POST pour l'avatar et PUT pour le texte
-    Route::match(['put', 'post'], '/user/update', [AuthController::class, 'update']);
+    Route::match(['put', 'post'], '/user/update', [UserController::class, 'update']);
 
     // Gestion des annonces
     // Route::post('/annonces', [AnnonceController::class, 'store']);

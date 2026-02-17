@@ -13,16 +13,17 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name',
+        'username',
         'email',
         'password',
-        'username',
         'avatar',
+        'bio',
         'localisation',
         'activity',
-        'bio',
+        'avis',
+        'date_naissance',
+        'created_at',
     ];
-
-    protected $appends = ['join_date'];
 
     protected $hidden = [
         'password',

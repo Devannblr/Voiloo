@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AnnonceImage extends Model
 {
-    protected $guarded = [];
+    protected $fillable = ['annonce_id', 'path'];
 
-    public function annonce(): BelongsTo
+    public function annonce()
     {
         return $this->belongsTo(Annonce::class);
     }
