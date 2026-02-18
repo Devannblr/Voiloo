@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         // Étape 1 : On remplace les NULL existants par la valeur par défaut pour éviter l'erreur de troncature
-        DB::table('users')->whereNull('avatar')->update(['avatar' => '/userdefault.png']);
+        DB::table('users')->whereNull('avatar')->update(['avatar' => 'userdefault.png']);
 
         Schema::table('users', function (Blueprint $table) {
             // Étape 2 : On applique le changement avec nullable(false) si tu veux forcer
