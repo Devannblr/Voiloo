@@ -91,7 +91,7 @@ export default function VitrinePage() {
                 <div className="sticky top-0 z-50 flex items-center justify-between px-6 py-3 text-sm font-semibold text-dark shadow-sm"
                      style={{ backgroundColor: primary }}>
                     <span>👁 Aperçu de votre vitrine</span>
-                    <Link href={`/${userSlug}/${annonceSlug}/edit`}
+                    <Link href={`/u/${userSlug}/${annonceSlug}/edit`}
                           className="flex items-center gap-2 bg-black/10 hover:bg-black/20 px-4 py-1.5 rounded-full transition-colors">
                         <Pencil size={14} /> Modifier
                     </Link>
@@ -339,7 +339,7 @@ export default function VitrinePage() {
                         Vitrine créée avec <span style={{ color: primary }}>Voiloo</span>
                     </p>
                     {isOwner && (
-                        <Link href={`/${userSlug}/${annonceSlug}/edit`}
+                        <Link href={`/u/${userSlug}/${annonceSlug}/edit`}
                               className="flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-full transition-colors"
                               style={{ backgroundColor: `${primary}20`, color: textColor }}>
                             <Pencil size={12} /> Modifier la vitrine

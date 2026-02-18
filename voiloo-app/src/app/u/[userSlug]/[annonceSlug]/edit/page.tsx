@@ -119,7 +119,7 @@ export default function VitrineEditPage() {
                     <div className="flex items-center justify-between py-4">
                         <div className="flex items-center gap-4">
                             {/* ← Retour vers la vitrine publique */}
-                            <Link href={`/${userSlug}/${annonceSlug}`}
+                            <Link href={`/u/${userSlug}/${annonceSlug}`}
                                   className="flex items-center gap-2 text-sm text-gray-500 hover:text-dark transition-colors">
                                 <ArrowLeft size={16} />
                                 Retour à la vitrine
@@ -139,7 +139,7 @@ export default function VitrineEditPage() {
                                 variant="ghost"
                                 size="sm"
                                 leftIcon={<Eye size={16} />}
-                                onClick={() => window.open(`/${userSlug}/${annonceSlug}`, '_blank')}
+                                onClick={() => window.open(`/u/${userSlug}/${annonceSlug}`, '_blank')}
                             >
                                 Prévisualiser
                             </Button>

@@ -140,7 +140,7 @@ export default function UserProfilePage() {
                         <div className="grid md:grid-cols-2 gap-6">
                             {annonces.map((ad: any) => (
                                 <div key={ad.id} className="relative group">
-                                    <Link href={`/${userSlug}/${ad.slug}`}>
+                                    <Link href={`/u/${userSlug}/${ad.slug}`}>
                                         <Card hover className="h-full">
                                             <div className="h-1.5" style={{ backgroundColor: ad.vitrine_config?.couleur_principale || '#FFD359' }} />
                                             <CardBody className="p-5">
@@ -188,7 +188,7 @@ export default function UserProfilePage() {
                                     {/* Boutons owner */}
                                     {isOwner && (
                                         <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                            <Link href={`/${userSlug}/${ad.slug}/edit`}>
+                                            <Link href={`/u/${userSlug}/${ad.slug}/edit`}>
                                                 <button className="p-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg shadow-md transition-colors">
                                                     <Edit size={14} className="text-gray-600" />
                                                 </button>
