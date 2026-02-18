@@ -20,7 +20,7 @@ export default function ProfilPage() {
                 localisation: data.localisation ?? "",
                 activity: data.activity ?? "",
                 bio: data.bio ?? "",
-                avatar: data.avatar ?? "/poulet.jpg"
+                avatar: data.avatar ?? "/userdefault.png"
             };
             setUserData(clean);
 

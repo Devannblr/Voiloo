@@ -12,6 +12,7 @@ interface UserData {
     avatar?: string;
     bio?: string;
     activity?: string;
+    created_at?: string
 }
 
 interface ProfilCardProps {
@@ -25,7 +26,14 @@ export const ProfilCard = ({ user, onUpdate }: ProfilCardProps) => {
         name: user.name ?? "",
         localisation: user.localisation ?? ""
     });
-
+    const formatDate = (dateString?: string) => {
+        if (!dateString) return "Date inconnue";
+        const date = new Date(dateString);
+        return date.toLocaleDateString('fr-FR', {
+            month: 'long',
+            year: 'numeric'
+        });
+    };
     // ✅ État pour la preview de l'image
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
@@ -198,7 +206,7 @@ export const ProfilCard = ({ user, onUpdate }: ProfilCardProps) => {
                                     <div className="flex items-center gap-3 text-gray-600">
                                         <Calendar size={16} className="text-primary-dark" />
                                         <P className="text-sm font-medium italic text-gray-400">
-                                            Membre depuis {user.joinDate}
+                                            Membre depuis {formatDate(user.created_at)}
                                         </P>
                                     </div>
                                 </div>
