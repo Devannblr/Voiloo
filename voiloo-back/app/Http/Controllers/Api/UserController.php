@@ -5,80 +5,115 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Auth\Events\Verified;
 
 class UserController extends Controller
 {
-    public function user(Request $request)
+    public function showBySlug(string $slug)
     {
-        return response()->json($this->formatUserResponse($request->user()));
+        $user = User::where('slug', $slug)
+            ->select('id', 'name', 'username', 'slug', 'avatar', 'bio', 'localisation', 'activity', 'email_verified_at')
+            ->firstOrFail();
+        $annonces = $user->annonces()->with(['images', 'categorie', 'vitrineConfig'])->get();
+        return response()->json(['user' => $user, 'annonces' => $annonces]);
     }
 
-    // ✅ Méthode centralisée pour formater la réponse utilisateur
-    private function formatUserResponse(User $user): array
+    public function user(Request $request)
     {
-        return [
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-            'username' => $user->username,
-            'localisation' => $user->localisation,
-            'bio' => $user->bio,
-            'activity' => $user->activity,
-            // ✅ Construire l'URL complète UNIQUEMENT dans la réponse
-            'avatar' => $user->avatar
-                ? url('storage/' . $user->avatar)
-                : null,
-            'created_at' => $user->created_at,
-        ];
+        return response()->json($request->user());
     }
 
     public function update(Request $request)
     {
         $user = $request->user();
-
-        // Validation
         $validated = $request->validate([
-            'name'         => 'sometimes|string|max:255',
+            'name' => 'sometimes|string|max:255',
+            'username' => 'sometimes|string|max:50|unique:users,username,' . $user->id,
+            'email' => 'sometimes|email|unique:users,email,' . $user->id,
             'localisation' => 'sometimes|nullable|string|max:255',
-            'bio'          => 'sometimes|nullable|string',
-            'activity'     => 'sometimes|nullable|string',
-            'avatar'       => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'activity' => 'sometimes|nullable|string|max:255',
+            'bio' => 'sometimes|nullable|string|max:1000',
+            'avatar' => 'sometimes|image|mimes:jpeg,png,jpg|max:5120',
         ]);
 
-        // ✅ Gestion de l'Avatar avec nom personnalisé
-        if ($request->hasFile('avatar') && $request->file('avatar')->isValid()) {
-
-            // 🗑️ Supprimer l'ancien avatar s'il existe
-            if ($user->avatar && $user->avatar !== '/poulet.jpg') {
-                Storage::disk('public')->delete($user->avatar);
-            }
-
-            // ✅ Créer un nom de fichier personnalisé : username + timestamp + extension
+        if ($request->hasFile('avatar')) {
             $file = $request->file('avatar');
-            $extension = $file->getClientOriginalExtension();
-            $filename = $user->username . '_' . time() . '.' . $extension;
-
-            // Stocker dans le dossier avatars
-            $path = $file->storeAs('avatars', $filename, 'public');
-
-            // ✅ Stocker UNIQUEMENT le chemin relatif en BDD
-            $validated['avatar'] = $path; // Ex: "avatars/johndoe_1708123456.jpg"
-
-            \Log::info('Avatar stocké:', [
-                'path' => $path,
-                'filename' => $filename,
-                'user' => $user->username
-            ]);
+            $path = $file->storeAs('avatars', 'avatar-' . $user->username . '.' . $file->extension(), 'public');
+            $validated['avatar'] = asset('storage/' . $path);
         }
 
-        // Mise à jour de l'utilisateur
-        $user->update($validated);
-        $user->refresh();
+        // Si email change, reset verification
+        if (isset($validated['email']) && $validated['email'] !== $user->email) {
+            $validated['email_verified_at'] = null;
+        }
 
-        return response()->json([
-            'message' => 'Profil mis à jour avec succès',
-            'user' => $this->formatUserResponse($user)
+        $user->update($validated);
+        return response()->json(['message' => 'Profil mis à jour.', 'user' => $user->fresh()]);
+    }
+
+    public function changePassword(Request $request)
+    {
+        $user = $request->user();
+        $validated = $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|min:8',
         ]);
+
+        if (!Hash::check($validated['current_password'], $user->password)) {
+            return response()->json(['message' => 'Mot de passe actuel incorrect'], 403);
+        }
+
+        $user->update(['password' => Hash::make($validated['new_password'])]);
+        return response()->json(['message' => 'Mot de passe modifié']);
+    }
+
+    public function sendVerification(Request $request)
+    {
+        if ($request->user()->hasVerifiedEmail()) {
+            return response()->json(['message' => 'Email déjà vérifié']);
+        }
+        $request->user()->sendEmailVerificationNotification();
+        return response()->json(['message' => 'Email de vérification envoyé']);
+    }
+
+    public function verifyEmail(Request $request, $id, $hash)
+    {
+        // Vérifie la signature
+        if (!$request->hasValidSignature()) {
+            return response()->json(['message' => 'Lien invalide ou expiré'], 403);
+        }
+
+        $user = User::findOrFail($id);
+
+        if (!hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
+            return response()->json(['message' => 'Lien invalide'], 403);
+        }
+
+        if ($user->hasVerifiedEmail()) {
+            return response()->json(['message' => 'Email déjà vérifié']);
+        }
+
+        if ($user->markEmailAsVerified()) {
+            event(new Verified($user));
+        }
+
+        return response()->json(['message' => 'Email vérifié avec succès']);
+    }
+
+    public function deleteAccount(Request $request)
+    {
+        $user = $request->user();
+        $validated = $request->validate(['password' => 'required']);
+
+        if (!Hash::check($validated['password'], $user->password)) {
+            return response()->json(['message' => 'Mot de passe incorrect'], 403);
+        }
+
+        // Delete annonces (cascade deletes images/config/avis via foreign keys)
+        $user->annonces()->delete();
+        $user->delete();
+
+        return response()->json(['message' => 'Compte supprimé']);
     }
 }

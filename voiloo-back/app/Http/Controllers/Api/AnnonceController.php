@@ -5,18 +5,19 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Annonce;
 use App\Models\AnnonceImage;
+use App\Models\User;
+use App\Models\VitrineConfig;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class AnnonceController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Annonce::with(['user:id,name,avatar', 'images'])
-            ->where('status', 'accepted')
+        $query = Annonce::with(['user:id,name,avatar,slug', 'images', 'vitrineConfig'])
             ->latest();
 
-        // Filtre optionnel par slug de catégorie
         if ($request->has('category')) {
             $query->whereHas('categorie', function ($q) use ($request) {
                 $q->where('slug', $request->get('category'));
@@ -28,25 +29,41 @@ class AnnonceController extends Controller
 
     public function store(Request $request)
     {
-        // Validation alignée sur les vrais noms de colonnes (migration)
         $validated = $request->validate([
-            'titre'          => 'required|string|max:100',
-            'description'    => 'required|string|min:20',
-            'prix'           => 'required|numeric|min:0',
-            'categorie_id'   => 'required|exists:categories,id',
-            'ville'          => 'required|string|max:100',
-            'code_postal'    => 'required|string|size:5',
-            'disponibilites' => 'required|string',
-            'lat'            => 'nullable|numeric',
-            'lng'            => 'nullable|numeric',
-            // photos[] est optionnel mais validé si présent
-            'photos'         => 'nullable|array|max:6',
-            'photos.*'       => 'image|mimes:jpeg,png,jpg,webp|max:10240',
+            'titre'              => 'required|string|max:100',
+            'description'        => 'required|string|min:20',
+            'prix'               => 'required|numeric|min:0',
+            'categorie_id'       => 'required|exists:categories,id',
+            'ville'              => 'required|string|max:100',
+            'code_postal'        => 'required|string|size:5',
+            'disponibilites'     => 'required|string',
+            'lat'                => 'nullable|numeric',
+            'lng'                => 'nullable|numeric',
+            'photos'             => 'nullable|array|max:6',
+            'photos.*'           => 'image|mimes:jpeg,png,jpg,webp,heic,heif|max:20480',
+            // Config vitrine initiale
+            'couleur_principale' => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
+            'couleur_texte'      => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
+            'couleur_fond'       => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
         ]);
 
-        // Création de l'annonce liée à l'utilisateur connecté
-        $annonce = $request->user()->annonces()->create([
+        // Slug unique annonce
+        $baseSlug = Str::slug($validated['titre']);
+        $slug = $baseSlug;
+        $i = 1;
+        while (Annonce::where('slug', $slug)->exists()) {
+            $slug = $baseSlug . '-' . $i++;
+        }
+
+        // Slug unique user basé sur username (déjà unique en BDD)
+        $user = $request->user();
+        if (!$user->slug) {
+            $user->update(['slug' => Str::slug($user->username)]);
+        }
+
+        $annonce = $user->annonces()->create([
             'titre'          => $validated['titre'],
+            'slug'           => $slug,
             'description'    => $validated['description'],
             'prix'           => $validated['prix'],
             'categorie_id'   => $validated['categorie_id'],
@@ -58,10 +75,25 @@ class AnnonceController extends Controller
             'status'         => 'waiting',
         ]);
 
-        // Gestion des photos (optionnelles)
+        // Création automatique de la config vitrine
+        VitrineConfig::create([
+            'annonce_id'         => $annonce->id,
+            'user_id'            => $user->id,
+            'couleur_principale' => $validated['couleur_principale'] ?? '#FFD359',
+            'couleur_texte'      => $validated['couleur_texte']      ?? '#1A1A1A',
+            'couleur_fond'       => $validated['couleur_fond']        ?? '#FFFFFF',
+            'template'           => 'default',
+        ]);
+
         if ($request->hasFile('photos')) {
-            foreach ($request->file('photos') as $file) {
-                $path = $file->store('annonces', 'public');
+            foreach ($request->file('photos') as $index => $file) {
+                // Stockage : annonces/{username}/{annonce-slug}/01-annonce-slug.jpg
+                $folder    = 'annonces/' . $user->username . '/' . $slug;
+                $extension = $file->getClientOriginalExtension() ?: $file->extension();
+                $filename  = str_pad($index + 1, 2, '0', STR_PAD_LEFT) . '-' . $slug . '.' . $extension;
+
+                $path = $file->storeAs($folder, $filename, 'public');
+
                 AnnonceImage::create([
                     'annonce_id' => $annonce->id,
                     'path'       => asset('storage/' . $path),
@@ -70,14 +102,32 @@ class AnnonceController extends Controller
         }
 
         return response()->json([
-            'message' => 'Annonce créée avec succès, en attente de validation.',
-            'annonce' => $annonce->load('images'),
+            'message'   => 'Annonce créée, en attente de validation.',
+            'annonce'   => $annonce->load(['images', 'vitrineConfig']),
+            'user_slug' => $user->slug,
         ], 201);
+    }
+
+    // GET /annonces/{userSlug}/{annonceSlug}
+    public function showBySlug(string $userSlug, string $annonceSlug)
+    {
+        $annonce = Annonce::with([
+            'user',
+            'images',
+            'categorie',
+            'avis.user:id,name,avatar',
+            'vitrineConfig',
+        ])
+            ->whereHas('user', fn($q) => $q->where('slug', $userSlug))
+            ->where('slug', $annonceSlug)
+            ->firstOrFail();
+
+        return response()->json($annonce);
     }
 
     public function show($id)
     {
-        $annonce = Annonce::with(['user', 'images', 'categorie'])->findOrFail($id);
+        $annonce = Annonce::with(['user', 'images', 'categorie', 'avis', 'vitrineConfig'])->findOrFail($id);
         return response()->json($annonce);
     }
 
@@ -105,7 +155,7 @@ class AnnonceController extends Controller
 
         return response()->json([
             'message' => 'Annonce mise à jour.',
-            'annonce' => $annonce->load('images'),
+            'annonce' => $annonce->load(['images', 'vitrineConfig']),
         ]);
     }
 
@@ -117,13 +167,12 @@ class AnnonceController extends Controller
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
-        // Suppression des fichiers physiques
         foreach ($annonce->images as $image) {
             $relativePath = str_replace(asset('storage/'), '', $image->path);
             Storage::disk('public')->delete($relativePath);
         }
 
-        $annonce->delete();
+        $annonce->delete(); // cascade supprime aussi vitrineConfig
 
         return response()->json(['message' => 'Annonce supprimée']);
     }
