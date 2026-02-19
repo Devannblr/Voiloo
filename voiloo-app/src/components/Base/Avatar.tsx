@@ -1,10 +1,13 @@
+'use client';
+
 import React from 'react';
 import { User } from 'lucide-react';
+import { StorageImage } from './StorageImage'; // Vérifie que le chemin d'import est correct
 
 type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
 interface AvatarProps {
-    src?: string;
+    src?: string | File | null; // Changé pour accepter File (utile si on prévisualise un changement d'avatar)
     alt?: string;
     name?: string;
     size?: AvatarSize;
@@ -54,20 +57,20 @@ const getColorFromName = (name: string): string => {
 };
 
 export const Avatar = ({
-    src,
-    alt = '',
-    name = '',
-    size = 'md',
-    className = '',
-    status,
-}: AvatarProps) => {
+                           src,
+                           alt = '',
+                           name = '',
+                           size = 'md',
+                           className = '',
+                           status,
+                       }: AvatarProps) => {
     const displayAlt = alt || name || 'Avatar';
 
     return (
-        <div className={`relative inline-flex ${className}`}>
+        <div className={`relative inline-flex flex-shrink-0 ${className}`}>
             {src ? (
-                <img
-                    src={src}
+                <StorageImage
+                    path={src}
                     alt={displayAlt}
                     className={`
                         rounded-full object-cover
@@ -109,11 +112,11 @@ interface AvatarGroupProps {
 }
 
 export const AvatarGroup = ({
-    children,
-    max = 4,
-    size = 'md',
-    className = '',
-}: AvatarGroupProps) => {
+                                children,
+                                max = 4,
+                                size = 'md',
+                                className = '',
+                            }: AvatarGroupProps) => {
     const childArray = React.Children.toArray(children);
     const visibleChildren = childArray.slice(0, max);
     const remainingCount = childArray.length - max;
