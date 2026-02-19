@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardBody, Avatar, H4, P, Button, Input, IconButton, Label, H2, Link } from '@/components/Base';
 import { MapPin, Calendar, Edit2, Check, X, ShoppingBag, MessageCircle, Heart, LayoutDashboard, Upload } from 'lucide-react';
+import { useToast } from '@/components/Layouts/Toastprovider';
 
 interface UserData {
     name: string;
@@ -22,10 +23,15 @@ interface ProfilCardProps {
 
 export const ProfilCard = ({ user, onUpdate }: ProfilCardProps) => {
     const [isEditing, setIsEditing] = useState(false);
+    const { toast } = useToast();
     const [editData, setEditData] = useState({
         name: user.name ?? "",
         localisation: user.localisation ?? ""
     });
+
+    // ✅ Définition de l'URL de stockage pour les avatars
+    const STORAGE_URL = process.env.NEXT_PUBLIC_STORAGE_URL || 'https://voiloo.fr/back/public/storage';
+
     const formatDate = (dateString?: string) => {
         if (!dateString) return "Date inconnue";
         const date = new Date(dateString);
@@ -34,7 +40,8 @@ export const ProfilCard = ({ user, onUpdate }: ProfilCardProps) => {
             year: 'numeric'
         });
     };
-    // ✅ État pour la preview de l'image
+
+    // ✅ État pour la preview locale
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
@@ -43,7 +50,7 @@ export const ProfilCard = ({ user, onUpdate }: ProfilCardProps) => {
             name: user.name ?? "",
             localisation: user.localisation ?? ""
         });
-        // Réinitialiser la preview quand l'user change
+        // Réinitialiser la preview quand l'user est mis à jour depuis le serveur
         setAvatarPreview(null);
     }, [user]);
 
@@ -52,46 +59,57 @@ export const ProfilCard = ({ user, onUpdate }: ProfilCardProps) => {
         setIsEditing(false);
     };
 
-    // ✅ Gestion de l'avatar avec preview
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            // Vérifier le type et la taille
             if (!file.type.startsWith('image/')) {
-                alert('Veuillez sélectionner une image');
+                toast.error('Veuillez sélectionner une image');
                 return;
             }
 
-            if (file.size > 2 * 1024 * 1024) { // 2MB
-                alert('L\'image ne doit pas dépasser 2MB');
+            if (file.size > 2 * 1024 * 1024) {
+                toast.error('L\'image ne doit pas dépasser 2MB');
                 return;
             }
 
-            // ✅ Créer la preview locale
+            // Créer la preview locale immédiate
             const reader = new FileReader();
             reader.onloadend = () => {
                 setAvatarPreview(reader.result as string);
             };
             reader.readAsDataURL(file);
 
-            // ✅ Upload de l'image
             setIsUploadingAvatar(true);
             try {
                 const formData = new FormData();
                 formData.append('avatar', file);
                 await onUpdate(formData);
+                toast.success("Photo de profil mise à jour");
             } catch (error) {
                 console.error('Erreur upload:', error);
-                setAvatarPreview(null); // Annuler la preview en cas d'erreur
+                setAvatarPreview(null);
+                toast.error("Erreur lors de l'envoi de l'image");
             } finally {
                 setIsUploadingAvatar(false);
             }
         }
     };
 
-    // ✅ Annuler la preview
     const cancelPreview = () => {
         setAvatarPreview(null);
+    };
+
+    // ✅ Fonction pour obtenir l'URL finale de l'avatar
+    const getAvatarSrc = () => {
+        if (avatarPreview) return avatarPreview; // Priorité à la preview locale
+        if (!user.avatar) return "/storage/userdefault.png"; // Image par défaut
+
+        // Si l'URL est déjà complète (commence par http), on la garde
+        if (user.avatar.startsWith('http')) return user.avatar;
+
+        // Sinon on concatène avec le storage URL (en nettoyant les slashs en double)
+        const cleanPath = user.avatar.startsWith('/') ? user.avatar.substring(1) : user.avatar;
+        return `${STORAGE_URL}/${cleanPath}`;
     };
 
     return (
@@ -130,40 +148,27 @@ export const ProfilCard = ({ user, onUpdate }: ProfilCardProps) => {
                 </div>
 
                 <div className="grid grid-cols-[auto_1fr] gap-6 md:gap-10 items-start">
-                    {/* ✅ Avatar avec preview et loader */}
                     <div className="relative group shrink-0">
+                        {/* ✅ La key force le composant à se re-déssiner quand l'image change */}
                         <Avatar
-                            src={avatarPreview || user.avatar}
+                            key={getAvatarSrc()}
+                            src={getAvatarSrc()}
                             name={user.name}
                             size="xl"
                         />
 
-                        {/* Loader pendant l'upload */}
                         {isUploadingAvatar && (
                             <div className="absolute inset-0 bg-dark/60 rounded-full flex items-center justify-center">
                                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
                             </div>
                         )}
 
-                        {/* Preview overlay */}
-                        {avatarPreview && !isUploadingAvatar && (
-                            <div className="absolute inset-0 bg-dark/40 rounded-full flex items-center justify-center">
-                                <button
-                                    onClick={cancelPreview}
-                                    className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-                                >
-                                    <X size={14} />
-                                </button>
-                            </div>
-                        )}
-
-                        {/* Bouton de modification */}
                         {isEditing && !isUploadingAvatar && (
                             <label className="absolute inset-0 bg-dark/40 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer border-2 border-dashed border-white/50">
                                 <input
                                     type="file"
                                     className="hidden"
-                                    accept="image/jpeg,image/png,image/jpg,image/gif,image/webp"
+                                    accept="image/*"
                                     onChange={handleFileChange}
                                     disabled={isUploadingAvatar}
                                 />

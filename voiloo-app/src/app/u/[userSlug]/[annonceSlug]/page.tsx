@@ -4,11 +4,8 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { apiService } from '@/services/apiService';
 import { Loader2 } from 'lucide-react';
-
-// Imports des types partagés
 import { Annonce, VitrineConfig } from '@/components/Modules/types';
 
-// Imports des composants
 import OwnerBar from '@/components/Modules/OwnerBar';
 import VitrineHero from '@/components/Modules/VitrineHero';
 import VitrineNav from '@/components/Modules/VitrineNav';
@@ -21,12 +18,10 @@ import VitrineFooter from '@/components/Modules/VitrineFooter';
 
 export default function VitrinePage() {
     const params = useParams();
-    const userSlug = params.userSlug as string;
+    const userSlug = params.userSlug as string; // C'est l'username
     const annonceSlug = params.annonceSlug as string;
 
-    // --- Gestion des URLs ---
-    // On s'assure d'avoir la base sans /api pour les fichiers du dossier storage
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://voiloo.fr/back/public/api';
     const storageBaseUrl = apiUrl.replace(/\/api$/, '');
 
     const [annonce, setAnnonce] = useState<Annonce | null>(null);
@@ -43,17 +38,17 @@ export default function VitrinePage() {
                 setAnnonce(annonceData);
                 setConfig(configData);
 
-                // Vérification si l'utilisateur est le propriétaire
                 const token = localStorage.getItem('voiloo_token');
                 if (token) {
-                    apiService.getUser?.()
+                    apiService.getUser()
                         .then((user: any) => {
+                            // ✅ On vérifie l'id pour être sûr à 100%
                             if (user?.id === annonceData.user_id) setIsOwner(true);
                         })
                         .catch(() => {});
                 }
             })
-            .catch((err) => console.error("Erreur chargement vitrine:", err))
+            .catch((err) => console.error("Erreur vitrine:", err))
             .finally(() => setLoading(false));
     }, [userSlug, annonceSlug]);
 
@@ -64,12 +59,9 @@ export default function VitrinePage() {
     );
 
     if (!annonce || !config) return (
-        <div className="min-h-screen flex items-center justify-center">
-            <p className="text-gray-500">Vitrine introuvable</p>
-        </div>
+        <div className="min-h-screen flex items-center justify-center"><p>Vitrine introuvable</p></div>
     );
 
-    // Extraction des réglages de design
     const primary = config.couleur_principale || '#FFD359';
     const textColor = config.couleur_texte || '#1A1A1A';
     const bgColor = config.couleur_fond || '#FFFFFF';
@@ -80,84 +72,32 @@ export default function VitrinePage() {
         if (el) el.scrollIntoView({ behavior: 'smooth' });
     };
 
-    // Préparation des éléments de navigation
     const navItems = [
         sections.about && { id: 'about', label: 'À propos' },
         sections.parcours && { id: 'parcours', label: 'Parcours' },
-        (sections.services && sections.services.length > 0) && { id: 'services', label: 'Services' },
-        (annonce.images && annonce.images.length > 0) && { id: 'portfolio', label: 'Portfolio' },
+        (sections.services?.length > 0) && { id: 'services', label: 'Services' },
+        (annonce.images?.length > 0) && { id: 'portfolio', label: 'Portfolio' },
         config.show_contact_form && { id: 'contact', label: 'Contact' },
     ].filter(Boolean) as { id: string; label: string }[];
 
     return (
         <main style={{ backgroundColor: bgColor, color: textColor }} className="min-h-screen">
-
-            {isOwner && (
-                <OwnerBar
-                    userSlug={userSlug}
-                    annonceSlug={annonceSlug}
-                    primary={primary}
-                />
-            )}
-
-            <VitrineHero
-                annonce={annonce}
-                config={config}
-                primary={primary}
-                textColor={textColor}
-                bgColor={bgColor}
-                onContactClick={() => scrollTo('contact')}
-            />
-
-            <VitrineNav
-                items={navItems}
-                isOwner={isOwner}
-                primary={primary}
-                textColor={textColor}
-                onSelect={scrollTo}
-            />
+            {isOwner && <OwnerBar userSlug={userSlug} annonceSlug={annonceSlug} primary={primary} />}
+            <VitrineHero annonce={annonce} config={config} primary={primary} textColor={textColor} bgColor={bgColor} onContactClick={() => scrollTo('contact')} />
+            <VitrineNav items={navItems} isOwner={isOwner} primary={primary} textColor={textColor} onSelect={scrollTo} />
 
             <div className="max-w-3xl mx-auto px-6 py-12 space-y-16">
-
-                {sections.about && (
-                    <SectionAbout content={sections.about} primary={primary} />
+                {sections.about && <SectionAbout content={sections.about} primary={primary} />}
+                {sections.parcours && <SectionParcours parcours={sections.parcours} primary={primary} />}
+                {sections.services?.length > 0 && <SectionServices services={sections.services} primary={primary} />}
+                {annonce.images?.length > 0 && (
+                    <SectionPortfolio images={annonce.images.map((img: any) => img.path)} primary={primary} baseUrl={storageBaseUrl} />
                 )}
-
-                {sections.parcours && (
-                    <SectionParcours parcours={sections.parcours} primary={primary} />
-                )}
-
-                {sections.services && sections.services.length > 0 && (
-                    <SectionServices services={sections.services} primary={primary} />
-                )}
-
-                {/* Utilisation des images de l'annonce pour le portfolio */}
-                {annonce.images && annonce.images.length > 0 && (
-                    <SectionPortfolio
-                        images={annonce.images.map((img: any) => img.path)}
-                        primary={primary}
-                        baseUrl={storageBaseUrl}
-                    />
-                )}
-
-                {/* Formulaire de contact réel lié à l'ID de l'annonce */}
                 {config.show_contact_form && (
-                    <SectionContact
-                        primary={primary}
-                        annonceId={annonce.id}
-                        destinataireEmail={annonce.user?.email || 'l\'annonceur'}
-                    />
+                    <SectionContact primary={primary} annonceId={annonce.id} destinataireEmail={annonce.user?.email || 'l\'annonceur'} />
                 )}
-
             </div>
-
-            <VitrineFooter
-                userSlug={userSlug}
-                annonceSlug={annonceSlug}
-                isOwner={isOwner}
-                primary={primary}
-                textColor={textColor}
-            />
+            <VitrineFooter userSlug={userSlug} annonceSlug={annonceSlug} isOwner={isOwner} primary={primary} textColor={textColor} />
         </main>
     );
 }

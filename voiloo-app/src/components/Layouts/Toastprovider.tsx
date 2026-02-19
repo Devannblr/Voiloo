@@ -257,7 +257,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
             {/* Portal-like fixed container */}
             <div
-                className="fixed bottom-5 right-5 z-[9999] flex flex-col gap-2 items-end pointer-events-none"
+                className="fixed top-5 right-5 z-[9999] flex flex-col gap-2 items-end pointer-events-none"
                 aria-live="polite"
             >
                 {toasts.map(t => (
