@@ -7,8 +7,9 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules;
 
 class AuthController extends Controller
 {
@@ -37,6 +38,45 @@ class AuthController extends Controller
         ], 201);
     }
 
+    // ✅ MOT DE PASSE OUBLIÉ : Envoi du lien
+    public function sendResetLinkEmail(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        // On utilise le broker par défaut de Laravel
+        $status = Password::sendResetLink(
+            $request->only('email')
+        );
+
+        return $status === Password::RESET_LINK_SENT
+            ? response()->json(['message' => 'Lien de réinitialisation envoyé par email.'])
+            : response()->json(['message' => 'Impossible d\'envoyer le lien.'], 400);
+    }
+
+    // ✅ MOT DE PASSE OUBLIÉ : Nouveau mot de passe
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email',
+            'password' => ['required', 'min:8', 'confirmed'],
+        ]);
+
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user, $password) {
+                $user->forceFill([
+                    'password' => Hash::make($password),
+                    'remember_token' => Str::random(60),
+                ])->save();
+            }
+        );
+
+        return $status === Password::PASSWORD_RESET
+            ? response()->json(['message' => 'Votre mot de passe a été réinitialisé.'])
+            : response()->json(['message' => 'Lien invalide ou expiré.'], 400);
+    }
+
     public function checkUsername($username)
     {
         $cleanUsername = ltrim($username, '@');
@@ -47,11 +87,9 @@ class AuthController extends Controller
     public function checkEmail(Request $request)
     {
         $email = $request->query('email');
-
         if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return response()->json(['available' => null], 422);
         }
-
         $exists = User::where('email', $email)->exists();
         return response()->json(['available' => !$exists]);
     }
@@ -76,7 +114,7 @@ class AuthController extends Controller
             'user' => $this->formatUserResponse($user)
         ]);
     }
-    // ✅ Méthode centralisée pour formater la réponse utilisateur
+
     private function formatUserResponse(User $user): array
     {
         return [
@@ -87,17 +125,14 @@ class AuthController extends Controller
             'localisation' => $user->localisation,
             'bio' => $user->bio,
             'activity' => $user->activity,
-            // ✅ Construire l'URL complète UNIQUEMENT dans la réponse
-            'avatar' => $user->avatar
-                ? url('storage/' . $user->avatar)
-                : null,
+            'avatar' => $user->avatar ? url('storage/' . $user->avatar) : null,
             'created_at' => $user->created_at,
         ];
     }
+
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Déconnecté avec succès']);
     }
-
 }

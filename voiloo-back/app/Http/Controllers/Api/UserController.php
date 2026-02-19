@@ -40,15 +40,18 @@ class UserController extends Controller
         if ($request->hasFile('avatar')) {
             $file = $request->file('avatar');
             $path = $file->storeAs('avatars', 'avatar-' . $user->username . '.' . $file->extension(), 'public');
-            $validated['avatar'] = asset('storage/' . $path);
+            // ✅ On garde juste le chemin relatif en base
+            $validated['avatar'] = $path;
         }
 
-        // Si email change, reset verification
+        // ✅ LOGIQUE : Si l'email est modifié, on supprime la date de vérification
         if (isset($validated['email']) && $validated['email'] !== $user->email) {
-            $validated['email_verified_at'] = null;
+            $user->email_verified_at = null;
         }
 
-        $user->update($validated);
+        $user->fill($validated);
+        $user->save();
+
         return response()->json(['message' => 'Profil mis à jour.', 'user' => $user->fresh()]);
     }
 
@@ -79,7 +82,6 @@ class UserController extends Controller
 
     public function verifyEmail(Request $request, $id, $hash)
     {
-        // Vérifie la signature
         if (!$request->hasValidSignature()) {
             return response()->json(['message' => 'Lien invalide ou expiré'], 403);
         }
@@ -110,7 +112,6 @@ class UserController extends Controller
             return response()->json(['message' => 'Mot de passe incorrect'], 403);
         }
 
-        // Delete annonces (cascade deletes images/config/avis via foreign keys)
         $user->annonces()->delete();
         $user->delete();
 
