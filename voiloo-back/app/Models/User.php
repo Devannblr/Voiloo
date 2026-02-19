@@ -36,6 +36,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $this->notify(new CustomVerifyEmail);
     }
+
     protected function casts(): array
     {
         return [
@@ -46,15 +47,12 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function getJoinDateAttribute()
     {
-        return $this->created_at->translatedFormat('F Y');
+        return $this->created_at ? $this->created_at->translatedFormat('F Y') : null;
     }
 
-    // ✅ Accesseur optionnel pour toujours avoir l'URL complète
     public function getAvatarUrlAttribute()
     {
-        return $this->avatar
-            ? url('storage/' . $this->avatar)
-            : null;
+        return $this->avatar ? url('storage/' . $this->avatar) : null;
     }
 
     public function annonces()
@@ -79,6 +77,6 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return isset($this->role) && $this->role === 'admin';
     }
 }

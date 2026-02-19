@@ -15,7 +15,8 @@ class AnnonceController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Annonce::with(['user:id,name,avatar,slug', 'images', 'vitrineConfig'])
+        // ✅ CORRECTION : On demande 'username' à la place de 'slug'
+        $query = Annonce::with(['user:id,name,avatar,username', 'images', 'vitrineConfig'])
             ->latest();
 
         if ($request->has('category')) {
@@ -41,13 +42,11 @@ class AnnonceController extends Controller
             'lng'                => 'nullable|numeric',
             'photos'             => 'nullable|array|max:6',
             'photos.*'           => 'image|mimes:jpeg,png,jpg,webp,heic,heif|max:20480',
-            // Config vitrine initiale
             'couleur_principale' => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
             'couleur_texte'      => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
             'couleur_fond'       => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
         ]);
 
-        // Slug unique annonce
         $baseSlug = Str::slug($validated['titre']);
         $slug = $baseSlug;
         $i = 1;
@@ -55,11 +54,8 @@ class AnnonceController extends Controller
             $slug = $baseSlug . '-' . $i++;
         }
 
-        // Slug unique user basé sur username (déjà unique en BDD)
         $user = $request->user();
-        if (!$user->slug) {
-            $user->update(['slug' => Str::slug($user->username)]);
-        }
+        // ✅ CORRECTION : Suppression de la mise à jour automatique du user->slug
 
         $annonce = $user->annonces()->create([
             'titre'          => $validated['titre'],
@@ -75,7 +71,6 @@ class AnnonceController extends Controller
             'status'         => 'waiting',
         ]);
 
-        // Création automatique de la config vitrine
         VitrineConfig::create([
             'annonce_id'         => $annonce->id,
             'user_id'            => $user->id,
@@ -87,7 +82,6 @@ class AnnonceController extends Controller
 
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $index => $file) {
-                // Stockage : annonces/{username}/{annonce-slug}/01-annonce-slug.jpg
                 $folder    = 'annonces/' . $user->username . '/' . $slug;
                 $extension = $file->getClientOriginalExtension() ?: $file->extension();
                 $filename  = str_pad($index + 1, 2, '0', STR_PAD_LEFT) . '-' . $slug . '.' . $extension;
@@ -96,7 +90,7 @@ class AnnonceController extends Controller
 
                 AnnonceImage::create([
                     'annonce_id' => $annonce->id,
-                    'path'       => asset('storage/' . $path),
+                    'path'       => 'storage/' . $path,
                 ]);
             }
         }
@@ -104,21 +98,21 @@ class AnnonceController extends Controller
         return response()->json([
             'message'   => 'Annonce créée, en attente de validation.',
             'annonce'   => $annonce->load(['images', 'vitrineConfig']),
-            'user_slug' => $user->slug,
+            'user_username' => $user->username, // ✅ Changé de user_slug à user_username
         ], 201);
     }
 
-    // GET /annonces/{userSlug}/{annonceSlug}
     public function showBySlug(string $userSlug, string $annonceSlug)
     {
         $annonce = Annonce::with([
             'user',
             'images',
             'categorie',
-            'avis.user:id,name,avatar',
+            'avis.user:id,name,avatar,username', // ✅ Changé slug -> username
             'vitrineConfig',
         ])
-            ->whereHas('user', fn($q) => $q->where('slug', $userSlug))
+            // ✅ CORRECTION : On filtre par username (qui correspond au userSlug de l'URL)
+            ->whereHas('user', fn($q) => $q->where('username', $userSlug))
             ->where('slug', $annonceSlug)
             ->firstOrFail();
 
@@ -142,7 +136,7 @@ class AnnonceController extends Controller
         $validated = $request->validate([
             'titre'          => 'sometimes|string|max:100',
             'description'    => 'sometimes|string|min:20',
-            'prix'           => 'sometimes|numeric|min:0',
+            'prix'               => 'sometimes|numeric|min:0',
             'categorie_id'   => 'sometimes|exists:categories,id',
             'ville'          => 'sometimes|string|max:100',
             'code_postal'    => 'sometimes|string|size:5',
@@ -168,11 +162,11 @@ class AnnonceController extends Controller
         }
 
         foreach ($annonce->images as $image) {
-            $relativePath = str_replace(asset('storage/'), '', $image->path);
+            $relativePath = str_replace(url('storage/'), '', $image->path);
             Storage::disk('public')->delete($relativePath);
         }
 
-        $annonce->delete(); // cascade supprime aussi vitrineConfig
+        $annonce->delete();
 
         return response()->json(['message' => 'Annonce supprimée']);
     }

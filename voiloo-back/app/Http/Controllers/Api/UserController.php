@@ -7,21 +7,33 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Auth\Events\Verified;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
-    public function showBySlug(string $slug)
+    // ✅ On cherche maintenant par username directement
+    public function showBySlug(string $username)
     {
-        $user = User::where('slug', $slug)
-            ->select('id', 'name', 'username', 'slug', 'avatar', 'bio', 'localisation', 'activity', 'email_verified_at')
+        $user = User::where('username', $username)
+            ->select('id', 'name', 'username', 'avatar', 'bio', 'localisation', 'activity', 'email_verified_at')
             ->firstOrFail();
+
+        if ($user->avatar && !str_starts_with($user->avatar, 'http')) {
+            $user->avatar = url('storage/' . $user->avatar);
+        }
+
         $annonces = $user->annonces()->with(['images', 'categorie', 'vitrineConfig'])->get();
         return response()->json(['user' => $user, 'annonces' => $annonces]);
     }
 
     public function user(Request $request)
     {
-        return response()->json($request->user());
+        $user = $request->user();
+        if ($user->avatar && !str_starts_with($user->avatar, 'http')) {
+            $user->avatar = url('storage/' . $user->avatar);
+        }
+        return response()->json($user);
     }
 
     public function update(Request $request)
@@ -29,7 +41,8 @@ class UserController extends Controller
         $user = $request->user();
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
-            'username' => 'sometimes|string|max:50|unique:users,username,' . $user->id,
+            // ✅ alpha_dash garantit : lettres, chiffres, tirets et underscores uniquement
+            'username' => 'sometimes|alpha_dash|max:50|unique:users,username,' . $user->id,
             'email' => 'sometimes|email|unique:users,email,' . $user->id,
             'localisation' => 'sometimes|nullable|string|max:255',
             'activity' => 'sometimes|nullable|string|max:255',
@@ -37,14 +50,21 @@ class UserController extends Controller
             'avatar' => 'sometimes|image|mimes:jpeg,png,jpg|max:5120',
         ]);
 
+        // ✅ GESTION DE L'AVATAR
         if ($request->hasFile('avatar')) {
+            if ($user->avatar) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+
             $file = $request->file('avatar');
-            $path = $file->storeAs('avatars', 'avatar-' . $user->username . '.' . $file->extension(), 'public');
-            // ✅ On garde juste le chemin relatif en base
+            $currentUsername = $validated['username'] ?? $user->username;
+            // On s'assure que le nom de fichier est propre
+            $filename = 'avatar-' . $currentUsername . '-' . time() . '.' . $file->extension();
+
+            $path = $file->storeAs('avatars', $filename, 'public');
             $validated['avatar'] = $path;
         }
 
-        // ✅ LOGIQUE : Si l'email est modifié, on supprime la date de vérification
         if (isset($validated['email']) && $validated['email'] !== $user->email) {
             $user->email_verified_at = null;
         }
@@ -52,7 +72,15 @@ class UserController extends Controller
         $user->fill($validated);
         $user->save();
 
-        return response()->json(['message' => 'Profil mis à jour.', 'user' => $user->fresh()]);
+        $updatedUser = $user->fresh();
+        if ($updatedUser->avatar && !str_starts_with($updatedUser->avatar, 'http')) {
+            $updatedUser->avatar = url('storage/' . $updatedUser->avatar);
+        }
+
+        return response()->json([
+            'message' => 'Profil mis à jour.',
+            'user' => $updatedUser
+        ]);
     }
 
     public function changePassword(Request $request)
