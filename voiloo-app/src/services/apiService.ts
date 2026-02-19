@@ -1,8 +1,34 @@
+// services/apiService.ts
 import { apiFetch } from "@/lib/api";
 
+export interface ServiceCardProvider {
+    name: string;
+    job: string;
+    price: string;
+    city: string;
+    rating: number;
+    nb_avis: number;
+    avatarSrc: string | null;
+    images: string[];
+    isNew?: boolean;
+}
+
 export const apiService = {
+    // --- CATEGORIES ---
     getCategories: () => apiFetch('/categories'),
+
+    // --- UTILISATEURS ---
     getUser: () => apiFetch('/user'),
+
+    // Vérification disponibilité Pseudo
+    checkUsername: (cleanName: string) =>
+        apiFetch(`/check-username/${cleanName}`),
+
+    // ✅ Ajouté : Vérification disponibilité Email
+    checkEmail: (email: string) =>
+        apiFetch(`/check-email?email=${encodeURIComponent(email)}`),
+
+    // --- ANNONCES ---
     getAnnonces: (categorySlug?: string) => {
         const endpoint = categorySlug ? `/annonces?category=${categorySlug}` : '/annonces';
         return apiFetch(endpoint);
@@ -21,7 +47,6 @@ export const apiService = {
         ville: string;
         code_postal: string;
         disponibilites: string;
-        // Couleurs vitrine initiales
         couleur_principale?: string;
         couleur_texte?: string;
         couleur_fond?: string;
@@ -51,11 +76,10 @@ export const apiService = {
         return apiFetch('/annonces', { method: 'POST', body: formData });
     },
 
-    // Récupère la config vitrine d'une annonce (lecture publique)
+    // --- VITRINE / CONFIG ---
     getVitrineConfig: (userSlug: string, annonceSlug: string) =>
         apiFetch(`/annonces/${userSlug}/${annonceSlug}/vitrine`),
 
-    // Met à jour la config vitrine (authentifié, propriétaire)
     updateVitrineConfig: (annonceId: number | string, data: {
         couleur_principale?: string;
         couleur_texte?: string;
@@ -66,6 +90,20 @@ export const apiService = {
         apiFetch(`/vitrine/${annonceId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        }),
+
+    // Demander l'envoi de l'email de récupération
+    forgotPassword: (email: string) =>
+        apiFetch('/forgot-password', {
+            method: 'POST',
+            body: JSON.stringify({ email }),
+        }),
+
+// Envoyer le nouveau mot de passe avec le token reçu par mail
+    resetPassword: (data: any) =>
+        apiFetch('/reset-password', {
+            method: 'POST',
             body: JSON.stringify(data),
         }),
 };

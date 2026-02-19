@@ -3,11 +3,14 @@ import "./globals.css";
 import {Header} from "@/components/Layouts/Header";
 import {HeaderMobile} from "@/components/Layouts/HeaderMobile";
 import {Footer} from "@/components/Layouts/Footer";
+import {ReactNode} from "react";
+import {ToastProvider} from "@/components/Layouts/Toastprovider";
 
 export const metadata: Metadata = {
     title: "Voiloo - Freelances & Services locaux",
     description: "Trouvez des freelances et services près de chez vous. Créez votre mini-site vitrine gratuitement.",
 };
+
 
 export default function RootLayout({
     children,
@@ -18,7 +21,9 @@ export default function RootLayout({
         <html lang="fr">
             <body className="antialiased pb-8 md:pb-0 relative">
             <Header/>
+            <ToastProvider>
                 {children}
+            </ToastProvider>
             <Footer/>
             <HeaderMobile/>
             </body>

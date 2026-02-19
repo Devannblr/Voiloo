@@ -10,13 +10,14 @@ const nextConfig: NextConfig = {
                 port: '8000',
                 pathname: '/storage/**',
             },
-            // Production — remplace par ton vrai domaine
+            // Production Infomaniak
             {
                 protocol: 'https',
-                hostname: 'ton-domaine.com',
-                pathname: '/storage/**',
+                hostname: 'voiloo.fr',
+                // ✅ Correction : On autorise tout ce qui est dans /back/ pour éviter les soucis avec /public/
+                pathname: '/back/**',
             },
-            // Unsplash (utilisé dans la démo)
+            // Unsplash
             {
                 protocol: 'https',
                 hostname: 'images.unsplash.com',
@@ -24,19 +25,19 @@ const nextConfig: NextConfig = {
         ],
     },
     turbopack: {
-      rules: {
-        '*.svg': {
-          loaders: ['@svgr/webpack'],
-          as: '*.js',
+        rules: {
+            '*.svg': {
+                loaders: ['@svgr/webpack'],
+                as: '*.js',
+            },
         },
-      },
     },
     webpack(config) {
-      config.module.rules.push({
-        test: /\.svg$/,
-        use: ['@svgr/webpack'],
-      });
-      return config;
+        config.module.rules.push({
+            test: /\.svg$/,
+            use: ['@svgr/webpack'],
+        });
+        return config;
     },
 };
 

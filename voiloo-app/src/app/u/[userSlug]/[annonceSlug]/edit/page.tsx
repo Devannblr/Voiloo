@@ -14,6 +14,8 @@ import { ServicesEditor } from "@/components/Vitrine/Serviceseditor";
 import { PortfolioEditor } from "@/components/Vitrine/Portfolioeditor";
 import { ContactEditor }  from "@/components/Vitrine/Contacteditor";
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 Mo en octets
+
 export default function VitrineEditPage() {
     const params = useParams();
     const router = useRouter();
@@ -45,11 +47,32 @@ export default function VitrineEditPage() {
                 setLoading(false);
             })
             .catch(() => setLoading(false));
-    }, [userSlug, annonceSlug]);
+    }, [userSlug, annonceSlug, router]);
 
     const hasChanges = JSON.stringify(draft) !== JSON.stringify(config);
 
     const handleSave = async () => {
+        // --- VÉRIFICATION TAILLE DES FICHIERS ---
+        let tooHeavy = false;
+
+        // Vérif Header
+        if (draft.header_photo instanceof File && draft.header_photo.size > MAX_FILE_SIZE) {
+            tooHeavy = true;
+        }
+
+        // Vérif Portfolio
+        if (draft.new_portfolio_files?.length > 0) {
+            draft.new_portfolio_files.forEach((file: File) => {
+                if (file.size > MAX_FILE_SIZE) tooHeavy = true;
+            });
+        }
+
+        if (tooHeavy) {
+            alert("L'un de vos fichiers est trop lourd. La taille maximale autorisée est de 10 Mo.");
+            return;
+        }
+        // ----------------------------------------
+
         setSaving(true);
         try {
             const formData = new FormData();
@@ -59,16 +82,21 @@ export default function VitrineEditPage() {
                 const value = draft[key];
                 if (value === null || value === undefined) return;
 
-                if (key === 'show_contact_form') {
+                if (key === 'header_photo') {
+                    if (value instanceof File) formData.append(key, value);
+                }
+                else if (key === 'show_contact_form') {
                     formData.append(key, value ? '1' : '0');
-                } else if (key === 'sections' || key === 'options') {
-                    // Décoder côté Laravel avec json_decode dans le controller
+                }
+                else if (key === 'new_portfolio_files' && Array.isArray(value)) {
+                    value.forEach((file) => {
+                        if (file instanceof File) formData.append('portfolio_images[]', file);
+                    });
+                }
+                else if (typeof value === 'object' && !(value instanceof File)) {
                     formData.append(key, JSON.stringify(value));
-                } else if (value instanceof File) {
-                    formData.append(key, value);
-                } else if (typeof value === 'object') {
-                    formData.append(key, JSON.stringify(value));
-                } else {
+                }
+                else {
                     formData.append(key, value);
                 }
             });
@@ -85,15 +113,28 @@ export default function VitrineEditPage() {
             const data = await response.json();
 
             if (!response.ok) {
-                console.error('Erreurs de validation Laravel:', data.errors);
-                throw new Error('Erreur de validation');
+                console.error('Erreurs:', data.errors);
+                throw new Error(data.message || 'Erreur de validation');
             }
 
-            setConfig(draft);
+            const freshConfig = data.config;
+            const cleanedDraft = {
+                ...freshConfig,
+                new_portfolio_files: []
+            };
+
+            setConfig(freshConfig);
+            setDraft(cleanedDraft);
+
+            if (data.annonce) {
+                setAnnonce(data.annonce);
+            }
+
             setSaved(true);
             setTimeout(() => setSaved(false), 2000);
-        } catch (e) {
+        } catch (e: any) {
             console.error('Erreur sauvegarde:', e);
+            alert(e.message);
         } finally {
             setSaving(false);
         }
@@ -113,12 +154,10 @@ export default function VitrineEditPage() {
 
     return (
         <main className="min-h-screen bg-gray-50">
-            {/* Top bar sticky */}
             <div className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
                 <Container>
                     <div className="flex items-center justify-between py-4">
                         <div className="flex items-center gap-4">
-                            {/* ← Retour vers la vitrine publique */}
                             <Link href={`/u/${userSlug}/${annonceSlug}`}
                                   className="flex items-center gap-2 text-sm text-gray-500 hover:text-dark transition-colors">
                                 <ArrowLeft size={16} />

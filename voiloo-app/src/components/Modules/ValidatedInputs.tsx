@@ -64,7 +64,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, ValidatedInputProps>((
         { label: "8+ car.", met: val.length >= 8 },
         { label: "Maj.", met: /[A-Z]/.test(val) },
         { label: "Chiffre", met: /\d/.test(val) },
-        { label: "Symbole", met: /[!@#$%^&*(),.?":{}|<>]/.test(val) },
+        { label: "Symbole", met: /[!@#$%^&*(),.?":{}|<>_-]/.test(val) },
     ];
 
     // Calcul du nombre de critères remplis

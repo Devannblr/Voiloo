@@ -75,6 +75,7 @@ export const Footer = () => {
                 <div className="md:hidden flex flex-col items-center gap-8 mb-8 text-center">
                     <Logo voilColor="var(--color-white)" ooColor="var(--color-primary)"  href={"/"}/>
                     <div className={colBase}>
+                        <Link href="/" className={linkStyle}>Accueil</Link>
                         <Link href="/faq" className={linkStyle}>FAQ</Link>
                         <Link href="/contact" className={linkStyle}>Contact</Link>
                         <Link href="/mentions-legales" className={linkStyle}>Légal</Link>
@@ -88,7 +89,7 @@ export const Footer = () => {
                     </Small>
                     <div className="flex gap-4 items-center">
                         <Mail size={14} className="text-white/30" />
-                        <Small className="text-white/30 text-[10px]">hello@voiloo.fr</Small>
+                        <Small className="text-white/30 text-[10px]">contact@voiloo.fr</Small>
                     </div>
                 </div>
             </Container>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useApi } from '@/hooks/useApi';
 import { Button, Input, P } from '@/components/Base';
 import { PasswordInput } from "@/components/Modules";
+import { apiService } from "@/services/apiService"; // ✅ On utilise le service centralisé
 
 export default function SignupForm() {
     const { request, isLoading, error } = useApi();
@@ -29,8 +30,8 @@ export default function SignupForm() {
             }
             setIsChecking(prev => ({ ...prev, user: true }));
             try {
-                const res = await fetch(`http://localhost:8000/api/check-username/${cleanName}`);
-                const data = await res.json();
+                // ✅ Utilise apiService pour pointer sur voiloo.fr ou localhost selon l'env
+                const data = await apiService.checkUsername(cleanName);
                 setIsUserAvailable(data.available);
             } catch (e) {
                 console.error("Erreur check username");
@@ -51,8 +52,8 @@ export default function SignupForm() {
             }
             setIsChecking(prev => ({ ...prev, email: true }));
             try {
-                const res = await fetch(`http://localhost:8000/api/check-email?email=${encodeURIComponent(formData.email)}`);
-                const data = await res.json();
+                // ✅ Plus de localhost ici ! On utilise apiService
+                const data = await apiService.checkEmail(formData.email);
                 setIsEmailAvailable(data.available);
             } catch (e) {
                 console.error("Erreur check email");
@@ -68,22 +69,20 @@ export default function SignupForm() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // 1. Bloquer si les vérifications sont en cours
         if (isChecking.user || isChecking.email) return;
 
-        // 2. Bloquer si les dispos sont fausses OU nulles (pas encore vérifiées)
         if (isUserAvailable !== true || isEmailAvailable !== true) {
             alert("Veuillez vérifier vos identifiants et email.");
             return;
         }
 
-        // 3. Bloquer si les mots de passe ne correspondent pas
         if (formData.password !== passwordConfirm) {
             alert("Les mots de passe ne correspondent pas.");
             return;
         }
 
         try {
+            // ✅ Ici on appelle bien /register via le hook request pour gérer le loading
             const data = await request('/register', {
                 method: 'POST',
                 body: JSON.stringify(formData),
@@ -98,7 +97,6 @@ export default function SignupForm() {
         }
     };
 
-    // Variable pour désactiver le bouton proprement
     const isInvalid =
         !formData.name ||
         isUserAvailable !== true ||
@@ -160,7 +158,7 @@ export default function SignupForm() {
             <div className="space-y-4">
                 <PasswordInput
                     label="Mot de passe"
-                    placeholder="••••••••"
+                    placeholder="Mot de passe"
                     value={formData.password}
                     onChange={(e) => setFormData({...formData, password: e.target.value})}
                     required
@@ -170,7 +168,7 @@ export default function SignupForm() {
                 <Input
                     label="Confirmer Mot de passe"
                     type="password"
-                    placeholder="••••••••"
+                    placeholder="Mot de passe"
                     value={passwordConfirm}
                     onChange={(e) => setPasswordConfirm(e.target.value)}
                     error={
@@ -184,7 +182,7 @@ export default function SignupForm() {
 
             <Button
                 type="submit"
-                className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 disabled:opacity-50 disabled:cursor-not-ALLOWED"
+                className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isLoading || isInvalid}
             >
                 {isLoading ? 'Création...' : 'Créer mon compte'}

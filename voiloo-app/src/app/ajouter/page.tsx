@@ -167,7 +167,7 @@ export default function AjouterAnnoncePage() {
         setLoading(true);
         try {
             const result = await apiService.createAnnonce({ ...form });
-            router.push(`/${result.user_slug}/${result.annonce.slug}`);
+            router.push(`/u/${result.user_slug}/${result.annonce.slug}`);
         } catch (err) {
             console.error('Erreur création annonce:', err);
             setLoading(false);

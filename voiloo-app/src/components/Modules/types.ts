@@ -18,10 +18,17 @@ export interface VitrineConfig {
 }
 
 export interface Annonce {
+    id: number;
+    user?: {
+        id: number;
+        email: string;
+        username?: string;
+    };
     titre: string;
     ville: string;
     code_postal: string;
     prix: number;
     user_id: number;
     categorie?: { nom: string };
+    images?: { id: number; path: string }[];
 }
