@@ -14,9 +14,21 @@ export interface VitrineConfig {
         parcours?: ParcoursItem[] | string;
         services?: ServiceItem[];
         portfolio?: string[];
+        portfolio_note?: string;
     };
 }
-
+export interface Avis {
+    id: number;
+    note: number;
+    commentaire: string;
+    auteur_id: number;
+    created_at: string;
+    user?: {
+        name: string;
+        username: string;
+        avatar?: string;
+    };
+}
 export interface Annonce {
     id: number;
     user?: {
@@ -31,4 +43,5 @@ export interface Annonce {
     user_id: number;
     categorie?: { nom: string };
     images?: { id: number; path: string }[];
+    avis?: Avis[];
 }

@@ -3,13 +3,13 @@
 import { Card, CardBody, H3, P } from '@/components/Base';
 import { Image as ImageIcon, Plus, X } from 'lucide-react';
 import { useRef } from 'react';
+import { StorageImage } from '@/components/Base/StorageImage'; // Vérifie le chemin d'import
 
 export function PortfolioEditor({ draft, setDraft, annonce }: any) {
     const sections = draft.sections || {};
     const portfolioNote = sections.portfolio_note || '';
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // 1. Gestion de la note textuelle
     const handleNoteChange = (value: string) => {
         setDraft((d: any) => ({
             ...d,
@@ -17,19 +17,16 @@ export function PortfolioEditor({ draft, setDraft, annonce }: any) {
         }));
     };
 
-    // 2. Gestion de l'ajout de fichiers
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             const files = Array.from(e.target.files);
             setDraft((d: any) => ({
                 ...d,
-                // On stocke les fichiers File dans une clé temporaire pour handleSave
                 new_portfolio_files: [...(d.new_portfolio_files || []), ...files]
             }));
         }
     };
 
-    // 3. Suppression d'un nouveau fichier (avant sauvegarde)
     const removeNewFile = (index: number) => {
         setDraft((d: any) => ({
             ...d,
@@ -37,7 +34,17 @@ export function PortfolioEditor({ draft, setDraft, annonce }: any) {
         }));
     };
 
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const removeExistingImage = (imageId: number) => {
+        setDraft((d: any) => ({
+            ...d,
+            portfolio_images_to_delete: [...(d.portfolio_images_to_delete || []), imageId]
+        }));
+    };
+
+    // Images déjà en BDD non marquées pour suppression
+    const visibleExistingImages = annonce.images?.filter(
+        (img: any) => !(draft.portfolio_images_to_delete || []).includes(img.id)
+    );
 
     return (
         <Card variant="elevated">
@@ -53,33 +60,40 @@ export function PortfolioEditor({ draft, setDraft, annonce }: any) {
                 </P>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                    {/* --- 1. Images déjà enregistrées sur le serveur --- */}
-                    {annonce.images?.map((img: any) => (
+                    {/* --- 1. Images existantes --- */}
+                    {visibleExistingImages?.map((img: any) => (
                         <div key={img.id} className="group relative aspect-square rounded-xl overflow-hidden bg-gray-100 border-2 border-transparent">
-                            <img
-                                src={img.path.startsWith('http') ? img.path : `${baseUrl}/storage/${img.path}`}
+                            <StorageImage
+                                path={img.path}
                                 alt=""
                                 className="w-full h-full object-cover"
                             />
-                            {/* Optionnel: Ajouter un bouton delete ici pour appeler une API de suppression */}
+                            <button
+                                type="button"
+                                onClick={() => removeExistingImage(img.id)}
+                                className="absolute top-2 right-2 bg-black/60 hover:bg-red-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-all shadow-lg"
+                            >
+                                <X size={14} />
+                            </button>
                         </div>
                     ))}
 
-                    {/* --- 2. Aperçu des nouvelles images (pas encore sauvées) --- */}
+                    {/* --- 2. Nouvelles images (Files) --- */}
                     {draft.new_portfolio_files?.map((file: File, i: number) => (
                         <div key={i} className="relative aspect-square rounded-xl overflow-hidden border-2 border-primary ring-2 ring-primary/20">
-                            <img
-                                src={URL.createObjectURL(file)}
+                            <StorageImage
+                                path={file}
                                 alt="Preview"
                                 className="w-full h-full object-cover"
                             />
                             <button
+                                type="button"
                                 onClick={() => removeNewFile(i)}
                                 className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 shadow-lg hover:bg-red-600 transition-colors"
                             >
                                 <X size={14} />
                             </button>
-                            <div className="absolute bottom-0 left-0 right-0 bg-primary text-[10px] text-center font-bold py-0.5">
+                            <div className="absolute bottom-0 left-0 right-0 bg-primary text-[10px] text-center font-bold py-0.5 text-white">
                                 À SAUVER
                             </div>
                         </div>
@@ -87,6 +101,7 @@ export function PortfolioEditor({ draft, setDraft, annonce }: any) {
 
                     {/* --- 3. Bouton d'ajout --- */}
                     <button
+                        type="button"
                         onClick={() => fileInputRef.current?.click()}
                         className="aspect-square rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center gap-2 hover:border-primary hover:bg-primary/5 hover:text-primary transition-all text-gray-400"
                     >

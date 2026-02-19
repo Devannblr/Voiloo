@@ -9,6 +9,7 @@ interface BadgeProps {
     variant?: BadgeVariant;
     size?: BadgeSize;
     className?: string;
+    style?: React.CSSProperties; // ✅ Ajouté à l'interface
     removable?: boolean;
     onRemove?: () => void;
 }
@@ -29,15 +30,17 @@ const sizeStyles: Record<BadgeSize, string> = {
 };
 
 export const Badge = ({
-    children,
-    variant = 'default',
-    size = 'md',
-    className = '',
-    removable = false,
-    onRemove,
-}: BadgeProps) => {
+                          children,
+                          variant = 'default',
+                          size = 'md',
+                          className = '',
+                          style, // ✅ Déstructuré ici
+                          removable = false,
+                          onRemove,
+                      }: BadgeProps) => {
     return (
         <span
+            style={style} // ✅ Appliqué ici
             className={`
                 inline-flex items-center gap-1 font-medium rounded-full
                 ${variantStyles[variant]}

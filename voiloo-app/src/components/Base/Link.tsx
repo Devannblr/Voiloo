@@ -10,6 +10,7 @@ interface LinkProps {
     variant?: LinkVariant;
     external?: boolean;
     className?: string;
+    style?: React.CSSProperties; // ✅ Ajout de style à l'interface
     leftIcon?: React.ReactNode;
     rightIcon?: React.ReactNode;
     underline?: 'always' | 'hover' | 'none';
@@ -29,15 +30,16 @@ const underlineStyles = {
 };
 
 export const Link = ({
-    href,
-    children,
-    variant = 'default',
-    external = false,
-    className = '',
-    leftIcon,
-    rightIcon,
-    underline = 'hover',
-}: LinkProps) => {
+                         href,
+                         children,
+                         variant = 'default',
+                         external = false,
+                         className = '',
+                         style, // ✅ Déstructuration du style
+                         leftIcon,
+                         rightIcon,
+                         underline = 'hover',
+                     }: LinkProps) => {
     const baseStyles = `
         inline-flex items-center gap-1 transition-colors duration-200
         ${variantStyles[variant]}
@@ -50,6 +52,7 @@ export const Link = ({
             <a
                 href={href}
                 className={baseStyles}
+                style={style} // ✅ Application du style
                 target="_blank"
                 rel="noopener noreferrer"
             >
@@ -60,15 +63,19 @@ export const Link = ({
     }
 
     return (
-        <NextLink href={href} className={baseStyles}>
+        <NextLink
+            href={href}
+            className={baseStyles}
+            style={style} // ✅ Application du style sur NextLink
+        >
             {leftIcon && (
-                <div>
+                <div className="flex-shrink-0">
                     {leftIcon}
                 </div>
             )}
             {children}
             {rightIcon && (
-                <div>
+                <div className="flex-shrink-0">
                     {rightIcon}
                 </div>
             )}

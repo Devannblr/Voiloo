@@ -3,18 +3,21 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { apiService } from '@/services/apiService';
-import { Container, Button, H2, P, Badge } from '@/components/Base';
-import { Save, Eye, ArrowLeft, Loader2, Check } from 'lucide-react';
+import { Container, Button, P, Badge } from '@/components/Base';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { HeaderEditor }   from "@/components/Vitrine/Headereditor";
-import { SocialsEditor }  from "@/components/Vitrine/Socialseditor";
-import { AboutEditor }    from "@/components/Vitrine/Abouteditor";
-import { ParcoursEditor } from "@/components/Vitrine/Parcoureditor";
-import { ServicesEditor } from "@/components/Vitrine/Serviceseditor";
-import { PortfolioEditor } from "@/components/Vitrine/Portfolioeditor";
-import { ContactEditor }  from "@/components/Vitrine/Contacteditor";
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 Mo en octets
+// Imports des éditeurs
+import { HeaderEditor }    from "@/components/Vitrine/Headereditor";
+import { ColorsEditor }    from "@/components/Vitrine/ColorsEditor"; // <-- NOUVEAU
+import { SocialsEditor }   from "@/components/Vitrine/Socialseditor";
+import { AboutEditor }     from "@/components/Vitrine/Abouteditor";
+import { ParcoursEditor }  from "@/components/Vitrine/Parcoureditor";
+import { ServicesEditor }  from "@/components/Vitrine/Serviceseditor";
+import { PortfolioEditor } from "@/components/Vitrine/Portfolioeditor";
+import { ContactEditor }   from "@/components/Vitrine/Contacteditor";
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 Mo
 
 export default function VitrineEditPage() {
     const params = useParams();
@@ -43,98 +46,88 @@ export default function VitrineEditPage() {
             .then(([annonceData, configData]) => {
                 setAnnonce(annonceData);
                 setConfig(configData);
-                setDraft(configData);
+                setDraft({
+                    ...configData,
+                    new_portfolio_files: [],
+                    portfolio_images_to_delete: [],
+                    delete_header_photo: false
+                });
                 setLoading(false);
             })
-            .catch(() => setLoading(false));
+            .catch((err) => {
+                console.error("Erreur chargement vitrine:", err);
+                setLoading(false);
+            });
     }, [userSlug, annonceSlug, router]);
 
-    const hasChanges = JSON.stringify(draft) !== JSON.stringify(config);
+    const hasChanges = JSON.stringify(draft) !== JSON.stringify({
+        ...config,
+        new_portfolio_files: [],
+        portfolio_images_to_delete: [],
+        delete_header_photo: false
+    });
 
     const handleSave = async () => {
-        // --- VÉRIFICATION TAILLE DES FICHIERS ---
-        let tooHeavy = false;
-
-        // Vérif Header
-        if (draft.header_photo instanceof File && draft.header_photo.size > MAX_FILE_SIZE) {
-            tooHeavy = true;
-        }
-
-        // Vérif Portfolio
-        if (draft.new_portfolio_files?.length > 0) {
-            draft.new_portfolio_files.forEach((file: File) => {
-                if (file.size > MAX_FILE_SIZE) tooHeavy = true;
-            });
-        }
-
-        if (tooHeavy) {
-            alert("L'un de vos fichiers est trop lourd. La taille maximale autorisée est de 10 Mo.");
-            return;
-        }
-        // ----------------------------------------
-
         setSaving(true);
         try {
             const formData = new FormData();
             formData.append('_method', 'PUT');
 
+            const plainStringKeys = [
+                'couleur_principale', 'couleur_texte', 'couleur_fond',
+                'slogan', 'template', 'instagram', 'linkedin',
+                'facebook', 'twitter', 'site_web'
+            ];
+
             Object.keys(draft).forEach(key => {
+                if (key === 'new_portfolio_files') return;
                 const value = draft[key];
-                if (value === null || value === undefined) return;
 
                 if (key === 'header_photo') {
                     if (value instanceof File) formData.append(key, value);
                 }
+                else if (key === 'delete_header_photo') {
+                    formData.append(key, value ? '1' : '0');
+                }
+                else if (key === 'portfolio_images_to_delete') {
+                    formData.append(key, JSON.stringify(value || []));
+                }
                 else if (key === 'show_contact_form') {
                     formData.append(key, value ? '1' : '0');
                 }
-                else if (key === 'new_portfolio_files' && Array.isArray(value)) {
-                    value.forEach((file) => {
-                        if (file instanceof File) formData.append('portfolio_images[]', file);
-                    });
+                else if (plainStringKeys.includes(key)) {
+                    formData.append(key, value || '');
                 }
-                else if (typeof value === 'object' && !(value instanceof File)) {
+                else if (typeof value === 'object' && value !== null && !(value instanceof File)) {
                     formData.append(key, JSON.stringify(value));
                 }
-                else {
+                else if (value !== null && value !== undefined) {
                     formData.append(key, value);
                 }
             });
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/vitrine/${annonce.id}`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('voiloo_token')}`,
-                    'Accept': 'application/json',
-                },
-                body: formData,
+            if (draft.new_portfolio_files?.length > 0) {
+                draft.new_portfolio_files.forEach((file: File) => {
+                    formData.append('portfolio_images[]', file);
+                });
+            }
+
+            const data = await apiService.updateVitrineConfig(annonce.id, formData);
+
+            setConfig(data.config);
+            setDraft({
+                ...data.config,
+                new_portfolio_files: [],
+                portfolio_images_to_delete: [],
+                delete_header_photo: false
             });
 
-            const data = await response.json();
-
-            if (!response.ok) {
-                console.error('Erreurs:', data.errors);
-                throw new Error(data.message || 'Erreur de validation');
-            }
-
-            const freshConfig = data.config;
-            const cleanedDraft = {
-                ...freshConfig,
-                new_portfolio_files: []
-            };
-
-            setConfig(freshConfig);
-            setDraft(cleanedDraft);
-
-            if (data.annonce) {
-                setAnnonce(data.annonce);
-            }
-
+            if (data.annonce) setAnnonce(data.annonce);
             setSaved(true);
             setTimeout(() => setSaved(false), 2000);
         } catch (e: any) {
             console.error('Erreur sauvegarde:', e);
-            alert(e.message);
+            alert("Erreur lors de la sauvegarde.");
         } finally {
             setSaving(false);
         }
@@ -146,50 +139,24 @@ export default function VitrineEditPage() {
         </div>
     );
 
-    if (!annonce || !config) return (
-        <div className="min-h-screen flex items-center justify-center">
-            <P>Erreur de chargement</P>
-        </div>
-    );
-
     return (
         <main className="min-h-screen bg-gray-50">
             <div className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
                 <Container>
                     <div className="flex items-center justify-between py-4">
                         <div className="flex items-center gap-4">
-                            <Link href={`/u/${userSlug}/${annonceSlug}`}
-                                  className="flex items-center gap-2 text-sm text-gray-500 hover:text-dark transition-colors">
-                                <ArrowLeft size={16} />
-                                Retour à la vitrine
+                            <Link href={`/u/${userSlug}/${annonceSlug}`} className="flex items-center gap-2 text-sm text-gray-500 hover:text-dark transition-colors">
+                                <ArrowLeft size={16} /> Retour
                             </Link>
                             <div className="h-6 w-px bg-gray-200" />
                             <div>
-                                <P className="text-sm font-bold text-dark">{annonce.titre}</P>
+                                <P className="text-sm font-bold text-dark">{annonce?.titre}</P>
                                 <P className="text-xs text-gray-400">Édition de la vitrine</P>
                             </div>
                         </div>
-
                         <div className="flex items-center gap-3">
-                            {hasChanges && (
-                                <Badge variant="warning" size="sm">Non sauvegardé</Badge>
-                            )}
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                leftIcon={<Eye size={16} />}
-                                onClick={() => window.open(`/u/${userSlug}/${annonceSlug}`, '_blank')}
-                            >
-                                Prévisualiser
-                            </Button>
-                            <Button
-                                variant="primary"
-                                size="sm"
-                                leftIcon={saved ? <Check size={16} /> : <Save size={16} />}
-                                onClick={handleSave}
-                                disabled={!hasChanges || saving}
-                                isLoading={saving}
-                            >
+                            {hasChanges && <Badge variant="warning" size="sm">Modifié</Badge>}
+                            <Button variant="primary" size="sm" onClick={handleSave} disabled={!hasChanges || saving} isLoading={saving}>
                                 {saved ? 'Sauvegardé !' : 'Sauvegarder'}
                             </Button>
                         </div>
@@ -197,38 +164,16 @@ export default function VitrineEditPage() {
                 </Container>
             </div>
 
-            <Container>
-                <div className="py-12 max-w-4xl mx-auto space-y-8">
-                    <div className="text-center mb-12">
-                        <Badge variant="primary" className="mb-3">Personnalisation</Badge>
-                        <H2 className="text-3xl font-black italic text-dark mb-2">
-                            Construisez votre vitrine
-                        </H2>
-                        <P className="text-gray-500">
-                            Chaque modification est sauvegardée en un clic. Prévisualisez en temps réel.
-                        </P>
-                    </div>
-
-                    <HeaderEditor   draft={draft} setDraft={setDraft} />
-                    <SocialsEditor  draft={draft} setDraft={setDraft} />
-                    <AboutEditor    draft={draft} setDraft={setDraft} />
-                    <ParcoursEditor draft={draft} setDraft={setDraft} />
-                    <ServicesEditor draft={draft} setDraft={setDraft} />
-                    <PortfolioEditor draft={draft} setDraft={setDraft} annonce={annonce} />
-                    <ContactEditor  draft={draft} setDraft={setDraft} />
-
-                    <div className="flex justify-center pt-8 border-t border-gray-200">
-                        <Button
-                            variant="primary"
-                            onClick={handleSave}
-                            disabled={!hasChanges || saving}
-                            isLoading={saving}
-                            className="px-12"
-                        >
-                            {saved ? 'Sauvegardé !' : 'Sauvegarder les modifications'}
-                        </Button>
-                    </div>
-                </div>
+            <Container className="py-12 max-w-4xl mx-auto space-y-8">
+                {/* Ordre des sections d'édition */}
+                <HeaderEditor    draft={draft} setDraft={setDraft} />
+                <ColorsEditor    draft={draft} setDraft={setDraft} /> {/* <-- On l'ajoute ici */}
+                <AboutEditor     draft={draft} setDraft={setDraft} />
+                <ServicesEditor  draft={draft} setDraft={setDraft} />
+                <ParcoursEditor  draft={draft} setDraft={setDraft} />
+                <SocialsEditor   draft={draft} setDraft={setDraft} />
+                <PortfolioEditor draft={draft} setDraft={setDraft} annonce={annonce} />
+                <ContactEditor   draft={draft} setDraft={setDraft} />
             </Container>
         </main>
     );

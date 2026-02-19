@@ -24,7 +24,7 @@ export const apiService = {
     checkUsername: (cleanName: string) =>
         apiFetch(`/check-username/${cleanName}`),
 
-    // ✅ Ajouté : Vérification disponibilité Email
+    // ✅ Vérification disponibilité Email
     checkEmail: (email: string) =>
         apiFetch(`/check-email?email=${encodeURIComponent(email)}`),
 
@@ -80,27 +80,46 @@ export const apiService = {
     getVitrineConfig: (userSlug: string, annonceSlug: string) =>
         apiFetch(`/annonces/${userSlug}/${annonceSlug}/vitrine`),
 
-    updateVitrineConfig: (annonceId: number | string, data: {
-        couleur_principale?: string;
-        couleur_texte?: string;
-        couleur_fond?: string;
-        template?: 'default' | 'minimal' | 'bold' | 'elegant';
-        options?: Record<string, unknown>;
-    }) =>
-        apiFetch(`/vitrine/${annonceId}`, {
+    /**
+     * Mise à jour de la vitrine
+     * Supporte à la fois un objet JSON ou un FormData (pour les images)
+     */
+    updateVitrineConfig: (annonceId: number | string, data: any) => {
+        // Si c'est un FormData (cas de ton éditeur actuel avec photos)
+        if (data instanceof FormData) {
+            // Laravel nécessite souvent _method=PUT pour traiter les fichiers en multipart
+            if (!data.has('_method')) {
+                data.append('_method', 'PUT');
+            }
+            return apiFetch(`/vitrine/${annonceId}`, {
+                method: 'POST', // Utilisation de POST + _method PUT pour les fichiers
+                body: data,
+                // On ne définit pas le Content-Type ici, le navigateur le fera avec le boundary
+            });
+        }
+
+        // Si c'est un objet JSON simple
+        return apiFetch(`/vitrine/${annonceId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
-        }),
+        });
+    },
 
-    // Demander l'envoi de l'email de récupération
+    updateAnnonce: (id: number | string, data: any) => {
+        return apiFetch(`/annonces/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+    },
+    // --- AUTH / MOT DE PASSE ---
     forgotPassword: (email: string) =>
         apiFetch('/forgot-password', {
             method: 'POST',
             body: JSON.stringify({ email }),
         }),
 
-// Envoyer le nouveau mot de passe avec le token reçu par mail
     resetPassword: (data: any) =>
         apiFetch('/reset-password', {
             method: 'POST',

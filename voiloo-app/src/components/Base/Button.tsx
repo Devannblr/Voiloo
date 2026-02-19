@@ -19,6 +19,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantStyles: Record<ButtonVariant, string> = {
+    // Suppression de bg-primary ici pour permettre l'override si besoin
     primary: 'bg-primary text-dark hover:bg-primary-dark active:bg-primary-dark',
     secondary: 'bg-dark text-white hover:bg-gray active:bg-gray',
     outline: 'bg-transparent border-2 border-primary text-primary hover:bg-primary hover:text-dark',
@@ -41,24 +42,29 @@ export const Button = ({
                            leftIcon,
                            rightIcon,
                            disabled,
-                           href, // On enlève le par défaut "" pour tester s'il existe vraiment
+                           href,
                            className = '',
                            ...props
                        }: ButtonProps) => {
 
-    // On centralise les classes pour ne pas les répéter
+    // ✅ LOGIQUE : Si le className contient "bg-", on n'applique pas le style de background par défaut du variant
+    const hasCustomBg = className.includes('bg-');
+    const baseVariantStyle = variantStyles[variant];
+    const finalVariantStyle = hasCustomBg
+        ? baseVariantStyle.replace(/bg-\S+/g, '') // On enlève le bg-primary par défaut
+        : baseVariantStyle;
+
     const combinedClasses = `
         inline-flex items-center justify-center font-semibold rounded-lg
         transition-all duration-200 ease-out
         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2
         disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none
-        ${variantStyles[variant]}
+        ${finalVariantStyle}
         ${sizeStyles[size]}
         ${fullWidth ? 'w-full' : ''}
         ${className}
-    `;
+    `.trim();
 
-    // Le contenu du bouton (Icônes + Texte)
     const content = (
         <>
             {isLoading ? (
@@ -73,7 +79,6 @@ export const Button = ({
         </>
     );
 
-    // SI HREF EST PRÉSENT : On rend un Link stylé
     if (href) {
         return (
             <Link href={href} className={combinedClasses}>
@@ -82,7 +87,6 @@ export const Button = ({
         );
     }
 
-    // SINON : On rend le bouton standard
     return (
         <button
             className={combinedClasses}

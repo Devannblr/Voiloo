@@ -10,7 +10,7 @@ export default function EditerAnnoncePage() {
     const router = useRouter();
     const params = useParams();
     const userSlug = params.userSlug as string;
-    const annonceSlug = params.annonceSlug as string;
+    const initialAnnonceSlug = params.annonceSlug as string;
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -30,7 +30,7 @@ export default function EditerAnnoncePage() {
     useEffect(() => {
         Promise.all([
             apiService.getCategories(),
-            apiService.getAnnonceBySlug(userSlug, annonceSlug)
+            apiService.getAnnonceBySlug(userSlug, initialAnnonceSlug)
         ]).then(([cats, annonce]) => {
             setCategories(cats);
             setForm({
@@ -48,15 +48,27 @@ export default function EditerAnnoncePage() {
             console.error(err);
             router.push('/');
         });
-    }, [userSlug, annonceSlug]);
+    }, [userSlug, initialAnnonceSlug, router]);
 
     const handleSave = async () => {
         setSaving(true);
         try {
-            await apiService.updateAnnonce(form.id, form);
-            router.push(`/u/${userSlug}/${annonceSlug}`);
-        } catch (err) {
-            alert("Erreur lors de la modification");
+            // ✅ On récupère la réponse du serveur
+            const response = await apiService.updateAnnonce(form.id, form);
+
+            // ✅ On utilise le nouveau slug s'il a changé, sinon l'ancien
+            const nextSlug = response.new_slug || initialAnnonceSlug;
+
+            alert("Modification réussie !");
+
+            // ✅ On redirige vers la nouvelle URL
+            router.push(`/u/${userSlug}/${nextSlug}`);
+            router.refresh();
+        } catch (err: any) {
+            console.error("Erreur complète:", err);
+            // ✅ Affiche l'erreur précise du serveur si possible
+            const errorMsg = err.response?.data?.message || "Erreur lors de la modification";
+            alert(errorMsg);
         } finally {
             setSaving(false);
         }
