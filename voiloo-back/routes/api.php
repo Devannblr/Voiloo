@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AvisController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\AnnonceController;
@@ -17,11 +18,14 @@ use App\Http\Controllers\Api\CategoryController;
 // Catégories et Annonces
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/annonces', [AnnonceController::class, 'index']);
-Route::get('/annonces/{userSlug}/{annonceSlug}/vitrine', [VitrineConfigController::class, 'show']);
+
+// ✅ CORRECTION : Une seule route pour la vitrine, pointant vers AnnonceController qui est à jour
+Route::get('/annonces/{userSlug}/{annonceSlug}/vitrine', [AnnonceController::class, 'getVitrineConfig']);
+
 Route::get('/annonces/{userSlug}/{annonceSlug}', [AnnonceController::class, 'showBySlug']);
 Route::get('/annonces/{id}', [AnnonceController::class, 'show'])->whereNumber('id');
 
-// Utilisateurs publics
+// Utilisateurs publics (On garde le nom slug mais UserController doit chercher par username en interne)
 Route::get('/users/{slug}', [UserController::class, 'showBySlug']);
 
 // Authentification & Inscription
@@ -30,12 +34,11 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/check-username/{username}', [AuthController::class, 'checkUsername']);
 Route::get('/check-email', [AuthController::class, 'checkEmail']);
 
-// ✅ MOT DE PASSE OUBLIÉ (Public)
-// Ces deux routes sont indispensables pour tes nouvelles pages Next.js
+// ✅ MOT DE PASSE OUBLIÉ
 Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
-// Vérification d'email (Le lien cliqué dans le mail)
+// Vérification d'email
 Route::get('/email/verify/{id}/{hash}', [UserController::class, 'verifyEmail'])
     ->name('verification.verify');
 
@@ -57,14 +60,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user/change-password', [UserController::class, 'changePassword']);
     Route::delete('/user/delete', [UserController::class, 'deleteAccount']);
 
-    // Email verification (Renvoi du lien si non reçu)
+    // Email verification
     Route::post('/email/verification-notification', [UserController::class, 'sendVerification']);
 
     // Annonces
     Route::post('/annonces', [AnnonceController::class, 'store']);
     Route::put('/annonces/{id}', [AnnonceController::class, 'update']);
     Route::delete('/annonces/{id}', [AnnonceController::class, 'destroy']);
-
-    // Vitrine config
+    Route::post('/annonces/{id}/avis', [AvisController::class, 'store']);
+    // Vitrine config (Update reste ici, c'est OK)
     Route::put('/vitrine/{annonceId}', [VitrineConfigController::class, 'update']);
 });

@@ -4,16 +4,16 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Annonce;
+use App\Models\AnnonceImage;
 use App\Models\VitrineConfig;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class VitrineConfigController extends Controller
 {
-    // GET /annonces/{userSlug}/{annonceSlug}/vitrine
     public function show(string $userSlug, string $annonceSlug)
     {
-        $annonce = Annonce::whereHas('user', fn($q) => $q->where('slug', $userSlug))
+        $annonce = Annonce::whereHas('user', fn($q) => $q->where('username', $userSlug))
             ->where('slug', $annonceSlug)
             ->firstOrFail();
 
@@ -25,99 +25,91 @@ class VitrineConfigController extends Controller
         return response()->json($config);
     }
 
-    // PUT /vitrine/{annonceId}
     public function update(Request $request, int $annonceId)
     {
-
         $annonce = Annonce::findOrFail($annonceId);
 
         if ($request->user()->id !== $annonce->user_id) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
-        // 1. Prétraitement des données FormData
-        if ($request->has('show_contact_form')) {
-            $request->merge([
-                'show_contact_form' => filter_var($request->show_contact_form, FILTER_VALIDATE_BOOLEAN)
-            ]);
-        }
-
-        foreach (['sections', 'options'] as $field) {
+        // 1. Décodage des JSON
+        foreach (['sections', 'options', 'portfolio_images_to_delete'] as $field) {
             if ($request->has($field) && is_string($request->$field)) {
                 $decoded = json_decode($request->$field, true);
                 $request->merge([$field => is_array($decoded) ? $decoded : []]);
             }
         }
 
-        // 2. Validation
-        $validated = $request->validate([
-            'couleur_principale' => ['sometimes', 'nullable', 'string', 'regex:/^#([A-Fa-f0-9]{3}){1,2}$/'],
-            'couleur_texte'      => ['sometimes', 'nullable', 'string', 'regex:/^#([A-Fa-f0-9]{3}){1,2}$/'],
-            'couleur_fond'       => ['sometimes', 'nullable', 'string', 'regex:/^#([A-Fa-f0-9]{3}){1,2}$/'],
+        $config = VitrineConfig::firstOrNew(['annonce_id' => $annonce->id, 'user_id' => $annonce->user_id]);
 
-            // Validation Header
-            'header_photo'       => 'sometimes|nullable|image|mimes:jpeg,png,jpg,webp|max:10240',
+        // 2. SUPPRESSION HEADER
+        $shouldDeleteHeader = filter_var($request->input('delete_header_photo'), FILTER_VALIDATE_BOOLEAN);
+        if ($shouldDeleteHeader && $config->header_photo) {
+            $oldPath = str_replace([asset('storage/'), 'storage/'], '', $config->header_photo);
+            Storage::disk('public')->delete($oldPath);
+            $config->header_photo = null;
+        }
 
-            // --- AJOUT : Validation Portfolio ---
-            'portfolio_images'   => 'sometimes|array',
-            'portfolio_images.*' => 'image|mimes:jpeg,png,jpg,webp|max:10240',
-            // ------------------------------------
+        // 3. SUPPRESSION PORTFOLIO (Physique)
+        if ($request->has('portfolio_images_to_delete')) {
+            $idsToDelete = $request->input('portfolio_images_to_delete');
+            $images = AnnonceImage::whereIn('id', $idsToDelete)->where('annonce_id', $annonce->id)->get();
 
-            'slogan'             => 'sometimes|nullable|string|max:200',
-            'sections'           => 'sometimes|array',
-            'instagram'          => 'sometimes|nullable|string|max:255',
-            'linkedin'           => 'sometimes|nullable|string|max:255',
-            'site_web'           => 'sometimes|nullable|string|max:255',
-            'facebook'           => 'sometimes|nullable|string|max:255',
-            'twitter'            => 'sometimes|nullable|string|max:255',
-            'template'           => 'sometimes|string|in:default,minimal,bold,elegant',
-            'show_contact_form'  => 'sometimes|boolean',
-            'options'            => 'sometimes|array',
-        ]);
+            foreach ($images as $img) {
+                $path = str_replace([asset('storage/'), 'storage/'], '', $img->path);
+                Storage::disk('public')->delete($path);
+                $img->delete();
+            }
+        }
 
-        // 3. Upload header_photo
+        // 4. UPLOAD HEADER (Nom avec time prefix)
         if ($request->hasFile('header_photo')) {
-            $user = $request->user();
-            $folder = 'vitrines/' . $user->username . '/' . $annonce->slug;
-            $file   = $request->file('header_photo');
-            $filename = 'header.' . $file->getClientOriginalExtension();
+            $folder = 'vitrines/' . $request->user()->username . '/' . $annonce->slug;
+            $file = $request->file('header_photo');
+            $timePrefix = substr(time(), 0, 4);
+            $filename = 'header-' . $timePrefix . '.' . $file->getClientOriginalExtension();
 
-            $oldConfig = VitrineConfig::where('annonce_id', $annonceId)->first();
-            if ($oldConfig && $oldConfig->header_photo) {
-                $oldPath = str_replace(asset('storage/'), '', $oldConfig->header_photo);
+            if ($config->header_photo) {
+                $oldPath = str_replace([asset('storage/'), 'storage/'], '', $config->header_photo);
                 Storage::disk('public')->delete($oldPath);
             }
 
             $path = $file->storeAs($folder, $filename, 'public');
-            $validated['header_photo'] = asset('storage/' . $path);
+            $config->header_photo = $path; // Enregistre "vitrines/..."
         }
 
-        // 4. Upload Portfolio
+        // 5. UPLOAD PORTFOLIO (Nom : XX-TIME-SLUG.EXT)
         if ($request->hasFile('portfolio_images')) {
             $user = $request->user();
             $folder = 'annonces/' . $user->username . '/' . $annonce->slug;
             $currentCount = $annonce->images()->count();
+            $timePrefix = substr(time(), 0, 4);
 
             foreach ($request->file('portfolio_images') as $index => $image) {
                 $count = $currentCount + $index + 1;
                 $number = str_pad($count, 2, '0', STR_PAD_LEFT);
-                $extension = $image->getClientOriginalExtension();
-                $filename = $number . '-' . $annonce->slug . '.' . $extension;
+                $filename = $number . '-' . $timePrefix . '-' . $annonce->slug . '.' . $image->getClientOriginalExtension();
 
                 $path = $image->storeAs($folder, $filename, 'public');
-                $fullUrl = asset('storage/' . $path);
 
                 $annonce->images()->create([
-                    'path' => $fullUrl,
+                    'path' => $path, // Enregistre "annonces/..."
                 ]);
             }
         }
 
-        // 5. Update ou Create
-        $config = VitrineConfig::updateOrCreate(
-            ['annonce_id' => $annonce->id, 'user_id' => $annonce->user_id],
-            $validated
-        );
+        // 6. Sauvegarde reste des données
+        $config->fill($request->only([
+            'couleur_principale', 'couleur_texte', 'couleur_fond',
+            'slogan', 'sections', 'template', 'options'
+        ]));
+
+        if ($request->has('show_contact_form')) {
+            $config->show_contact_form = filter_var($request->show_contact_form, FILTER_VALIDATE_BOOLEAN);
+        }
+
+        $config->save();
 
         return response()->json([
             'message' => 'Vitrine mise à jour.',

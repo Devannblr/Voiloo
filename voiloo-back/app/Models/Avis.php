@@ -15,8 +15,8 @@ class Avis extends Model
         return $this->belongsTo(Annonce::class);
     }
 
-    // L'auteur de l'avis
-    public function auteur(): BelongsTo
+    // Changé "auteur" en "user" pour correspondre au code React et au Eager Loading
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'auteur_id');
     }

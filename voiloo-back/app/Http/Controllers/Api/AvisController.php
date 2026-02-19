@@ -1,7 +1,9 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
+use App\Models\Annonce;
 use App\Models\Avis;
 use Illuminate\Http\Request;
 
@@ -26,9 +28,23 @@ class AvisController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
-        //
+    public function store(Request $request, $annonceId) {
+        $annonce = Annonce::findOrFail($annonceId);
+
+        $validated = $request->validate([
+            'note' => 'required|integer|min:1|max:5',
+            'commentaire' => 'nullable|string|max:500',
+        ]);
+
+        $avis = Avis::create([
+            'annonce_id' => $annonce->id,
+            'auteur_id' => auth()->id(),
+            'vendeur_id' => $annonce->user_id,
+            'note' => $validated['note'],
+            'commentaire' => $validated['commentaire'],
+        ]);
+
+        return response()->json($avis, 201);
     }
 
     /**

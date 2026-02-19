@@ -26,11 +26,10 @@ class Annonce extends Model
         return $this->hasMany(AnnonceImage::class);
     }
 
-    public function avis(): HasMany
+    public function avis()
     {
         return $this->hasMany(Avis::class);
     }
-
     // Config vitrine liée (couleurs, template, options)
     public function vitrineConfig(): HasOne
     {

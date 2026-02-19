@@ -10,12 +10,13 @@ use App\Models\VitrineConfig;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
+use File;
 
 class AnnonceController extends Controller
 {
     public function index(Request $request)
     {
-        // ✅ CORRECTION : On demande 'username' à la place de 'slug'
         $query = Annonce::with(['user:id,name,avatar,username', 'images', 'vitrineConfig'])
             ->latest();
 
@@ -55,7 +56,6 @@ class AnnonceController extends Controller
         }
 
         $user = $request->user();
-        // ✅ CORRECTION : Suppression de la mise à jour automatique du user->slug
 
         $annonce = $user->annonces()->create([
             'titre'          => $validated['titre'],
@@ -84,7 +84,7 @@ class AnnonceController extends Controller
             foreach ($request->file('photos') as $index => $file) {
                 $folder    = 'annonces/' . $user->username . '/' . $slug;
                 $extension = $file->getClientOriginalExtension() ?: $file->extension();
-                $filename  = str_pad($index + 1, 2, '0', STR_PAD_LEFT) . '-' . $slug . '.' . $extension;
+                $filename  = str_pad($index + 1, 2, '0', STR_PAD_LEFT) . '-' . $annonce->id . '-' . $slug . '.' . $extension;
 
                 $path = $file->storeAs($folder, $filename, 'public');
 
@@ -98,7 +98,7 @@ class AnnonceController extends Controller
         return response()->json([
             'message'   => 'Annonce créée, en attente de validation.',
             'annonce'   => $annonce->load(['images', 'vitrineConfig']),
-            'user_username' => $user->username, // ✅ Changé de user_slug à user_username
+            'user_username' => $user->username,
         ], 201);
     }
 
@@ -108,15 +108,25 @@ class AnnonceController extends Controller
             'user',
             'images',
             'categorie',
-            'avis.user:id,name,avatar,username', // ✅ Changé slug -> username
+            'avis.user:id,name,avatar,username',
             'vitrineConfig',
         ])
-            // ✅ CORRECTION : On filtre par username (qui correspond au userSlug de l'URL)
             ->whereHas('user', fn($q) => $q->where('username', $userSlug))
             ->where('slug', $annonceSlug)
             ->firstOrFail();
 
         return response()->json($annonce);
+    }
+
+    public function getVitrineConfig(string $userSlug, string $annonceSlug)
+    {
+        $annonce = Annonce::where('slug', $annonceSlug)
+            ->whereHas('user', fn($q) => $q->where('username', $userSlug))
+            ->firstOrFail();
+
+        $config = VitrineConfig::where('annonce_id', $annonce->id)->firstOrFail();
+
+        return response()->json($config);
     }
 
     public function show($id)
@@ -127,7 +137,7 @@ class AnnonceController extends Controller
 
     public function update(Request $request, $id)
     {
-        $annonce = Annonce::findOrFail($id);
+        $annonce = Annonce::with(['user', 'images'])->findOrFail($id);
 
         if ($request->user()->id !== $annonce->user_id) {
             return response()->json(['message' => 'Non autorisé'], 403);
@@ -136,7 +146,7 @@ class AnnonceController extends Controller
         $validated = $request->validate([
             'titre'          => 'sometimes|string|max:100',
             'description'    => 'sometimes|string|min:20',
-            'prix'               => 'sometimes|numeric|min:0',
+            'prix'           => 'sometimes|numeric|min:0',
             'categorie_id'   => 'sometimes|exists:categories,id',
             'ville'          => 'sometimes|string|max:100',
             'code_postal'    => 'sometimes|string|size:5',
@@ -145,25 +155,77 @@ class AnnonceController extends Controller
             'lng'            => 'nullable|numeric',
         ]);
 
+        $oldSlug = $annonce->slug;
+        $newSlug = $oldSlug;
+
+        if (isset($validated['titre']) && $validated['titre'] !== $annonce->titre) {
+            $baseSlug = Str::slug($validated['titre']);
+            $newSlug = $baseSlug;
+            $i = 1;
+            while (Annonce::where('slug', $newSlug)->where('id', '!=', $annonce->id)->exists()) {
+                $newSlug = $baseSlug . '-' . $i++;
+            }
+        }
+
+        if ($newSlug !== $oldSlug) {
+            $username = $annonce->user->username;
+            $basePath = storage_path("app/public/annonces/{$username}");
+
+            clearstatcache();
+
+            $oldPath = $basePath . "/" . $oldSlug;
+            $newPath = $basePath . "/" . $newSlug;
+
+            if (File::exists($oldPath)) {
+                // 1. Renommer le dossier
+                File::move($oldPath, $newPath);
+                Log::info("Dossier renommé : {$newPath}");
+
+                // 2. Renommer les fichiers PHYSIQUES à l'intérieur
+                $files = File::files($newPath);
+                foreach ($files as $file) {
+                    $oldFileName = $file->getFilename();
+                    // On remplace l'ancien slug par le nouveau dans le nom du fichier
+                    $newFileName = str_replace($oldSlug, $newSlug, $oldFileName);
+
+                    if ($oldFileName !== $newFileName) {
+                        File::move($file->getRealPath(), $newPath . '/' . $newFileName);
+                    }
+                }
+                Log::info("Fichiers physiques renommés.");
+
+                // 3. Mettre à jour la BDD
+                foreach ($annonce->images as $image) {
+                    $dbPath = $image->path;
+                    $dbPath = str_replace("/{$oldSlug}/", "/{$newSlug}/", $dbPath);
+                    $dbPath = str_replace("-{$oldSlug}.", "-{$newSlug}.", $dbPath);
+                    $image->update(['path' => $dbPath]);
+                }
+            }
+
+            $annonce->slug = $newSlug;
+        }
+
         $annonce->update($validated);
 
         return response()->json([
-            'message' => 'Annonce mise à jour.',
-            'annonce' => $annonce->load(['images', 'vitrineConfig']),
+            'message'  => 'Annonce mise à jour.',
+            'annonce'  => $annonce->load(['images', 'vitrineConfig']),
+            'new_slug' => $annonce->slug
         ]);
     }
 
     public function destroy(Request $request, $id)
     {
-        $annonce = Annonce::findOrFail($id);
+        $annonce = Annonce::with('user')->findOrFail($id);
 
         if ($request->user()->id !== $annonce->user_id && !$request->user()->isAdmin()) {
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
-        foreach ($annonce->images as $image) {
-            $relativePath = str_replace(url('storage/'), '', $image->path);
-            Storage::disk('public')->delete($relativePath);
+        $folderPath = storage_path("app/public/annonces/{$annonce->user->username}/{$annonce->slug}");
+        if (File::exists($folderPath)) {
+            File::deleteDirectory($folderPath);
         }
 
         $annonce->delete();
