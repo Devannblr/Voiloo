@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import {
     Container,
     Input,
@@ -21,7 +21,7 @@ import { Logo } from "@/components/Base/logo";
 import { apiService } from '@/services/apiService';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export const Header = () => {
+function HeaderContent() {
     const [visible, setVisible] = useState(true);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [categories, setCategories] = useState<any[]>([]);
@@ -89,7 +89,6 @@ export const Header = () => {
         setShowExplore(false);
     };
 
-    // On affiche max 5 catégories dans le dropdown
     const displayedCategories = categories.slice(0, 5);
 
     return (
@@ -101,14 +100,12 @@ export const Header = () => {
                     <div className="flex items-center gap-6">
                         <Logo voilColor="var(--color-white)" ooColor="var(--color-primary)" href={"/"} />
 
-                        {/* EXPLORER — un seul bouton, tout cliquable */}
                         <div className="relative" ref={dropdownRef}>
                             <button
                                 onClick={() => setShowExplore(!showExplore)}
                                 className="text-white font-bold hover:text-primary transition-colors flex items-center gap-1.5"
                             >
                                 Explorer
-                                {/* Badge filtre actif OR chevron */}
                                 {activeCategory ? (
                                     <span className="flex items-center gap-1 bg-primary text-dark text-xs font-bold px-2 py-0.5 rounded-full">
                                         {activeCategory}
@@ -133,11 +130,9 @@ export const Header = () => {
                                 )}
                             </button>
 
-                            {/* DROPDOWN */}
                             {showExplore && (
                                 <div className="absolute top-full left-0 mt-3 w-60 bg-white rounded-2xl shadow-2xl border border-beige/20 overflow-hidden text-dark">
 
-                                    {/* Toutes les catégories */}
                                     <button
                                         onClick={() => handleNavigate('/explorer')}
                                         className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-primary/10 transition-colors text-left ${!activeCategory ? 'bg-primary/5' : ''}`}
@@ -151,7 +146,6 @@ export const Header = () => {
 
                                     <div className="border-t border-gray-100 mx-3" />
 
-                                    {/* 5 premières catégories */}
                                     {displayedCategories.map((cat: any) => {
                                         const isActive = activeCategory === cat.slug;
                                         return (
@@ -168,7 +162,6 @@ export const Header = () => {
                                         );
                                     })}
 
-                                    {/* Lien "Voir toutes" si plus de 5 catégories */}
                                     {categories.length > 5 && (
                                         <>
                                             <div className="border-t border-gray-100 mx-3" />
@@ -240,5 +233,13 @@ export const Header = () => {
                 </div>
             </Container>
         </header>
+    );
+}
+
+export const Header = () => {
+    return (
+        <Suspense fallback={null}>
+            <HeaderContent />
+        </Suspense>
     );
 };

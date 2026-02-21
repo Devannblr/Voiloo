@@ -29,7 +29,7 @@ export default function ProfilPage() {
                 localisation: data.localisation ?? "",
                 activity: data.activity ?? "",
                 bio: data.bio ?? "",
-                avatar: data.avatar ?? "/storage/userdefault.png"
+                avatar: data.avatar ?? "/storage/userdefault.png",
             };
             setUserData(clean);
 
@@ -189,7 +189,7 @@ export default function ProfilPage() {
                     </div>
                     <div className="md:col-span-4 sticky top-24">
                         <div className="h-[48px] hidden md:block" />
-                        <QuickLinksCard />
+                        <QuickLinksCard user={userData}/>
                     </div>
                 </div>
             </Container>

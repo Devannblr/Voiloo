@@ -7,7 +7,7 @@ import { Container, H1, P, Badge, Card, CardBody, Avatar, Button } from '@/compo
 import { MapPin, Star, Loader2, Trash2, Edit, Plus } from 'lucide-react';
 import { apiService } from '@/services/apiService';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') ?? 'https://voiloo.fr/back/public';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.voiloo.fr';
 
 function normalizeImageUrl(path: string): string {
     if (!path) return `${API_BASE}/userdefault.png`;
@@ -27,7 +27,7 @@ export default function UserProfilePage() {
 
     useEffect(() => {
         // Appelle ton UserController->showBySlug qui cherche maintenant par username
-        fetch(`${API_BASE}/api/users/${userSlug}`)
+        fetch(`${API_BASE}/users/${userSlug}`)
             .then(res => res.json())
             .then(data => {
                 setUser(data.user);
@@ -52,7 +52,7 @@ export default function UserProfilePage() {
         setDeleting(annonceId);
         try {
             const token = localStorage.getItem('voiloo_token');
-            await fetch(`${API_BASE}/api/annonces/${annonceId}`, {
+            await fetch(`${API_BASE}/annonces/${annonceId}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });

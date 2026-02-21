@@ -440,7 +440,7 @@ export default function DemoPage() {
                             {/* Espaceur pour que le haut de la QuickLinksCard soit aligné avec le haut de la ProfilCard */}
                             <div className="h-[32px] mb-2 hidden md:block" />
 
-                            <QuickLinksCard />
+                            <QuickLinksCard user={userData}/>
                         </div>
                         {/* Colonne de DROITE (Liens rapides) - occupe 4 colonnes (plus petite) */}
                         <div className="md:col-span-12 flex flex-col">

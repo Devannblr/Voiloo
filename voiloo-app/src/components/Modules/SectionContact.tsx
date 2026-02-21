@@ -116,10 +116,11 @@ export default function SectionContact({ primary, annonceId, destinataireEmail }
                     </div>
                 )}
 
+                {/* BOUTON AVEC HOVER DYNAMIQUE */}
                 <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-4.5 rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50"
+                    className="group w-full py-4.5 rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-50 hover:brightness-95    hover:shadow-lg"
                     style={{
                         backgroundColor: primary,
                         color: '#1A1A1A'
@@ -130,7 +131,7 @@ export default function SectionContact({ primary, annonceId, destinataireEmail }
                     ) : (
                         <>
                             <span>Envoyer le message</span>
-                            <Send size={18} />
+                            <Send size={18} className="transition-transform group-hover:translate-x-1" />
                         </>
                     )}
                 </button>

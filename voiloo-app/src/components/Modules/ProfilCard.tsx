@@ -13,7 +13,8 @@ interface UserData {
     avatar?: string;
     bio?: string;
     activity?: string;
-    created_at?: string
+    created_at?: string;
+    slug?: string;
 }
 
 interface ProfilCardProps {
@@ -302,12 +303,12 @@ export const AboutSection = ({ user, onUpdate }: ProfilCardProps) => {
     );
 };
 
-export const QuickLinksCard = () => {
+export const QuickLinksCard = ({ user }: { user: UserData }) => {
     const links = [
         { title: "Commandes", icon: <ShoppingBag size={18} />, href: "/commandes" },
         { title: "Messages", icon: <MessageCircle size={18} />, href: "/messages" },
         { title: "Favoris", icon: <Heart size={18} />, href: "/favoris" },
-        { title: "Tableau de bord", icon: <LayoutDashboard size={18} />, href: "/dashboard" },
+        { title: "Tableau de bord", icon: <LayoutDashboard size={18} />, href: `/u/${user?.username || ''}` },
     ];
 
     return (

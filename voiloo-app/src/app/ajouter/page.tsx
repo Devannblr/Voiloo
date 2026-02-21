@@ -8,8 +8,10 @@ import {
     ChevronRight, ChevronLeft, Check, Upload, X, AlertCircle,
     MapPin, Tag, FileText, Euro, Calendar, Image as ImageIcon, Palette,
 } from 'lucide-react';
+import AddressInput from "@/components/Modules/AdresseInput";
 
 interface FormData {
+    adresse: string;
     titre: string;
     description: string;
     categorie_id: string;
@@ -85,6 +87,7 @@ export default function AjouterAnnoncePage() {
         titre: '', description: '', categorie_id: '',
         prix: '', ville: '', code_postal: '',
         disponibilites: '', couleur_principale: '#FFD359', photos: [],
+        adresse: '',
         lat: null,
         lng: null,
     });
@@ -222,12 +225,26 @@ export default function AjouterAnnoncePage() {
             );
             case 3: return (
                 <div className="flex flex-col gap-6">
-                    <Field label="Ville" required error={errors.ville}>
-                        <InputField value={form.ville} onChange={v => set('ville', v)} placeholder="Ex : Lyon" error={errors.ville} leftIcon={<MapPin size={16} />} />
+                    <Field label="Adresse complète" required error={errors.ville}>
+                        <AddressInput
+                            value={form.adresse || ''}
+                            onChange={({ adresse, ville, code_postal, lat, lng }) => {
+                                set('adresse', adresse);
+                                set('ville', ville);
+                                set('code_postal', code_postal);
+                                set('lat', lat);
+                                set('lng', lng);
+                            }}
+                            error={errors.ville}
+                        />
                     </Field>
-                    <Field label="Code postal" required error={errors.code_postal}>
-                        <InputField value={form.code_postal} onChange={v => set('code_postal', v)} placeholder="Ex : 69001" error={errors.code_postal} />
-                    </Field>
+                    {form.ville && (
+                        <div className="flex items-center gap-2 text-sm text-gray-500 bg-green-50 px-4 py-3 rounded-xl">
+                            <MapPin size={14} className="text-green-600" />
+                            <span>{form.adresse}, {form.code_postal} {form.ville}</span>
+                            <span className="ml-auto text-green-600 font-bold text-xs">✓ Coordonnées OK</span>
+                        </div>
+                    )}
                 </div>
             );
             case 4: return (

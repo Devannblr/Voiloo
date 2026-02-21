@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useApi } from '@/hooks/useApi';
 import { apiService } from '@/services/apiService';
 import { Button, Input, H4, P } from '@/components/Base';
 import { Mail } from 'lucide-react';
 
-export default function ForgotPasswordPage() {
+function ForgotPasswordForm() {
     const { request, isLoading, error } = useApi();
     const [email, setEmail] = useState('');
     const [isSent, setIsSent] = useState(false);
@@ -56,5 +56,13 @@ export default function ForgotPasswordPage() {
                 {isLoading ? 'Envoi...' : 'Envoyer le lien'}
             </Button>
         </form>
+    );
+}
+
+export default function ForgotPasswordPage() {
+    return (
+        <Suspense fallback={<div>Chargement...</div>}>
+            <ForgotPasswordForm />
+        </Suspense>
     );
 }

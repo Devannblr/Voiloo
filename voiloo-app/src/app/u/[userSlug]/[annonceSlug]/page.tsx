@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { apiService } from '@/services/apiService';
 import { Loader2 } from 'lucide-react';
@@ -26,10 +26,45 @@ export default function VitrinePage() {
     const [config, setConfig] = useState<VitrineConfig | null>(null);
     const [loading, setLoading] = useState(true);
     const [isOwner, setIsOwner] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
+
+    // Synchronisation Header
+    const [headerVisible, setHeaderVisible] = useState(true);
+    const lastScrollY = useRef(0);
+    const scrollDownAccum = useRef(0);
+    const HIDE_THRESHOLD = 200;
+
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        checkMobile();
+
+        const handleScroll = () => {
+            const currentY = window.scrollY;
+            const delta = currentY - lastScrollY.current;
+
+            if (currentY < 50) {
+                setHeaderVisible(true);
+                scrollDownAccum.current = 0;
+            } else if (delta > 0) {
+                scrollDownAccum.current += delta;
+                if (scrollDownAccum.current > HIDE_THRESHOLD) setHeaderVisible(false);
+            } else {
+                scrollDownAccum.current = 0;
+                setHeaderVisible(true);
+            }
+            lastScrollY.current = currentY;
+        };
+
+        window.addEventListener('resize', checkMobile);
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            window.removeEventListener('resize', checkMobile);
+        };
+    }, []);
 
     useEffect(() => {
         if (!userSlug || !annonceSlug) return;
-
         setLoading(true);
         Promise.all([
             apiService.getAnnonceBySlug(userSlug, annonceSlug),
@@ -38,7 +73,6 @@ export default function VitrinePage() {
             .then(([annonceData, configData]) => {
                 setAnnonce(annonceData);
                 setConfig(configData);
-
                 const token = typeof window !== 'undefined' ? localStorage.getItem('voiloo_token') : null;
                 if (token) {
                     apiService.getUser()
@@ -69,9 +103,21 @@ export default function VitrinePage() {
     const bgColor = config.couleur_fond || '#FFFFFF';
     const sections = config.sections || {};
 
+    // Calculs des positions
+    const DESKTOP_HEADER_H = 64;
+    const currentHeaderH = isMobile ? 0 : DESKTOP_HEADER_H;
+    const ownerBarH = isMobile ? 48 : 54; // Hauteur approximative réduite sur mobile
+
     const scrollTo = (id: string) => {
         const el = document.getElementById(id);
-        if (el) el.scrollIntoView({ behavior: 'smooth' });
+        if (el) {
+            const navHeight = isOwner ? (currentHeaderH + ownerBarH + 50) : (currentHeaderH + 50);
+            const elementPosition = el.getBoundingClientRect().top + window.scrollY;
+            window.scrollTo({
+                top: elementPosition - navHeight,
+                behavior: 'smooth'
+            });
+        }
     };
 
     const navItems = [
@@ -79,18 +125,28 @@ export default function VitrinePage() {
         sections.parcours && { id: 'parcours', label: 'Parcours' },
         ((sections.services?.length ?? 0) > 0) && { id: 'services', label: 'Services' },
         ((annonce.images?.length ?? 0) > 0) && { id: 'portfolio', label: 'Portfolio' },
-        { id: 'avis', label: 'Avis' }, // ✅ On retire la condition de longueur pour l'onglet
+        { id: 'avis', label: 'Avis' },
         config.show_contact_form && { id: 'contact', label: 'Contact' },
     ].filter(Boolean) as { id: string; label: string }[];
 
     return (
-        <main style={{ backgroundColor: bgColor, color: textColor }} className="min-h-screen">
+        <main style={{ backgroundColor: bgColor, color: textColor }} className="min-h-screen relative">
+
+            {/* 1. OWNER BAR */}
             {isOwner && (
-                <OwnerBar
-                    userSlug={userSlug}
-                    annonceSlug={annonceSlug}
-                    primary={primary}
-                />
+                <div
+                    className="sticky z-[90] transition-transform duration-300 border-b border-black/5"
+                    style={{
+                        top: `${currentHeaderH}px`,
+                        transform: headerVisible ? 'translateY(0)' : `translateY(-${currentHeaderH}px)`
+                    }}
+                >
+                    <OwnerBar
+                        userSlug={userSlug}
+                        annonceSlug={annonceSlug}
+                        primary={primary}
+                    />
+                </div>
             )}
 
             <VitrineHero
@@ -102,28 +158,34 @@ export default function VitrinePage() {
                 onContactClick={() => scrollTo('contact')}
             />
 
-            <VitrineNav
-                items={navItems}
-                isOwner={isOwner}
-                primary={primary}
-                textColor={textColor}
-                bgColor={bgColor}
-                onSelect={scrollTo}
-            />
+            {/* 2. VITRINE NAV */}
+            <div
+                className="sticky z-[80] transition-transform duration-300 shadow-sm"
+                style={{
+                    top: isOwner ? `${currentHeaderH + ownerBarH}px` : `${currentHeaderH}px`,
+                    transform: headerVisible ? 'translateY(0)' : `translateY(-${currentHeaderH}px)`
+                }}
+            >
+                <VitrineNav
+                    items={navItems}
+                    isOwner={isOwner}
+                    primary={primary}
+                    textColor={textColor}
+                    bgColor={bgColor}
+                    onSelect={scrollTo}
+                />
+            </div>
 
             <div className="max-w-3xl mx-auto px-6 py-12 space-y-16">
                 {sections.about && (
                     <SectionAbout content={sections.about} primary={primary} />
                 )}
-
                 {sections.parcours && (
                     <SectionParcours parcours={sections.parcours} primary={primary} />
                 )}
-
                 {((sections.services?.length ?? 0) > 0) && (
                     <SectionServices services={sections.services!} primary={primary} />
                 )}
-
                 {((annonce.images?.length ?? 0) > 0) && (
                     <SectionPortfolio
                         images={annonce.images || []}
@@ -131,14 +193,11 @@ export default function VitrinePage() {
                         note={sections.portfolio_note}
                     />
                 )}
-
-                {/* ✅ On affiche la section même si 0 avis pour pouvoir cliquer sur "Noter" */}
                 <SectionAvis
                     avis={annonce.avis || []}
                     primary={primary}
                     annonceId={annonce.id}
                 />
-
                 {config.show_contact_form && (
                     <SectionContact
                         primary={primary}

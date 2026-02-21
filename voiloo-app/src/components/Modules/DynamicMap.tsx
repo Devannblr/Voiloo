@@ -16,11 +16,11 @@ function RecenterMap({ lat, lng }: { lat: number, lng: number }) {
 interface Annonce {
     id: number | string;
     user?: { name?: string };
-    title?: string;
-    latitude?: number;
-    longitude?: number;
+    titre?: string;
+    lat?: number | string;
+    lng?: number | string;
     ville?: string;
-    price?: number | string;
+    prix?: number | string;
 }
 
 interface DynamicMapProps {
@@ -28,20 +28,28 @@ interface DynamicMapProps {
 }
 
 export const DynamicMap = ({ points = [] }: DynamicMapProps) => {
-    const [position, setPosition] = useState<[number, number]>([47.09, 5.49]);
+    // On centre la vue par défaut ici, mais on ne crée pas de marqueur
+    const [viewCenter, setViewCenter] = useState<[number, number]>([47.109556, 5.509639]);
+    const [userPos, setUserPos] = useState<[number, number] | null>(null);
     const [mapMode, setMapMode] = useState<'light' | 'dark'>('light');
 
     useEffect(() => {
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition((pos) => {
-                setPosition([pos.coords.latitude, pos.coords.longitude]);
+                const newPos: [number, number] = [pos.coords.latitude, pos.coords.longitude];
+                setUserPos(newPos);
+                setViewCenter(newPos);
+            }, (err) => {
+                console.log("Géolocalisation refusée ou indisponible");
             });
         }
     }, []);
 
-    // Filtrer les annonces qui ont des coordonnées valides
-    const validPoints = points.filter(
-        (p) => p.latitude != null && p.longitude != null
+    // Nettoyage et conversion des points en Float
+    const validPoints = points.filter(p =>
+        p.lat !== null && p.lng !== null &&
+        !isNaN(parseFloat(p.lat as string)) &&
+        !isNaN(parseFloat(p.lng as string))
     );
 
     const tileUrl = mapMode === 'dark'
@@ -49,23 +57,23 @@ export const DynamicMap = ({ points = [] }: DynamicMapProps) => {
         : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
 
     return (
-        <div className="relative w-full h-full rounded-2xl overflow-hidden border-4 border-primary/20 shadow-xl">
+        <div className="relative w-full h-full rounded-2xl overflow-hidden border-4 border-primary/20 shadow-xl bg-stone-100">
 
             {/* BOUTON SWITCH MODE */}
             <button
                 onClick={() => setMapMode(mapMode === 'light' ? 'dark' : 'light')}
-                className="absolute top-4 right-4 z-[1000] bg-white dark:bg-dark p-2 rounded-full shadow-lg border border-primary/50 hover:scale-110 transition-transform"
+                className="absolute top-4 right-4 z-[1000] bg-white dark:bg-stone-900 p-2 rounded-full shadow-lg border border-primary/50 hover:scale-110 transition-transform"
             >
                 {mapMode === 'light'
-                    ? <Moon size={20} className="text-whit" />
+                    ? <Moon size={20} className="text-stone-900 text-white" />
                     : <Sun size={20} className="text-primary" />
                 }
             </button>
 
             <MapContainer
-                center={position}
+                center={viewCenter}
                 zoom={14}
-                scrollWheelZoom={false}
+                scrollWheelZoom={true}
                 style={{
                     height: '100%',
                     width: '100%',
@@ -73,40 +81,46 @@ export const DynamicMap = ({ points = [] }: DynamicMapProps) => {
                 }}
             >
                 <TileLayer url={tileUrl} attribution='&copy; CARTO' />
-                <RecenterMap lat={position[0]} lng={position[1]} />
+                <RecenterMap lat={viewCenter[0]} lng={viewCenter[1]} />
 
-                {/* POSITION DE L'UTILISATEUR */}
-                <CircleMarker
-                    center={position}
-                    pathOptions={{
-                        color: '#FFD359',
-                        fillColor: '#FFD359',
-                        fillOpacity: 1,
-                        weight: 2
-                    }}
-                    radius={8}
-                >
-                    <Popup>Tu es ici !</Popup>
-                </CircleMarker>
+                {/* ✅ POSITION DE L'UTILISATEUR : Affichée uniquement si détectée */}
+                {userPos && (
+                    <CircleMarker
+                        center={userPos}
+                        pathOptions={{
+                            color: '#FFD359',
+                            fillColor: '#FFD359',
+                            fillOpacity: 1,
+                            weight: 2
+                        }}
+                        radius={8}
+                    >
+                        <Popup>Tu es ici !</Popup>
+                    </CircleMarker>
+                )}
 
                 {/* POINTS DES ANNONCES */}
                 {validPoints.map((pro) => (
                     <CircleMarker
                         key={pro.id}
-                        center={[pro.latitude!, pro.longitude!]}
+                        center={[parseFloat(pro.lat as string), parseFloat(pro.lng as string)]}
                         pathOptions={{
                             color: '#FFD359',
                             fillColor: mapMode === 'dark' ? '#202020' : '#ffffff',
-                            fillOpacity: 0.9,
+                            fillOpacity: 1,
                             weight: 3
                         }}
                         radius={7}
                     >
                         <Popup>
-                            <div className="font-sans font-bold">{pro.user?.name ?? 'Prestataire'}</div>
-                            <div className="text-xs text-gray-500">{pro.title}</div>
-                            {pro.ville && <div className="text-xs">{pro.ville}</div>}
-                            {pro.price && <div className="text-xs font-semibold text-primary">{pro.price}€</div>}
+                            <div className="font-sans">
+                                <div className="font-bold text-sm">{pro.user?.name ?? 'Prestataire'}</div>
+                                <div className="text-[11px] text-gray-500 leading-tight mb-1">{pro.titre}</div>
+                                <div className="flex items-center justify-between border-t border-gray-100 pt-1 mt-1">
+                                    <span className="text-xs font-black text-primary">{pro.prix}€</span>
+                                    <span className="text-[10px] bg-gray-100 px-1 py-0.5 rounded uppercase font-bold">{pro.ville}</span>
+                                </div>
+                            </div>
                         </Popup>
                     </CircleMarker>
                 ))}

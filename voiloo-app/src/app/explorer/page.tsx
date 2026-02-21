@@ -12,11 +12,16 @@ const CardSkeleton = () => (
     <div className="bg-gray-50 rounded-3xl h-[450px] animate-pulse border border-gray-100" />
 );
 
+// ✅ Import dynamique propre depuis ton fichier de module
 const DynamicMap = dynamic(
     () => import('@/components/Modules/DynamicMap').then((mod) => mod.DynamicMap),
     {
         ssr: false,
-        loading: () => <div className="w-full h-full bg-dark/50 animate-pulse rounded-2xl flex items-center justify-center text-white/20">Chargement de la carte...</div>
+        loading: () => (
+            <div className="w-full h-full bg-stone-100 animate-pulse flex items-center justify-center text-stone-400 font-black italic uppercase">
+                Chargement Voiloo Map...
+            </div>
+        )
     }
 );
 
@@ -60,6 +65,7 @@ function ExplorerContent() {
     return (
         <main className="bg-white overflow-hidden">
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_500px] h-[calc(100vh-72px)]">
+                {/* LISTE */}
                 <div className="overflow-y-auto scrollbar-hide relative bg-white">
                     <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md px-6 py-4 border-b border-gray-50">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -102,36 +108,31 @@ function ExplorerContent() {
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-12">
-                                {annonces.map((ad: any) => {
-                                    // Règle stricte : Seulement la header_photo de la config
-                                    const mainImage = ad.vitrine_config?.header_photo;
-                                    const primaryColor = ad.vitrine_config?.couleur_principale || '#FFD359';
-
-                                    return (
-                                        <div key={ad.id}>
-                                            <ServiceCard
-                                                href={`/u/${ad.user?.slug || ad.user?.username}/${ad.slug}`}
-                                                provider={{
-                                                    name: ad.user?.name || "Utilisateur",
-                                                    job: ad.titre,
-                                                    price: `${ad.prix}€`,
-                                                    city: ad.ville,
-                                                    rating: ad.average_rating || 0,
-                                                    nb_avis: ad.avis_count || 0,
-                                                    avatarSrc: ad.user?.avatar,
-                                                    mainPhoto: mainImage,
-                                                    primary: primaryColor,
-                                                    images: ad.images?.map((img: any) => img.path) || [],
-                                                    isNew: ad.created_at ? (new Date(ad.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)) : false
-                                                }}
-                                            />
-                                        </div>
-                                    );
-                                })}
+                                {annonces.map((ad: any) => (
+                                    <ServiceCard
+                                        key={ad.id}
+                                        href={`/u/${ad.user?.slug || ad.user?.username}/${ad.slug}`}
+                                        provider={{
+                                            name: ad.user?.name || "Utilisateur",
+                                            job: ad.titre,
+                                            price: `${ad.prix}€`,
+                                            city: ad.ville,
+                                            rating: ad.average_rating || 0,
+                                            nb_avis: ad.avis_count || 0,
+                                            avatarSrc: ad.user?.avatar,
+                                            mainPhoto: ad.vitrine_config?.header_photo,
+                                            primary: ad.vitrine_config?.couleur_principale || '#FFD359',
+                                            images: ad.images?.map((img: any) => img.path) || [],
+                                            isNew: ad.created_at ? (new Date(ad.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)) : false
+                                        }}
+                                    />
+                                ))}
                             </div>
                         )}
                     </Container>
                 </div>
+
+                {/* CARTE */}
                 <div className="hidden lg:block h-full relative border-l border-gray-100">
                     <DynamicMap points={annonces} />
                 </div>
@@ -142,14 +143,7 @@ function ExplorerContent() {
 
 export default function ExplorerPage() {
     return (
-        <Suspense fallback={
-            <div className="min-h-screen flex items-center justify-center bg-white">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                    <span className="font-black italic uppercase text-sm tracking-widest text-primary">Voiloo</span>
-                </div>
-            </div>
-        }>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-white italic font-black text-primary">VOILOO...</div>}>
             <ExplorerContent />
         </Suspense>
     );
