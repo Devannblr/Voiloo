@@ -68,7 +68,7 @@ class AnnonceController extends Controller
             'disponibilites' => $validated['disponibilites'],
             'lat'            => $validated['lat'] ?? null,
             'lng'            => $validated['lng'] ?? null,
-            'status'         => 'waiting',
+            'status' => 'active',
         ]);
 
         VitrineConfig::create([
@@ -148,6 +148,7 @@ class AnnonceController extends Controller
             'description'    => 'sometimes|string|min:20',
             'prix'           => 'sometimes|numeric|min:0',
             'categorie_id'   => 'sometimes|exists:categories,id',
+            'adresse'        => 'nullable|string|max:255', // 👈 manquait
             'ville'          => 'sometimes|string|max:100',
             'code_postal'    => 'sometimes|string|size:5',
             'disponibilites' => 'sometimes|string',
