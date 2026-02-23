@@ -1,6 +1,15 @@
 @import "tailwindcss";
 
 /* ===== VOILOO DESIGN SYSTEM ===== */
+.preloader-shadow {
+    filter: drop-shadow(0 20px 30px rgba(0,0,0,0.1));
+}
+
+/* On ajoute une classe utilitaire propre pour bloquer le scroll */
+.no-scroll {
+    overflow: hidden !important;
+    height: 100vh;
+}
 
 /* ===== FONTS ===== */
 @font-face {
