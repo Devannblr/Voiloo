@@ -7,16 +7,23 @@ import dynamic from 'next/dynamic';
 import { DynamicMap } from "@/components/Modules/DynamicMap";
 import { DoubleSearchInput } from "@/components/Modules";
 import {Logo} from "@/components/Base/logo";
+import { useRouter } from 'next/navigation';
+
 
 export const HeroSection = () => {
     // 1. DÉCLARATION DES STATES À L'INTÉRIEUR DU COMPOSANT
     const [searchQuery, setSearchQuery] = useState('');
     const [location, setLocation] = useState('');
+    const router = useRouter();
 
     // 2. DÉCLARATION DE LA FONCTION DE RECHERCHE À L'INTÉRIEUR
     const handleSearch = () => {
-        console.log("Recherche de :", searchQuery, "à :", location);
-        // Logique de redirection ou API ici
+        const params = new URLSearchParams();
+
+        if (searchQuery) params.append('query', searchQuery);
+        if (location) params.append('city', location);
+
+        router.push(`/explorer?${params.toString()}`);
     };
     const DynamicMap = dynamic(
         () => import('@/components/Modules/DynamicMap').then((mod) => mod.DynamicMap),

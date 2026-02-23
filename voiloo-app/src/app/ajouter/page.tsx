@@ -180,7 +180,8 @@ export default function AjouterAnnoncePage() {
         setLoading(true);
         try {
             const result = await apiService.createAnnonce({ ...form });
-            router.push(`/u/${result.user_slug}/${result.annonce.slug}`);
+            console.log(result);
+            router.push(`/u/${result.user_username}/${result.annonce.slug}`);
         } catch (err) {
             console.error('Erreur:', err);
             setLoading(false);

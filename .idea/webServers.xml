@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="e98d56af-9efa-448b-91ef-ea29ae375543" name="node">
+        <fileTransfer rootFolder="/srv/customer" accessType="SFTP" host="57-107873.ssh.hosting-ik.com" port="22" sshConfigId="a436cb03-e55a-4ee5-b607-096832488f21" sshConfig="ZM3RGvdLDFA_node@57-107873.ssh.hosting-ik.com:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

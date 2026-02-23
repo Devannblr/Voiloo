@@ -17,16 +17,64 @@ class AnnonceController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Annonce::with(['user:id,name,avatar,username', 'images', 'vitrineConfig'])
-            ->latest();
+        $query = Annonce::with([
+            'user:id,name,avatar,username',
+            'images',
+            'vitrineConfig'
+        ])
+            ->withCount('avis')
+            ->withAvg('avis', 'note')
+            ->where('status', 'active');
 
-        if ($request->has('category')) {
+        // 🔎 Filtre catégorie
+        if ($request->filled('category')) {
             $query->whereHas('categorie', function ($q) use ($request) {
-                $q->where('slug', $request->get('category'));
+                $q->where('slug', $request->category);
             });
         }
 
-        return response()->json($query->get());
+        // 🔎 Recherche globale
+        if ($request->filled('query')) {
+            $search = strtolower($request->query);
+
+            $query->where(function ($q) use ($search) {
+                $q->whereRaw('LOWER(titre) LIKE ?', ["%{$search}%"])
+                    ->orWhereRaw('LOWER(description) LIKE ?', ["%{$search}%"])
+                    ->orWhereRaw('LOWER(ville) LIKE ?', ["%{$search}%"]);
+            });
+        }
+
+        // 🏙 Ville spécifique (si double champ what / where)
+        if ($request->filled('city')) {
+            $city = strtolower($request->city);
+            $query->whereRaw('LOWER(ville) LIKE ?', ["%{$city}%"]);
+        }
+
+        // 💰 Tri dynamique
+        if ($request->filled('sort')) {
+            switch ($request->sort) {
+                case 'price_asc':
+                    $query->orderBy('prix', 'asc');
+                    break;
+
+                case 'price_desc':
+                    $query->orderBy('prix', 'desc');
+                    break;
+
+                case 'rating_desc':
+                    $query->orderBy('avis_avg_note', 'desc');
+                    break;
+
+                case 'recent':
+                default:
+                    $query->latest();
+                    break;
+            }
+        } else {
+            $query->latest();
+        }
+
+        return response()->json($query->paginate(12));
     }
 
     public function store(Request $request)
@@ -148,7 +196,7 @@ class AnnonceController extends Controller
             'description'    => 'sometimes|string|min:20',
             'prix'           => 'sometimes|numeric|min:0',
             'categorie_id'   => 'sometimes|exists:categories,id',
-            'adresse'        => 'nullable|string|max:255', // 👈 manquait
+            'adresse'        => 'nullable|string|max:255',
             'ville'          => 'sometimes|string|max:100',
             'code_postal'    => 'sometimes|string|size:5',
             'disponibilites' => 'sometimes|string',

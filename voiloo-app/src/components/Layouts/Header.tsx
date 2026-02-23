@@ -35,7 +35,9 @@ function HeaderContent() {
     const lastScrollY = useRef(0);
     const scrollDownAccum = useRef(0);
     const HIDE_THRESHOLD = 200;
-
+    const [searchValue, setSearchValue] = useState('');
+    const [suggestions, setSuggestions] = useState<any[]>([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
     // 1. Auth + catégories + click outside
     useEffect(() => {
         const token = localStorage.getItem('voiloo_token');
@@ -53,6 +55,30 @@ function HeaderContent() {
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
+    const handleEnter = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            router.push(`/explorer?query=${searchValue}`);
+            setShowSuggestions(false);
+        }
+    };
+    useEffect(() => {
+        if (!searchValue || searchValue.length < 2) {
+            setSuggestions([]);
+            setShowSuggestions(false); // ← ajoute ça
+            return;
+        }
+
+        const timeout = setTimeout(() => {
+            apiService.getAnnonces({ query: searchValue })
+                .then((data) => {
+                    setSuggestions(data.data?.slice(0, 5) || []);
+                    setShowSuggestions(true);
+                });
+        }, 300);
+
+        return () => clearTimeout(timeout);
+
+    }, [searchValue]);
 
     // 2. Scroll
     useEffect(() => {
@@ -183,10 +209,36 @@ function HeaderContent() {
                         <div className="relative w-full max-w-xl">
                             <Input
                                 placeholder="Rechercher un freelance..."
+                                value={searchValue}
+                                onKeyDown={handleEnter}
+                                onChange={(e) => {
+                                    setSearchValue(e.target.value);
+                                    setShowSuggestions(true);
+                                }}
                                 leftIcon={<Search size={20} />}
                             />
+
+                            {showSuggestions && suggestions.length > 0 && (
+                                <div className="absolute top-full left-0 w-full bg-white text-dark rounded-2xl shadow-xl mt-2 overflow-hidden z-50">
+                                    {suggestions.map((item) => (
+                                        <button
+                                            key={item.id}
+                                            onClick={() => {
+                                                router.push(`/explorer?query=${item.titre}`);
+                                                setShowSuggestions(false);
+                                            }}
+                                            className="w-full text-left px-4 py-3 hover:bg-gray-50 transition"
+                                        >
+                                            <div className="font-semibold">{item.titre}</div>
+                                            <div className="text-xs text-gray-400">{item.ville}</div>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
+
+
 
                     {/* 3. BLOC DROITE : Actions & Auth */}
                     <div className="flex items-center gap-4 md:gap-6">

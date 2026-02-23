@@ -29,6 +29,8 @@ function ExplorerContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const categorySlug = searchParams.get('category') || undefined;
+    const query = searchParams.get('query') || undefined;
+    const city = searchParams.get('city') || undefined;
 
     const [annonces, setAnnonces] = useState<any[]>([]);
     const [categories, setCategories] = useState<Record<string, string>>({});
@@ -36,16 +38,22 @@ function ExplorerContent() {
 
     useEffect(() => {
         setLoading(true);
-        apiService.getAnnonces(categorySlug)
+
+        apiService.getAnnonces({
+            category: categorySlug,
+            query,
+            city
+        })
             .then(data => {
-                setAnnonces(data);
+                setAnnonces(data.data || data); // si paginate
                 setLoading(false);
             })
             .catch((err) => {
                 console.error("Erreur annonces:", err);
                 setLoading(false);
             });
-    }, [categorySlug]);
+
+    }, [categorySlug, query, city]);
 
     useEffect(() => {
         apiService.getCategories()

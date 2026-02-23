@@ -13,9 +13,9 @@ const nextConfig: NextConfig = {
             // Production Infomaniak
             {
                 protocol: 'https',
-                hostname: 'voiloo.fr',
+                hostname: 'api.voiloo.fr',
                 // ✅ Correction : On autorise tout ce qui est dans /back/ pour éviter les soucis avec /public/
-                pathname: '/back/**',
+                pathname: '/**',
             },
             // Unsplash
             {

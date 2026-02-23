@@ -29,9 +29,20 @@ export const apiService = {
         apiFetch(`/check-email?email=${encodeURIComponent(email)}`),
 
     // --- ANNONCES ---
-    getAnnonces: (categorySlug?: string) => {
-        const endpoint = categorySlug ? `/annonces?category=${categorySlug}` : '/annonces';
-        return apiFetch(endpoint);
+    getAnnonces: (params?: {
+        category?: string;
+        city?: string;
+        query?: string;
+        sort?: string;
+    }) => {
+        const query = new URLSearchParams();
+
+        if (params?.category) query.append('category', params.category);
+        if (params?.city) query.append('city', params.city);
+        if (params?.query) query.append('query', params.query);
+        if (params?.sort) query.append('sort', params.sort);
+
+        return apiFetch(`/annonces?${query.toString()}`);
     },
 
     getAnnonceBySlug: (userSlug: string, annonceSlug: string) =>

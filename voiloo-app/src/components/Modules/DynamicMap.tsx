@@ -57,7 +57,7 @@ export const DynamicMap = ({ points = [] }: DynamicMapProps) => {
         : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
 
     return (
-        <div className="relative w-full h-full rounded-2xl overflow-hidden border-4 border-primary/20 shadow-xl bg-stone-100">
+        <div className="relative w-full h-full z-0 rounded-2xl overflow-hidden border-4 border-primary/20 shadow-xl bg-stone-100">
 
             {/* BOUTON SWITCH MODE */}
             <button
