@@ -17,64 +17,75 @@ class AnnonceController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Annonce::with([
-            'user:id,name,avatar,username',
-            'images',
-            'vitrineConfig'
-        ])
-            ->withCount('avis')
-            ->withAvg('avis', 'note')
-            ->where('status', 'active');
+        try {
+            $query = Annonce::with([
+                'user:id,name,avatar,username',
+                'images',
+                'vitrineConfig',
+                'categorie'
+            ])
+                ->withCount('avis')
+                ->withAvg('avis', 'note')
+                ->where('status', 'active');
 
-        // 🔎 Filtre catégorie
-        if ($request->filled('category')) {
-            $query->whereHas('categorie', function ($q) use ($request) {
-                $q->where('slug', $request->category);
-            });
-        }
-
-        // 🔎 Recherche globale
-        if ($request->filled('query')) {
-            $search = strtolower($request->query);
-
-            $query->where(function ($q) use ($search) {
-                $q->whereRaw('LOWER(titre) LIKE ?', ["%{$search}%"])
-                    ->orWhereRaw('LOWER(description) LIKE ?', ["%{$search}%"])
-                    ->orWhereRaw('LOWER(ville) LIKE ?', ["%{$search}%"]);
-            });
-        }
-
-        // 🏙 Ville spécifique (si double champ what / where)
-        if ($request->filled('city')) {
-            $city = strtolower($request->city);
-            $query->whereRaw('LOWER(ville) LIKE ?', ["%{$city}%"]);
-        }
-
-        // 💰 Tri dynamique
-        if ($request->filled('sort')) {
-            switch ($request->sort) {
-                case 'price_asc':
-                    $query->orderBy('prix', 'asc');
-                    break;
-
-                case 'price_desc':
-                    $query->orderBy('prix', 'desc');
-                    break;
-
-                case 'rating_desc':
-                    $query->orderBy('avis_avg_note', 'desc');
-                    break;
-
-                case 'recent':
-                default:
-                    $query->latest();
-                    break;
+            // 🔎 Filtre catégorie
+            if ($request->filled('category')) {
+                $query->whereHas('categorie', function ($q) use ($request) {
+                    $q->where('slug', $request->category);
+                });
             }
-        } else {
-            $query->latest();
-        }
 
-        return response()->json($query->paginate(12));
+            // 🔎 Recherche globale (CORRIGÉ ICI)
+            if ($request->filled('query')) {
+                // On récupère la valeur en string, pas l'objet InputBag
+                $searchValue = $request->query('query');
+                $search = is_string($searchValue) ? strtolower($searchValue) : '';
+
+                if (!empty($search)) {
+                    $query->where(function ($q) use ($search) {
+                        $q->whereRaw('LOWER(titre) LIKE ?', ["%{$search}%"])
+                            ->orWhereRaw('LOWER(description) LIKE ?', ["%{$search}%"])
+                            ->orWhereRaw('LOWER(ville) LIKE ?', ["%{$search}%"]);
+                    });
+                }
+            }
+
+            // 🏙 Ville spécifique
+            if ($request->filled('city')) {
+                $cityValue = $request->query('city');
+                $city = is_string($cityValue) ? strtolower($cityValue) : '';
+                $query->whereRaw('LOWER(ville) LIKE ?', ["%{$city}%"]);
+            }
+
+            // 💰 Tri dynamique
+            if ($request->filled('sort')) {
+                switch ($request->sort) {
+                    case 'price_asc':
+                        $query->orderBy('prix', 'asc');
+                        break;
+                    case 'price_desc':
+                        $query->orderBy('prix', 'desc');
+                        break;
+                    case 'rating_desc':
+                        $query->orderBy('avis_avg_note', 'desc');
+                        break;
+                    default:
+                        $query->latest();
+                        break;
+                }
+            } else {
+                $query->latest();
+            }
+
+            return response()->json($query->paginate(12));
+
+        } catch (\Exception $e) {
+            Log::error("Erreur Recherche Annonces: " . $e->getMessage());
+            return response()->json([
+                'error' => 'Erreur serveur',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function store(Request $request)
@@ -144,7 +155,7 @@ class AnnonceController extends Controller
         }
 
         return response()->json([
-            'message'   => 'Annonce créée, en attente de validation.',
+            'message'   => 'Annonce créée avec succès.',
             'annonce'   => $annonce->load(['images', 'vitrineConfig']),
             'user_username' => $user->username,
         ], 201);
@@ -226,24 +237,15 @@ class AnnonceController extends Controller
             $newPath = $basePath . "/" . $newSlug;
 
             if (File::exists($oldPath)) {
-                // 1. Renommer le dossier
                 File::move($oldPath, $newPath);
-                Log::info("Dossier renommé : {$newPath}");
-
-                // 2. Renommer les fichiers PHYSIQUES à l'intérieur
                 $files = File::files($newPath);
                 foreach ($files as $file) {
                     $oldFileName = $file->getFilename();
-                    // On remplace l'ancien slug par le nouveau dans le nom du fichier
                     $newFileName = str_replace($oldSlug, $newSlug, $oldFileName);
-
                     if ($oldFileName !== $newFileName) {
                         File::move($file->getRealPath(), $newPath . '/' . $newFileName);
                     }
                 }
-                Log::info("Fichiers physiques renommés.");
-
-                // 3. Mettre à jour la BDD
                 foreach ($annonce->images as $image) {
                     $dbPath = $image->path;
                     $dbPath = str_replace("/{$oldSlug}/", "/{$newSlug}/", $dbPath);
@@ -251,7 +253,6 @@ class AnnonceController extends Controller
                     $image->update(['path' => $dbPath]);
                 }
             }
-
             $annonce->slug = $newSlug;
         }
 
@@ -263,7 +264,79 @@ class AnnonceController extends Controller
             'new_slug' => $annonce->slug
         ]);
     }
+// À ajouter dans AnnonceController.php
 
+    public function suggestions(Request $request)
+    {
+        $search = $request->query('query');
+        if (!$search) return response()->json([]);
+
+        $results = [];
+
+        // --- LOGIQUE POWER USER (u: ou a:) ---
+        if (str_starts_with($search, 'u:')) {
+            $cleanSearch = ltrim(str_replace('u:', '', $search));
+            $results = User::where('name', 'LIKE', "%{$cleanSearch}%")
+                ->orWhere('username', 'LIKE', "%{$cleanSearch}%")
+                ->select('id', 'name', 'username', 'avatar')
+                ->limit(5)
+                ->get()
+                ->map(fn($u) => [
+                    'type' => 'user',
+                    'title' => $u->name,
+                    'subtitle' => "@{$u->username}",
+                    'url' => "/u/{$u->username}",
+                    'avatar' => $u->avatar,
+                    'id' => $u->id
+                ]);
+        }
+        elseif (str_starts_with($search, 'a:')) {
+            $cleanSearch = ltrim(str_replace('a:', '', $search));
+            $results = Annonce::where('titre', 'LIKE', "%{$cleanSearch}%")
+                ->where('status', 'active')
+                ->with('user')
+                ->limit(5)
+                ->get()
+                ->map(fn($a) => [
+                    'type' => 'annonce',
+                    'title' => $a->titre,
+                    'subtitle' => $a->user->name,
+                    'url' => "/u/{$a->user->username}/{$a->slug}",
+                    'price' => $a->prix,
+                    'id' => $a->id
+                ]);
+        }
+        else {
+            // --- RECHERCHE MIXTE PAR DÉFAUT ---
+            $users = User::where('name', 'LIKE', "%{$search}%")
+                ->select('id', 'name', 'username', 'avatar')
+                ->limit(3)
+                ->get()
+                ->map(fn($u) => [
+                    'type' => 'user',
+                    'title' => $u->name,
+                    'subtitle' => 'Freelance',
+                    'url' => "/u/{$u->username}",
+                    'avatar' => $u->avatar
+                ]);
+
+            $annonces = Annonce::where('titre', 'LIKE', "%{$search}%")
+                ->with('user')
+                ->limit(3)
+                ->get()
+                ->map(fn($a) => [
+                    'type' => 'annonce',
+                    'title' => $a->titre,
+                    'subtitle' => $a->user->name,
+                    'url' => "/u/{$a->user->username}/{$a->slug}",
+                    'price' => $a->prix
+                ]);
+
+            $results = $users->concat($annonces);
+        }
+
+        return response()->json($results);
+    }
     public function destroy(Request $request, $id)
     {
         $annonce = Annonce::with('user')->findOrFail($id);

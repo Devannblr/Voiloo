@@ -1,4 +1,3 @@
-// services/apiService.ts
 import { apiFetch } from "@/lib/api";
 
 export interface ServiceCardProvider {
@@ -20,13 +19,15 @@ export const apiService = {
     // --- UTILISATEURS ---
     getUser: () => apiFetch('/user'),
 
-    // Vérification disponibilité Pseudo
     checkUsername: (cleanName: string) =>
         apiFetch(`/check-username/${cleanName}`),
 
-    // ✅ Vérification disponibilité Email
     checkEmail: (email: string) =>
         apiFetch(`/check-email?email=${encodeURIComponent(email)}`),
+
+    // --- RECHERCHE GLOBALE / SUGGESTIONS ---
+    getSuggestions: (query: string) =>
+        apiFetch(`/search/suggestions?query=${encodeURIComponent(query)}`),
 
     // --- ANNONCES ---
     getAnnonces: (params?: {
@@ -87,29 +88,27 @@ export const apiService = {
         return apiFetch('/annonces', { method: 'POST', body: formData });
     },
 
+    getUserByUsername: (username: string) =>
+        apiFetch(`/users/${username}`),
+
+    deleteAnnonce: (id: number | string) =>
+        apiFetch(`/annonces/${id}`, { method: 'DELETE' }),
+
     // --- VITRINE / CONFIG ---
     getVitrineConfig: (userSlug: string, annonceSlug: string) =>
         apiFetch(`/annonces/${userSlug}/${annonceSlug}/vitrine`),
 
-    /**
-     * Mise à jour de la vitrine
-     * Supporte à la fois un objet JSON ou un FormData (pour les images)
-     */
     updateVitrineConfig: (annonceId: number | string, data: any) => {
-        // Si c'est un FormData (cas de ton éditeur actuel avec photos)
         if (data instanceof FormData) {
-            // Laravel nécessite souvent _method=PUT pour traiter les fichiers en multipart
             if (!data.has('_method')) {
                 data.append('_method', 'PUT');
             }
             return apiFetch(`/vitrine/${annonceId}`, {
-                method: 'POST', // Utilisation de POST + _method PUT pour les fichiers
+                method: 'POST',
                 body: data,
-                // On ne définit pas le Content-Type ici, le navigateur le fera avec le boundary
             });
         }
 
-        // Si c'est un objet JSON simple
         return apiFetch(`/vitrine/${annonceId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -124,6 +123,7 @@ export const apiService = {
             body: JSON.stringify(data),
         });
     },
+
     // --- AUTH / MOT DE PASSE ---
     forgotPassword: (email: string) =>
         apiFetch('/forgot-password', {

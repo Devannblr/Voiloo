@@ -25,8 +25,9 @@ Route::get('/annonces/{userSlug}/{annonceSlug}/vitrine', [AnnonceController::cla
 Route::get('/annonces/{userSlug}/{annonceSlug}', [AnnonceController::class, 'showBySlug']);
 Route::get('/annonces/{id}', [AnnonceController::class, 'show'])->whereNumber('id');
 
-// Utilisateurs publics (On garde le nom slug mais UserController doit chercher par username en interne)
+// Utilisateurs publics
 Route::get('/users/{slug}', [UserController::class, 'showBySlug']);
+Route::get('/search/suggestions', [AnnonceController::class, 'suggestions']);
 
 // Authentification & Inscription
 Route::post('/register', [AuthController::class, 'register']);
