@@ -20,8 +20,11 @@ export const LoginForm = () => {
             });
 
             if (data.access_token) {
+                // On garde dans localStorage pour apiFetch (Header Authorization)
                 localStorage.setItem('voiloo_token', data.access_token);
-                // On redirige vers le profil pour voir l'avatar et les infos
+
+                // Le cookie HttpOnly est déjà posé par Laravel grâce à withCookie()
+                // On redirige. Le middleware verra le cookie au prochain chargement.
                 window.location.href = "/profil";
             }
         } catch (err) {

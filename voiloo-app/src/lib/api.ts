@@ -1,9 +1,9 @@
 // lib/api.ts
 
-// ✅ Utilise la variable d'env, sinon fallback local
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 
 export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
+    // Le token est toujours dans le localStorage pour les headers Authorization
     const token = typeof window !== 'undefined' ? localStorage.getItem('voiloo_token') : null;
     const isFormData = options.body instanceof FormData;
 
@@ -20,10 +20,11 @@ export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
         Object.assign(headers, options.headers);
     }
 
-    // ✅ On utilise bien l'API_URL dynamique
     const response = await fetch(`${API_URL}${endpoint}`, {
         ...options,
-        headers
+        headers,
+        // INDISPENSABLE pour que les cookies HttpOnly transitent
+        credentials: 'include'
     });
 
     if (!response.ok) {
