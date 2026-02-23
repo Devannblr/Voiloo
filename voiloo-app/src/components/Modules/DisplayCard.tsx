@@ -1,23 +1,10 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Avatar, Card, CardBody, H4, Price, Small, P } from "@/components/Base";
 import { StarMark } from "@/components/Modules/StarMark";
-
-// ✅ Correction de la base URL avec fallback propre
-const STORAGE_BASE = (process.env.NEXT_PUBLIC_STORAGE_URL || 'http://localhost:8000/storage').replace(/\/+$/, '');
-
-function normalizeImageUrl(path: string | null | undefined): string {
-    if (!path || path === "userdefault.png") return "/userdefault.png";
-    if (path.startsWith('http://') || path.startsWith('https://')) return path;
-
-    // Nettoyage des slashes et du mot "storage" en doublon
-    const cleanPath = path.replace(/^(storage\/|\/storage\/|\/)/, '');
-
-    return `${STORAGE_BASE}/${cleanPath}`;
-}
+import { StorageImage } from "@/components/Base/StorageImage";
 
 interface DisplayCardProps {
     name: string;
@@ -45,13 +32,11 @@ export const DisplayCard = ({
 
     const inner = (
         <Card hover className="rounded-[20px] w-full max-w-sm overflow-hidden border-none shadow-sm h-full flex flex-col">
-            {/* Bandeau couleur vitrine */}
             <div className="h-1.5 w-full shrink-0" style={{ backgroundColor: couleurPrincipale }} />
             <CardBody className="p-5 flex flex-col flex-1">
-                {/* Header */}
                 <div className="flex justify-between items-start mb-5 gap-2">
                     <div className="flex gap-3 min-w-0">
-                        <Avatar src={normalizeImageUrl(avatarSrc)} name={name} size="lg" />
+                        <Avatar src={avatarSrc} name={name} size="lg" />
                         <div className="flex flex-col min-w-0">
                             <H4 className="text-lg leading-tight mb-0.5 truncate">{name}</H4>
                             <P className="text-sm font-medium mb-1 text-gray-600 truncate">{job}</P>
@@ -64,18 +49,14 @@ export const DisplayCard = ({
                     </div>
                 </div>
 
-                {/* Grid photos - Remplissage auto du reste de la carte */}
                 <div className="grid grid-cols-3 gap-2 mt-auto">
                     {displayImages.map((img, i) => (
-                        <div key={i}
-                             className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 hover:opacity-90 transition-opacity">
+                        <div key={i} className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 hover:opacity-90 transition-opacity">
                             {img ? (
-                                <Image
-                                    src={normalizeImageUrl(img)}
+                                <StorageImage
+                                    path={img}
                                     alt={`Réalisation ${i + 1}`}
-                                    fill
-                                    className="object-cover"
-                                    sizes="(max-width: 768px) 33vw, 120px"
+                                    className="w-full h-full object-cover"
                                 />
                             ) : (
                                 <div className="w-full h-full bg-gray-50 flex items-center justify-center border border-dashed border-gray-200 rounded-xl">
