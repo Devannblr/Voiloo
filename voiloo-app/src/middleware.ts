@@ -2,18 +2,18 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-    // ✅ Utilise le même nom que celui défini dans ton Back (ou ton script de login)
-    // On vérifie 'voiloo_token' (recommandé) ou 'token' selon ce que tu as gardé
+    // On cherche prioritairement voiloo_token
     const token = request.cookies.get('voiloo_token')?.value || request.cookies.get('token')?.value;
 
-    // Définis les routes qui nécessitent d'être connecté
+    // Routes nécessitant une connexion
     const protectedRoutes = ['/ajouter', '/messages'];
 
+    // Vérification si on est sur une route d'édition d'annonce (ex: /u/username/mon-annonce/edit)
+    const isEditRoute = request.nextUrl.pathname.endsWith('/edit');
     const isProtectedRoute = protectedRoutes.some(route =>
         request.nextUrl.pathname.startsWith(route)
-    );
+    ) || isEditRoute;
 
-    // Si la route est protégée et qu'aucun cookie n'est présent
     if (isProtectedRoute && !token) {
         const loginUrl = new URL('/login', request.url);
         loginUrl.searchParams.set('error', 'unauthorized');
@@ -28,6 +28,7 @@ export const config = {
     matcher: [
         '/profil/:path*',
         '/ajouter/:path*',
-        '/messages/:path*'
+        '/messages/:path*',
+        '/u/:user/:annonce/edit'
     ],
 };

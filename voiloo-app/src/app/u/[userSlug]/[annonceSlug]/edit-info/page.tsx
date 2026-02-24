@@ -3,8 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { apiService } from '@/services/apiService';
-import { Container, Button, H1 } from '@/components/Base';
-import { Loader2, Save, ArrowLeft, Euro, MapPin, Tag, FileText, Calendar, Home } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+
+// Tes composants Base
+import {Container, Button, H1, Loader, Input, Select, Textarea, Divider, Label, P} from '@/components/Base';
+import { Save, ArrowLeft, Euro, FileText, Calendar, Home, Tag } from 'lucide-react';
+
+// Tes composants Modules
 import AddressInput from "@/components/Modules/AdresseInput";
 
 export default function EditerAnnoncePage() {
@@ -12,6 +17,8 @@ export default function EditerAnnoncePage() {
     const params = useParams();
     const userSlug = params.userSlug as string;
     const initialAnnonceSlug = params.annonceSlug as string;
+
+    const { user: currentUser, isLoading: authLoading } = useAuth();
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -23,60 +30,72 @@ export default function EditerAnnoncePage() {
         description: '',
         categorie_id: '',
         prix: '',
-        adresse: '', // Ajouté
+        adresse: '',
         ville: '',
         code_postal: '',
         disponibilites: '',
-        lat: parseFloat(""),
-        lng: parseFloat(""),
+        lat: null as number | null,
+        lng: null as number | null,
     });
 
     useEffect(() => {
-        Promise.all([
-            apiService.getCategories(),
-            apiService.getAnnonceBySlug(userSlug, initialAnnonceSlug)
-        ]).then(([cats, annonce]) => {
-            setCategories(cats);
-            setForm({
-                id: annonce.id,
-                titre: annonce.titre,
-                description: annonce.description,
-                categorie_id: String(annonce.categorie_id),
-                prix: String(annonce.prix),
-                adresse: annonce.adresse || '', // Ajouté
-                ville: annonce.ville || '',
-                code_postal: annonce.code_postal || '',
-                disponibilites: annonce.disponibilites || '',
-                lat: annonce.lat ?? null,
-                lng: annonce.lng ?? null,
-            });
-            setLoading(false);
-        }).catch(err => {
-            console.error(err);
-            router.push('/');
-        });
-    }, [userSlug, initialAnnonceSlug, router]);
+        if (!authLoading && !currentUser) {
+            router.push('/login');
+            return;
+        }
+
+        const fetchData = async () => {
+            try {
+                const [cats, annonce] = await Promise.all([
+                    apiService.getCategories(),
+                    apiService.getAnnonceBySlug(userSlug, initialAnnonceSlug)
+                ]);
+
+                if (currentUser && annonce.user_id !== currentUser.id) {
+                    router.push('/');
+                    return;
+                }
+
+                setCategories(cats);
+                setForm({
+                    id: annonce.id,
+                    titre: annonce.titre,
+                    description: annonce.description,
+                    categorie_id: String(annonce.categorie_id),
+                    prix: String(annonce.prix),
+                    adresse: annonce.adresse || '',
+                    ville: annonce.ville || '',
+                    code_postal: annonce.code_postal || '',
+                    disponibilites: annonce.disponibilites || '',
+                    lat: annonce.lat ?? null,
+                    lng: annonce.lng ?? null,
+                });
+                setLoading(false);
+            } catch (err) {
+                console.error(err);
+                router.push('/');
+            }
+        };
+
+        if (!authLoading) fetchData();
+    }, [userSlug, initialAnnonceSlug, router, currentUser, authLoading]);
 
     const handleSave = async () => {
         setSaving(true);
         try {
             const response = await apiService.updateAnnonce(form.id, form);
             const nextSlug = response.new_slug || initialAnnonceSlug;
-            alert("Modification réussie !");
             router.push(`/u/${userSlug}/${nextSlug}`);
-            router.refresh();
         } catch (err: any) {
-            console.error("Erreur complète:", err);
-            const errorMsg = err.response?.data?.message || "Erreur lors de la modification";
-            alert(errorMsg);
+            alert(err.response?.data?.message || "Erreur lors de la modification");
         } finally {
             setSaving(false);
         }
     };
 
-    if (loading) return (
+    if (loading || authLoading) return (
         <div className="min-h-screen flex items-center justify-center bg-white">
-            <Loader2 className="animate-spin text-primary" size={40} />
+            <Loader variant="spinner" size="lg" color="primary" />
         </div>
     );
 
@@ -84,108 +103,88 @@ export default function EditerAnnoncePage() {
         <main className="min-h-screen bg-gray-50 py-12">
             <Container>
                 <div className="max-w-2xl mx-auto">
-                    <button onClick={() => router.back()} className="flex items-center gap-2 text-gray-500 mb-6 hover:text-dark font-bold">
-                        <ArrowLeft size={18} /> Retour
-                    </button>
+                    <Button
+                        variant="ghost"
+                        onClick={() => router.back()}
+                        leftIcon={<ArrowLeft size={18} />}
+                        className="mb-6 font-bold"
+                    >
+                        Retour
+                    </Button>
 
                     <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
-                        <H1 className="text-2xl font-black mb-8 italic text-dark uppercase tracking-tight">Modifier l'annonce</H1>
+                        <H1 className="text-2xl font-black mb-8 italic text-dark uppercase tracking-tight italic">
+                            Paramètres de l'annonce
+                        </H1>
 
                         <div className="space-y-6">
-                            {/* TITRE */}
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-sm font-semibold text-dark flex items-center gap-2">
-                                    <FileText size={16} className="text-gray-400" /> Titre de l'annonce
-                                </label>
-                                <input
-                                    value={form.titre}
-                                    onChange={e => setForm({...form, titre: e.target.value})}
-                                    className="w-full px-4 py-3 border-2 border-gray-50 rounded-xl focus:border-primary outline-none transition-colors"
-                                />
-                            </div>
+                            <Input
+                                label="Titre de l'annonce"
+                                leftIcon={<FileText size={18} className="text-gray-400" />}
+                                value={form.titre}
+                                onChange={e => setForm({...form, titre: e.target.value})}
+                                placeholder="Ex: Pose d'ongles à domicile"
+                            />
 
                             <div className="grid sm:grid-cols-2 gap-4">
-                                {/* CATEGORIE */}
-                                <div className="flex flex-col gap-1.5">
-                                    <label className="text-sm font-semibold text-dark flex items-center gap-2">
-                                        <Tag size={16} className="text-gray-400" /> Catégorie
-                                    </label>
-                                    <select
-                                        value={form.categorie_id}
-                                        onChange={e => setForm({...form, categorie_id: e.target.value})}
-                                        className="w-full px-4 py-3 border-2 border-gray-50 rounded-xl focus:border-primary outline-none bg-white"
-                                    >
-                                        {categories.map(cat => (
-                                            <option key={cat.id} value={cat.id}>{cat.nom}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                {/* PRIX */}
-                                <div className="flex flex-col gap-1.5">
-                                    <label className="text-sm font-semibold text-dark flex items-center gap-2">
-                                        <Euro size={16} className="text-gray-400" /> Tarif horaire (€)
-                                    </label>
-                                    <input
-                                        type="number"
-                                        value={form.prix}
-                                        onChange={e => setForm({...form, prix: e.target.value})}
-                                        className="w-full px-4 py-3 border-2 border-gray-50 rounded-xl focus:border-primary outline-none"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* DESCRIPTION */}
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-sm font-semibold text-dark">Description de vos services</label>
-                                <textarea
-                                    value={form.description}
-                                    onChange={e => setForm({...form, description: e.target.value})}
-                                    rows={5}
-                                    className="w-full px-4 py-3 border-2 border-gray-50 rounded-xl focus:border-primary outline-none resize-none"
+                                <Select
+                                    label="Catégorie"
+                                    value={form.categorie_id}
+                                    onChange={e => setForm({...form, categorie_id: e.target.value})}
+                                    options={categories.map(cat => ({ value: String(cat.id), label: cat.nom }))}
+                                />
+                                <Input
+                                    label="Tarif horaire (€)"
+                                    type="number"
+                                    leftIcon={<Euro size={18} className="text-gray-400" />}
+                                    value={form.prix}
+                                    onChange={e => setForm({...form, prix: e.target.value})}
                                 />
                             </div>
 
+                            <Textarea
+                                label="Description des services"
+                                value={form.description}
+                                onChange={e => setForm({...form, description: e.target.value})}
+                                rows={5}
+                                hint="Décrivez votre expertise pour rassurer vos futurs clients."
+                            />
 
-                            {/* VILLE & CP */}
+                            <Divider />
+
                             <div className="flex flex-col gap-1.5">
-                                <label className="text-sm font-semibold text-dark flex items-center gap-2">
-                                    <Home size={16} className="text-gray-400" /> Adresse complète
-                                </label>
+                                <Label className="flex items-center gap-2">
+                                    <Home size={18} className="text-gray-400" /> Localisation
+                                </Label>
                                 <AddressInput
                                     value={form.adresse}
                                     onChange={({ adresse, ville, code_postal, lat, lng }) =>
                                         setForm(f => ({ ...f, adresse, ville, code_postal, lat, lng }))
                                     }
                                 />
-                                {/* Affichage en lecture seule des champs auto-remplis */}
                                 {form.ville && (
-                                    <p className="text-xs text-gray-400 mt-1">
-                                        📍 {form.ville} — {form.code_postal}
-                                        {form.lat && <span className="ml-2 text-green-600 font-semibold">✓ Coordonnées capturées</span>}
-                                    </p>
+                                    <P className="text-xs text-primary mt-1 font-bold italic">
+                                        📍 Actuellement : {form.ville} ({form.code_postal})
+                                    </P>
                                 )}
                             </div>
 
-                            {/* DISPONIBILITÉS */}
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-sm font-semibold text-dark flex items-center gap-2">
-                                    <Calendar size={16} className="text-gray-400" /> Disponibilités
-                                </label>
-                                <input
-                                    value={form.disponibilites}
-                                    onChange={e => setForm({...form, disponibilites: e.target.value})}
-                                    placeholder="Ex: Semaine et week-end"
-                                    className="w-full px-4 py-3 border-2 border-gray-50 rounded-xl focus:border-primary outline-none"
-                                />
-                            </div>
+                            <Input
+                                label="Disponibilités"
+                                leftIcon={<Calendar size={18} className="text-gray-400" />}
+                                value={form.disponibilites}
+                                onChange={e => setForm({...form, disponibilites: e.target.value})}
+                                placeholder="Ex: Lundi au Vendredi, 18h-20h"
+                            />
 
                             <Button
                                 onClick={handleSave}
-                                className="w-full mt-4 flex items-center justify-center gap-2 h-14 rounded-2xl text-lg font-bold"
+                                className="w-full mt-4 h-14 rounded-2xl text-lg font-bold italic uppercase"
                                 disabled={saving}
+                                isLoading={saving}
+                                leftIcon={!saving && <Save size={20} />}
                             >
-                                {saving ? <Loader2 className="animate-spin" size={20} /> : <><Save size={20} /> Enregistrer</>}
+                                Enregistrer les modifications
                             </Button>
                         </div>
                     </div>

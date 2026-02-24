@@ -1,11 +1,15 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { apiService } from '@/services/apiService';
-import { Loader2 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext'; // ✅ Ton nouveau contexte
+
+// Tes composants Base
+import { Loader, Container, P, Button } from '@/components/Base';
 import { Annonce, VitrineConfig } from '@/components/Modules/types';
 
+// Tes composants Vitrine
 import OwnerBar from '@/components/Modules/OwnerBar';
 import VitrineHero from '@/components/Vitrine/(vitrine)/VitrineHero';
 import VitrineNav from '@/components/Vitrine/(vitrine)/VitrineNav';
@@ -22,10 +26,12 @@ export default function VitrinePage() {
     const userSlug = params.userSlug as string;
     const annonceSlug = params.annonceSlug as string;
 
+    // ✅ Utilisation du hook global (plus d'appel API manuel pour le user)
+    const { user: currentUser, isLoading: authLoading } = useAuth();
+
     const [annonce, setAnnonce] = useState<Annonce | null>(null);
     const [config, setConfig] = useState<VitrineConfig | null>(null);
     const [loading, setLoading] = useState(true);
-    const [isOwner, setIsOwner] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
 
     // Synchronisation Header
@@ -34,6 +40,7 @@ export default function VitrinePage() {
     const scrollDownAccum = useRef(0);
     const HIDE_THRESHOLD = 200;
 
+    // Gestion du scroll et resize
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 768);
         checkMobile();
@@ -63,50 +70,57 @@ export default function VitrinePage() {
         };
     }, []);
 
+    // Chargement des données de l'annonce
     useEffect(() => {
         if (!userSlug || !annonceSlug) return;
-        setLoading(true);
-        Promise.all([
-            apiService.getAnnonceBySlug(userSlug, annonceSlug),
-            apiService.getVitrineConfig(userSlug, annonceSlug),
-        ])
-            .then(([annonceData, configData]) => {
+
+        const fetchVitrine = async () => {
+            setLoading(true);
+            try {
+                const [annonceData, configData] = await Promise.all([
+                    apiService.getAnnonceBySlug(userSlug, annonceSlug),
+                    apiService.getVitrineConfig(userSlug, annonceSlug),
+                ]);
                 setAnnonce(annonceData);
                 setConfig(configData);
-                const token = typeof window !== 'undefined' ? localStorage.getItem('voiloo_token') : null;
-                if (token) {
-                    apiService.getUser()
-                        .then((user: any) => {
-                            if (user?.id === annonceData.user_id) setIsOwner(true);
-                        })
-                        .catch(() => {});
-                }
-            })
-            .catch((err) => console.error("Erreur chargement vitrine:", err))
-            .finally(() => setLoading(false));
+            } catch (err) {
+                console.error("Erreur chargement vitrine:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchVitrine();
     }, [userSlug, annonceSlug]);
 
-    if (loading) return (
+    // ✅ Déduction de isOwner via le contexte (instantané)
+    const isOwner = useMemo(() => {
+        return currentUser && annonce && currentUser.id === annonce.user_id;
+    }, [currentUser, annonce]);
+
+    if (loading || authLoading) return (
         <div className="min-h-screen flex items-center justify-center bg-white">
-            <Loader2 size={32} className="animate-spin" style={{ color: '#FFD359' }} />
+            <Loader variant="spinner" size="lg" color="primary" />
         </div>
     );
 
     if (!annonce || !config) return (
-        <div className="min-h-screen flex items-center justify-center">
-            <p className="text-gray-500">Vitrine introuvable</p>
-        </div>
+        <Container className="min-h-screen flex flex-col items-center justify-center">
+            <P className="text-gray-500 italic mb-4">Vitrine introuvable</P>
+            <Button href="/">Retour à l'accueil</Button>
+        </Container>
     );
 
+    // Configuration des styles
     const primary = config.couleur_principale || '#FFD359';
     const textColor = config.couleur_texte || '#1A1A1A';
     const bgColor = config.couleur_fond || '#FFFFFF';
     const sections = config.sections || {};
 
-    // Calculs des positions
+    // Calculs des positions pour le scroll smooth
     const DESKTOP_HEADER_H = 64;
     const currentHeaderH = isMobile ? 0 : DESKTOP_HEADER_H;
-    const ownerBarH = isMobile ? 48 : 54; // Hauteur approximative réduite sur mobile
+    const ownerBarH = isMobile ? 48 : 54;
 
     const scrollTo = (id: string) => {
         const el = document.getElementById(id);
@@ -132,7 +146,7 @@ export default function VitrinePage() {
     return (
         <main style={{ backgroundColor: bgColor, color: textColor }} className="min-h-screen relative">
 
-            {/* 1. OWNER BAR */}
+            {/* 1. OWNER BAR (Conditionnée par isOwner du contexte) */}
             {isOwner && (
                 <div
                     className="sticky z-[90] transition-transform duration-300 border-b border-black/5"
@@ -176,16 +190,20 @@ export default function VitrinePage() {
                 />
             </div>
 
-            <div className="max-w-3xl mx-auto px-6 py-12 space-y-16">
+            {/* Contenu principal restreint pour la lisibilité */}
+            <div className="max-w-3xl mx-auto px-6 py-12 space-y-24">
                 {sections.about && (
                     <SectionAbout content={sections.about} primary={primary} />
                 )}
+
                 {sections.parcours && (
                     <SectionParcours parcours={sections.parcours} primary={primary} />
                 )}
+
                 {((sections.services?.length ?? 0) > 0) && (
                     <SectionServices services={sections.services!} primary={primary} />
                 )}
+
                 {((annonce.images?.length ?? 0) > 0) && (
                     <SectionPortfolio
                         images={annonce.images || []}
@@ -193,11 +211,13 @@ export default function VitrinePage() {
                         note={sections.portfolio_note}
                     />
                 )}
+
                 <SectionAvis
                     avis={annonce.avis || []}
                     primary={primary}
                     annonceId={annonce.id}
                 />
+
                 {config.show_contact_form && (
                     <SectionContact
                         primary={primary}
