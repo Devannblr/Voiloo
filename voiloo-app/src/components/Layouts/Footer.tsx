@@ -10,9 +10,7 @@ export const Footer = () => {
 
     // --- TES BASES COMMUNES ---
     const columnTitle = "font-accent text-primary text-lg mb-4 block";
-    // Ajout de 'block' ou 'w-full' pour que le lien occupe toute la ligne
     const linkStyle = "text-white/70 hover:text-primary transition-colors text-sm block mb-2";
-    // La base pour tes conteneurs de listes
     const colBase = "flex flex-col gap-1";
 
     return (
@@ -35,28 +33,30 @@ export const Footer = () => {
                         <div className={colBase}>
                             <Link href="/" className={linkStyle}>Accueil</Link>
                             <Link href="/explorer" className={linkStyle}>Explorer</Link>
-                            <Link href="/annonces" className={linkStyle}>Annonces</Link>
+                            <Link href="/favoris" className={linkStyle}>Favoris</Link>
                             <Link href="/profil" className={linkStyle}>Mon Profil</Link>
                         </div>
                     </div>
 
-                    {/* Colonne 3 : Plateforme */}
+                    {/* Colonne 3 : Plateforme (Mise à jour ✅) */}
                     <div>
                         <span className={columnTitle}>Plateforme</span>
                         <div className={colBase}>
-                            <Link href="/comment-ca-marche" className={linkStyle}>Comment ça marche</Link>
-                            <Link href="/devenir-prestataire" className={linkStyle}>Proposer un service</Link>
+                            {/* Liens vers les futures pages ou ancres */}
+                            <Link href="/concept" className={linkStyle}>Comment ça marche</Link>
+                            <Link href="/register" className={linkStyle}>Devenir prestataire</Link>
                             <Link href="/blog" className={linkStyle}>Blog & Actu</Link>
                         </div>
                     </div>
 
-                    {/* Colonne 4 : Aide */}
+                    {/* Colonne 4 : Aide (Mise à jour ✅) */}
                     <div>
-                        <span className={columnTitle}>Aide</span>
+                        <span className={columnTitle}>Aide & Légal</span>
                         <div className={colBase}>
                             <Link href="/faq" className={linkStyle}>FAQ</Link>
                             <Link href="/contact" className={linkStyle}>Contact</Link>
-                            <Link href="/mentions-legales" className={linkStyle}>Légal</Link>
+                            <Link href="/mentions-legales" className={linkStyle}>Mentions Légales</Link>
+                            <Link href="/politique-confidentialite" className={linkStyle}>Confidentialité</Link>
                         </div>
                     </div>
 
@@ -71,14 +71,14 @@ export const Footer = () => {
                     </div>
                 </div>
 
-                {/* VERSION MOBILE */}
+                {/* VERSION MOBILE (Mise à jour ✅) */}
                 <div className="md:hidden flex flex-col items-center gap-8 mb-8 text-center">
-                    <Logo voilColor="var(--color-white)" ooColor="var(--color-primary)"  href={"/"}/>
+                    <Logo voilColor="var(--color-white)" ooColor="var(--color-primary)" href={"/"}/>
                     <div className={colBase}>
                         <Link href="/" className={linkStyle}>Accueil</Link>
-                        <Link href="/faq" className={linkStyle}>FAQ</Link>
+                        <Link href="/mentions-legales" className={linkStyle}>Mentions Légales</Link>
+                        <Link href="/politique-confidentialite" className={linkStyle}>Confidentialité</Link>
                         <Link href="/contact" className={linkStyle}>Contact</Link>
-                        <Link href="/mentions-legales" className={linkStyle}>Légal</Link>
                     </div>
                 </div>
 

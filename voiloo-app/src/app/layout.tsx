@@ -5,6 +5,7 @@ import { HeaderMobile } from "@/components/Layouts/HeaderMobile";
 import { Footer } from "@/components/Layouts/Footer";
 import { ToastProvider } from "@/components/Layouts/Toastprovider";
 import { Preloader } from "@/components/Modules/Preloader";
+import CookieBanner from "@/components/Layouts/CookieBanner";
 
 export const metadata: Metadata = {
     title: "Voiloo - Freelances & Services locaux",
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ToastProvider>
         <Preloader>
             {children}
+            <CookieBanner />
         </Preloader>
         </ToastProvider>
         <Footer />
