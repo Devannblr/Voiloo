@@ -20,10 +20,13 @@ import {
 import { Logo } from "@/components/Base/logo";
 import { apiService } from '@/services/apiService';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext'; // ✅ Import du hook
 
 function HeaderContent() {
+    // ✅ Utilisation du hook useAuth
+    const { isAuthenticated, user, logout } = useAuth();
+
     const [visible, setVisible] = useState(true);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [categories, setCategories] = useState<any[]>([]);
     const [showExplore, setShowExplore] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -36,17 +39,13 @@ function HeaderContent() {
     const scrollDownAccum = useRef(0);
     const HIDE_THRESHOLD = 200;
 
-    // --- NOUVEAUX STATES POUR LES SUGGESTIONS ---
     const [searchValue, setSearchValue] = useState('');
     const [suggestions, setSuggestions] = useState<any[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const suggestionsRef = useRef<HTMLDivElement>(null);
 
-    // Auth + catégories + click outside
+    // Chargement des catégories & gestion clic extérieur
     useEffect(() => {
-        const token = localStorage.getItem('voiloo_token');
-        if (token) setIsLoggedIn(true);
-
         apiService.getCategories()
             .then(setCategories)
             .catch(err => console.error("Erreur catégories:", err));
@@ -55,7 +54,6 @@ function HeaderContent() {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
                 setShowExplore(false);
             }
-            // Fermer les suggestions si on clique ailleurs
             if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node)) {
                 setShowSuggestions(false);
             }
@@ -71,7 +69,7 @@ function HeaderContent() {
         }
     };
 
-    // --- LOGIQUE DE RECHERCHE MISE À JOUR (Utilise getSuggestions) ---
+    // Suggestions de recherche
     useEffect(() => {
         if (!searchValue || searchValue.length < 2) {
             setSuggestions([]);
@@ -80,10 +78,8 @@ function HeaderContent() {
         }
 
         const timeout = setTimeout(() => {
-            // On appelle la nouvelle route globale qui gère u: et a:
             apiService.getSuggestions(searchValue)
                 .then((data) => {
-                    // On reçoit maintenant des objets unifiés {type, title, subtitle, url, price, avatar}
                     setSuggestions(data || []);
                     setShowSuggestions(true);
                 })
@@ -93,7 +89,7 @@ function HeaderContent() {
         return () => clearTimeout(timeout);
     }, [searchValue]);
 
-    // Scroll
+    // Logique de scroll (Show/Hide Header)
     useEffect(() => {
         const handleScroll = () => {
             const currentY = window.scrollY;
@@ -115,12 +111,6 @@ function HeaderContent() {
         window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
-
-    const handleLogout = () => {
-        localStorage.removeItem('voiloo_token');
-        setIsLoggedIn(false);
-        window.location.href = '/';
-    };
 
     const handleNavigate = (href: string) => {
         router.push(href);
@@ -193,14 +183,12 @@ function HeaderContent() {
                                 leftIcon={<Search size={20} />}
                             />
 
-                            {/* LE BLOC DE SUGGESTIONS */}
                             {showSuggestions && suggestions.length > 0 && (
                                 <div className="absolute top-full left-0 w-full bg-white text-dark rounded-2xl shadow-xl mt-2 overflow-hidden z-50 border border-gray-100">
                                     {suggestions.map((item, index) => (
                                         <button
                                             key={index}
                                             onClick={() => {
-                                                // On utilise l'URL envoyée par le backend (qui gère déjà si c'est /u/user ou /u/user/slug)
                                                 router.push(item.url);
                                                 setShowSuggestions(false);
                                                 setSearchValue('');
@@ -233,17 +221,32 @@ function HeaderContent() {
                         </div>
                     </div>
 
-                    {/* 3. Actions & Auth */}
+                    {/* 3. Actions & Auth (Utilise maintenant le hook ✅) */}
                     <div className="flex items-center gap-4 md:gap-6">
                         <Link href="/ajouter" className="text-white whitespace-nowrap" rightIcon={<Plus className="text-primary" size={20} />}>
                             Ajouter une annonce
                         </Link>
 
-                        {isLoggedIn ? (
+                        {isAuthenticated ? (
                             <div className="flex items-center gap-2">
                                 <IconButton label="Messages" icon={<MessageSquare size={22} />} variant="ghost" className="text-white hover:text-primary" href="/messages" />
-                                <IconButton label="Mon Profil" icon={<User size={22} />} variant="ghost" className="text-white hover:text-primary" href="/profil" />
-                                <IconButton label="Déconnexion" icon={<LogOut size={20} />} variant="ghost" className="text-white hover:text-red-500" onClick={handleLogout} />
+
+                                {/* Tu peux même afficher le nom de l'utilisateur ici si tu veux */}
+                                <IconButton
+                                    label={user?.username || "Mon Profil"}
+                                    icon={<User size={22} />}
+                                    variant="ghost"
+                                    className="text-white hover:text-primary"
+                                    href="/profil"
+                                />
+
+                                <IconButton
+                                    label="Déconnexion"
+                                    icon={<LogOut size={20} />}
+                                    variant="ghost"
+                                    className="text-white hover:text-red-500"
+                                    onClick={logout} // ✅ Utilise la fonction logout du hook
+                                />
                             </div>
                         ) : (
                             <div className="flex items-center gap-3">

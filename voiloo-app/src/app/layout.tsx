@@ -6,6 +6,7 @@ import { Footer } from "@/components/Layouts/Footer";
 import { ToastProvider } from "@/components/Layouts/Toastprovider";
 import { Preloader } from "@/components/Modules/Preloader";
 import CookieBanner from "@/components/Layouts/CookieBanner";
+import { AuthProvider } from '@/context/AuthContext'; // Import du nouveau context
 
 export const metadata: Metadata = {
     title: "Voiloo - Freelances & Services locaux",
@@ -25,15 +26,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <link rel="shortcut icon" href="/favicon.ico" />
         </head>
         <body className="antialiased pb-8 md:pb-0 relative">
-        <Header />
-        <ToastProvider>
-        <Preloader>
-            {children}
-            <CookieBanner />
-        </Preloader>
-        </ToastProvider>
-        <Footer />
-        <HeaderMobile />
+        <AuthProvider>
+            <ToastProvider>
+                <Header />
+                <Preloader>
+                    {children}
+                    <CookieBanner />
+                </Preloader>
+                <Footer />
+                <HeaderMobile />
+            </ToastProvider>
+        </AuthProvider>
         </body>
         </html>
     );
