@@ -10,6 +10,9 @@ class CategoryController extends Controller
 {
     public function index()
     {
-        return response()->json(Categorie::all());
+        // On utilise orderBy() avant de récupérer les résultats avec get()
+        $categories = Categorie::orderBy('nom', 'asc')->get();
+
+        return response()->json($categories);
     }
 }
