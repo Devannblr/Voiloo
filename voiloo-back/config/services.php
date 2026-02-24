@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'cloudflare' => [
+        'cf_secret' => env('CLOUDFLARE_TURNSTILE_SECRET'),
+    ],
+
 ];

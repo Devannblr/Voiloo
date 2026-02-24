@@ -10,14 +10,19 @@
           <excludedPaths>
             <excludedPath path="/sites/api.voiloo.fr/vendor" />
             <excludedPath local="true" path="$PROJECT_DIR$/voiloo-back/vendor" />
+            <excludedPath local="true" path="$PROJECT_DIR$/voiloo-back/node_modules" />
           </excludedPaths>
         </serverdata>
       </paths>
       <paths name="node">
         <serverdata>
           <mappings>
-            <mapping local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/sites/voiloo.fr" local="$PROJECT_DIR$/voiloo-app" web="/" />
           </mappings>
+          <excludedPaths>
+            <excludedPath local="true" path="$PROJECT_DIR$/voiloo-app/node_modules" />
+            <excludedPath local="true" path="$PROJECT_DIR$/voiloo-app/.next" />
+          </excludedPaths>
         </serverdata>
       </paths>
     </serverData>
