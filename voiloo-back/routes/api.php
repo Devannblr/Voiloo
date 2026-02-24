@@ -22,6 +22,8 @@ Route::get('/annonces', [AnnonceController::class, 'index']);
 
 // ✅ CORRECTION : Une seule route pour la vitrine, pointant vers AnnonceController qui est à jour
 Route::get('/annonces/{userSlug}/{annonceSlug}/vitrine', [AnnonceController::class, 'getVitrineConfig']);
+Route::get('/annonces/map', [AnnonceController::class, 'getMapPoints']);
+Route::get('/annonces/recommended', [AnnonceController::class, 'getRecommended']);
 
 Route::get('/annonces/{userSlug}/{annonceSlug}', [AnnonceController::class, 'showBySlug']);
 Route::get('/annonces/{id}', [AnnonceController::class, 'show'])->whereNumber('id');

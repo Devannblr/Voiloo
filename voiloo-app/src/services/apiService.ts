@@ -30,6 +30,16 @@ export const apiService = {
         apiFetch(`/search/suggestions?query=${encodeURIComponent(query)}`),
 
     // --- ANNONCES ---
+    // Pour la carte de la HeroSection
+    getMapPoints: () => apiFetch('/annonces/map'),
+
+    // Pour la FreelanceGrid de l'accueil
+    getRecommendedAnnonces: (city?: string) => {
+        const url = city
+            ? `/annonces/recommended?city=${encodeURIComponent(city)}`
+            : '/annonces/recommended';
+        return apiFetch(url);
+    },
     getAnnonces: (params?: {
         category?: string;
         city?: string;
@@ -145,4 +155,6 @@ export const apiService = {
 
     toggleFavori: (annonceId: number) =>
         apiFetch(`/favoris/${annonceId}`, { method: 'POST' }),
+
+
 };

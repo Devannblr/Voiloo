@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Container, H2, P, Loader, Button } from '@/components/Base';
 import { DisplayCard } from "@/components/Modules/DisplayCard";
 import { CtaCard } from "@/components/Modules/CtaCard";
@@ -13,71 +13,36 @@ interface FreelanceGridProps {
 export const FreelanceGrid = ({ userCity }: FreelanceGridProps) => {
     const [freelances, setFreelances] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [emptyInCity, setEmptyInCity] = useState(false);
-    const [showingGlobal, setShowingGlobal] = useState(false);
-    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const hasFetched = useRef(false);
+    const [mode, setMode] = useState<'city' | 'global'>('global');
 
-    const fetchGlobal = async () => {
-        const data = await apiService.getAnnonces({ sort: 'rating_desc' });
-        return (data?.data || []).slice(0, 3);
-    };
-
-    const fetchByCity = async (city: string) => {
-        const data = await apiService.getAnnonces({ sort: 'rating_desc', city });
-        return (data?.data || []).slice(0, 3);
-    };
-
-    const doFetch = async (city: string | null) => {
+    const fetchRecommended = useCallback(async (city: string | null) => {
         setIsLoading(true);
-        setEmptyInCity(false);
-        setShowingGlobal(false);
-
         try {
-            if (city) {
-                const annonces = await fetchByCity(city);
-                if (annonces.length > 0) {
-                    setFreelances(annonces);
-                } else {
-                    setEmptyInCity(true);
-                }
-            } else {
-                const annonces = await fetchGlobal();
-                setFreelances(annonces);
-                setShowingGlobal(true);
-            }
-        } catch {
+            // Utilisation de l'endpoint ultra-léger
+            const data = await apiService.getRecommendedAnnonces(city || undefined);
+            const results = Array.isArray(data) ? data : (data?.data || []);
+
+            setFreelances(results);
+            setMode(city && results.length > 0 ? 'city' : 'global');
+        } catch (error) {
+            console.error("Erreur recommandation:", error);
         } finally {
             setIsLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
-        if (timerRef.current) clearTimeout(timerRef.current);
+        // Si on a la ville, on fonce, sinon on attend 2s la géoloc avant de mettre le global
+        let timeout: NodeJS.Timeout;
 
         if (userCity) {
-            // Ville dispo → fetch direct
-            doFetch(userCity);
+            fetchRecommended(userCity);
         } else {
-            // Attendre 4s que la géoloc réponde avant de fetch en global
-            timerRef.current = setTimeout(() => doFetch(null), 4000);
+            timeout = setTimeout(() => fetchRecommended(null), 2000);
         }
 
-        return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-    }, [userCity]);
-
-    const handleShowGlobal = async () => {
-        setIsLoading(true);
-        setEmptyInCity(false);
-        try {
-            const annonces = await fetchGlobal();
-            setFreelances(annonces);
-            setShowingGlobal(true);
-        } catch {
-        } finally {
-            setIsLoading(false);
-        }
-    };
+        return () => clearTimeout(timeout);
+    }, [userCity, fetchRecommended]);
 
     const mapToCard = (annonce: any) => ({
         name: annonce.user?.name || annonce.user?.username || "Prestataire",
@@ -97,41 +62,38 @@ export const FreelanceGrid = ({ userCity }: FreelanceGridProps) => {
                     <H2 className="font-bold">Commencez à chercher par là.</H2>
                     {!isLoading && (
                         <P className="text-muted mt-2">
-                            {showingGlobal || !userCity
-                                ? "Les meilleurs prestataires du moment"
-                                : <>Les meilleurs prestataires près de <strong>{userCity}</strong></>
+                            {mode === 'city'
+                                ? <>Les meilleurs prestataires près de <strong>{userCity}</strong></>
+                                : "Les meilleurs prestataires du moment"
                             }
                         </P>
                     )}
                 </div>
 
-                {isLoading && (
+                {isLoading ? (
                     <div className="flex justify-center py-16">
                         <Loader variant="spinner" size="md" color="primary" />
                     </div>
-                )}
+                ) : (
+                    <>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+                            {freelances.map((annonce) => (
+                                <DisplayCard
+                                    key={annonce.id}
+                                    {...mapToCard(annonce)}
+                                    userSlug={annonce.user?.username}
+                                    annonceSlug={annonce.slug}
+                                    couleurPrincipale={annonce.vitrine_config?.couleur_principale}
+                                />
+                            ))}
+                        </div>
 
-                {!isLoading && emptyInCity && (
-                    <div className="text-center py-16 flex flex-col items-center gap-4">
-                        <P>Aucun prestataire disponible près de <strong>{userCity}</strong>.</P>
-                        <Button variant="outline" onClick={handleShowGlobal}>
-                            Voir les meilleurs prestataires
-                        </Button>
-                    </div>
-                )}
-
-                {!isLoading && !emptyInCity && freelances.length > 0 && (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-                        {freelances.map((annonce) => (
-                            <DisplayCard
-                                key={annonce.id}
-                                {...mapToCard(annonce)}
-                                userSlug={annonce.user?.username}
-                                annonceSlug={annonce.slug}
-                                couleurPrincipale={annonce.vitrine_config?.couleur_principale}
-                            />
-                        ))}
-                    </div>
+                        {mode === 'global' && userCity && freelances.length === 0 && (
+                            <P className="text-center text-gray-400 mb-8 italic">
+                                Pas encore de prestataires à {userCity}, voici les meilleurs ailleurs !
+                            </P>
+                        )}
+                    </>
                 )}
 
                 <div className="max-w-4xl mx-auto">

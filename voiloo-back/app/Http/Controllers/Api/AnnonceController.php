@@ -354,4 +354,53 @@ class AnnonceController extends Controller
 
         return response()->json(['message' => 'Annonce supprimée']);
     }
+    public function getMapPoints()
+    {
+        return Annonce::where('status', 'active')
+            ->whereNotNull('lat')
+            ->whereNotNull('lng')
+            ->select('id', 'lat', 'lng', 'titre', 'slug', 'user_id')
+            ->with('user:id,username')
+            ->get();
+    }
+
+    /**
+     * Récupère les 3 meilleures annonces (recommandées) avec le minimum de données
+     */
+    public function getRecommended(Request $request)
+    {
+        $city = $request->query('city');
+
+        $query = Annonce::with([
+            'user:id,name,avatar,username',
+            'images',
+            'vitrineConfig:annonce_id,couleur_principale'
+        ])
+            ->withCount('avis')
+            ->where('status', 'active');
+
+        // ✅ LA SOLUTION : Inclure le calcul de la moyenne directement dans le select
+        // On utilise addSelect pour ne pas écraser les autres colonnes
+        $query->select([
+            'id',
+            'user_id',
+            'titre',
+            'slug',
+            'prix',
+            'ville',
+        ])->withAvg('avis as avis_avg_note', 'note');
+
+        if ($city) {
+            // Protection contre les apostrophes (comme à Saint-Martin-d'Hères)
+            $query->whereRaw('LOWER(ville) = ?', [strtolower($city)]);
+        }
+
+        // Maintenant que avis_avg_note est explicitement dans le SELECT,
+        // l'orderBy fonctionnera à tous les coups.
+        $annonces = $query->orderBy('avis_avg_note', 'desc')
+            ->limit(3)
+            ->get();
+
+        return response()->json($annonces);
+    }
 }
