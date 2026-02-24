@@ -1,18 +1,19 @@
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server'; // Correction ici
+import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-    // Récupère le token dans les cookies
-    const token = request.cookies.get('token')?.value;
+    // ✅ Utilise le même nom que celui défini dans ton Back (ou ton script de login)
+    // On vérifie 'voiloo_token' (recommandé) ou 'token' selon ce que tu as gardé
+    const token = request.cookies.get('voiloo_token')?.value || request.cookies.get('token')?.value;
 
     // Définis les routes qui nécessitent d'être connecté
     const protectedRoutes = ['/ajouter', '/messages'];
 
-    // Vérifie si la route actuelle est protégée
     const isProtectedRoute = protectedRoutes.some(route =>
         request.nextUrl.pathname.startsWith(route)
     );
 
+    // Si la route est protégée et qu'aucun cookie n'est présent
     if (isProtectedRoute && !token) {
         const loginUrl = new URL('/login', request.url);
         loginUrl.searchParams.set('error', 'unauthorized');
@@ -23,7 +24,6 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
 }
 
-// Sécurité : on définit sur quelles routes le middleware doit s'activer
 export const config = {
     matcher: [
         '/profil/:path*',

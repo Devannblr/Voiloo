@@ -16,7 +16,6 @@ export default function CookieBanner() {
     const handleConsent = (status: 'all' | 'none') => {
         localStorage.setItem('cookie_consent', status);
         setIsVisible(false);
-        // Ici, tu pourrais désactiver certains scripts si 'none'
     };
 
     if (!isVisible) return null;

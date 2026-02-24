@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Card, CardBody, H2, P, Button, Divider, Link, Small } from '@/components/Base';
-import { MailInput, PasswordInput } from "@/components/Modules";
-import { Logo } from "@/components/Base/logo";
-import { useApi } from '@/hooks/useApi';
+import React, {useState} from 'react';
+import {Button, Card, CardBody, Divider, H2, Link, P} from '@/components/Base';
+import {MailInput, PasswordInput} from "@/components/Modules";
+import {Logo} from "@/components/Base/logo";
+import {useApi} from '@/hooks/useApi';
 
 export const LoginForm = () => {
     const [email, setEmail] = useState('');
@@ -20,12 +20,17 @@ export const LoginForm = () => {
             });
 
             if (data.access_token) {
-                // On garde dans localStorage pour apiFetch (Header Authorization)
+                // 1. Stockage pour les appels API classiques (Header Authorization)
                 localStorage.setItem('voiloo_token', data.access_token);
 
-                // Le cookie HttpOnly est déjà posé par Laravel grâce à withCookie()
-                // On redirige. Le middleware verra le cookie au prochain chargement.
-                window.location.href = "/profil";
+                // 2. Stockage dans un COOKIE pour le middleware Next.js
+                // On utilise 'token' car c'est ce que ton middleware.ts cherche
+                // On met path=/ pour qu'il soit accessible sur tout le site
+                document.cookie = `token=${data.access_token}; path=/; max-age=604800; SameSite=Lax`;
+
+                // 3. Redirection vers la page demandée ou le profil
+                const params = new URLSearchParams(window.location.search);
+                window.location.href = params.get('callbackUrl') || "/profil";
             }
         } catch (err) {
             console.error("Échec de la connexion", err);
@@ -82,7 +87,7 @@ export const LoginForm = () => {
                         isLoading={isLoading}
                         className="font-bold shadow-lg shadow-primary/20"
                     >
-                        Se connecter
+                        {isLoading ? 'Connexion...' : 'Se connecter'}
                     </Button>
                 </form>
 

@@ -92,13 +92,15 @@ export default function ProfilPage() {
     };
 
     const handleLogout = async () => {
-        if (!confirm("Voulez-vous vraiment vous déconnecter ?")) return;
         try {
-            await request('/logout', { method: 'POST' }).catch(() => null);
+            await request('/logout', { method: 'POST' });
         } finally {
+            // 1. On vide le localStorage
             localStorage.removeItem('voiloo_token');
-            router.push('/');
-            router.refresh();
+            // 2. On vide le cookie (en mettant une date d'expiration passée)
+            document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+            // 3. On redirigegi
+            window.location.href = "/login";
         }
     };
 
