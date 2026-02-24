@@ -121,6 +121,7 @@ function ExplorerContent() {
                                         key={ad.id}
                                         href={`/u/${ad.user?.slug || ad.user?.username}/${ad.slug}`}
                                         provider={{
+                                            id: ad.id,
                                             name: ad.user?.name || "Utilisateur",
                                             job: ad.titre,
                                             price: `${ad.prix}€`,

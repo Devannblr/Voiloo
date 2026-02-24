@@ -136,4 +136,13 @@ export const apiService = {
             method: 'POST',
             body: JSON.stringify(data),
         }),
+
+
+    // --- FAVORIS ---
+    getFavorisIds: () => apiFetch('/favoris/ids'),
+
+    getFavoris: () => apiFetch('/favoris'),
+
+    toggleFavori: (annonceId: number) =>
+        apiFetch(`/favoris/${annonceId}`, { method: 'POST' }),
 };

@@ -74,7 +74,6 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->belongsToMany(Annonce::class, 'favoris');
     }
-
     public function isAdmin(): bool
     {
         return isset($this->role) && $this->role === 'admin';

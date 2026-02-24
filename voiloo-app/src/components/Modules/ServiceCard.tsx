@@ -6,8 +6,11 @@ import { Card, CardBody, H4, Small, Price, Badge, Divider } from '@/components/B
 import { StarMark } from "@/components/Modules/StarMark";
 import { Heart } from "lucide-react";
 import { StorageImage } from "@/components/Base/StorageImage";
+import { useFavoris } from "@/hooks/useFavoris";
+import { useAuth } from "@/context/AuthContext";
 
 export interface ServiceCardProvider {
+    id: number;
     name: string;
     job: string;
     price: string;
@@ -15,7 +18,7 @@ export interface ServiceCardProvider {
     rating: number;
     nb_avis: number;
     avatarSrc: string | null;
-    mainPhoto?: string | null; // Uniquement la headerPhoto
+    mainPhoto?: string | null;
     primary?: string;
     images: string[];
     isNew?: boolean;
@@ -24,10 +27,12 @@ export interface ServiceCardProvider {
 interface EnhancedServiceCardProps {
     provider: ServiceCardProvider;
     href: string;
+    onRemove?: (id: number) => void; // ← override du Heart pour la page favoris
 }
 
-export function ServiceCard({ provider, href }: EnhancedServiceCardProps) {
+export function ServiceCard({ provider, href, onRemove }: EnhancedServiceCardProps) {
     const {
+        id,
         name,
         job,
         price,
@@ -41,8 +46,21 @@ export function ServiceCard({ provider, href }: EnhancedServiceCardProps) {
         isNew
     } = provider;
 
-    // Règle stricte : Uniquement la photo d'en-tête en "Hero"
+    const { user } = useAuth();
+    const { isFavori, toggleFavori } = useFavoris(!!user);
+
     const heroImage = mainPhoto;
+    const favori = onRemove ? true : isFavori(id); // toujours rouge si page favoris
+
+    const handleHeartClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (onRemove) {
+            onRemove(id);
+        } else {
+            toggleFavori(id);
+        }
+    };
 
     return (
         <Link href={href} className="block h-full">
@@ -56,7 +74,6 @@ export function ServiceCard({ provider, href }: EnhancedServiceCardProps) {
                                 className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
                             />
                         ) : (
-                            /* CARRÉ DE COULEUR SI PAS DE HEADER PHOTO */
                             <div
                                 className="w-full h-full transition-transform duration-500 group-hover:scale-110"
                                 style={{ backgroundColor: primary }}
@@ -72,10 +89,17 @@ export function ServiceCard({ provider, href }: EnhancedServiceCardProps) {
                     </div>
 
                     <button
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                        className="absolute top-3 right-3 p-2 rounded-full bg-black/10 backdrop-blur-md text-white hover:bg-white hover:text-red-500 transition-all duration-200 z-10"
+                        onClick={handleHeartClick}
+                        className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md transition-all duration-200 z-10
+                            ${favori
+                            ? 'bg-white text-red-500'
+                            : 'bg-black/10 text-white hover:bg-white hover:text-red-500'
+                        }`}
                     >
-                        <Heart size={18} />
+                        <Heart
+                            size={18}
+                            fill={favori ? 'currentColor' : 'none'}
+                        />
                     </button>
                 </div>
 
@@ -89,18 +113,15 @@ export function ServiceCard({ provider, href }: EnhancedServiceCardProps) {
                             />
                             <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
                         </div>
-
                         <div className="flex-1 min-w-0">
                             <H4 className="leading-tight truncate">{name}</H4>
                             <Small className="text-primary font-bold uppercase tracking-tighter text-[10px]">{job}</Small>
                         </div>
                     </div>
 
-                    {/* Mini galerie : affiche le portfolio normalement (index 0, 1, 2) */}
                     <div className="grid grid-cols-3 gap-2 mb-4">
                         {[0, 1, 2].map((i) => {
                             const currentImg = images && images[i];
-
                             return (
                                 <div key={i} className="aspect-square rounded-xl overflow-hidden border border-gray-100 bg-gray-50 relative">
                                     {currentImg ? (
@@ -122,12 +143,8 @@ export function ServiceCard({ provider, href }: EnhancedServiceCardProps) {
                     <Divider className="mb-4 mt-auto opacity-50" />
 
                     <div className="flex items-center justify-between">
-                        <div className="flex flex-col">
-                            <StarMark variant="display" value={rating} nb_avis={nb_avis} size="sm" />
-                        </div>
-                        <div className="text-right">
-                            <Price className="text-lg font-black text-gray-900">{price}</Price>
-                        </div>
+                        <StarMark variant="display" value={rating} nb_avis={nb_avis} size="sm" />
+                        <Price className="text-lg font-black text-gray-900">{price}</Price>
                     </div>
                 </CardBody>
             </Card>

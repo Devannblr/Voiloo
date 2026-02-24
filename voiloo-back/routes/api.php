@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AvisController;
 use App\Http\Controllers\Api\ContactController;
+use App\Http\Controllers\Api\FavoriController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\AnnonceController;
 use App\Http\Controllers\Api\VitrineConfigController;
@@ -71,4 +72,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/annonces/{id}/avis', [AvisController::class, 'store']);
     // Vitrine config (Update reste ici, c'est OK)
     Route::put('/vitrine/{annonceId}', [VitrineConfigController::class, 'update']);
+
+    Route::get('/favoris', [FavoriController::class, 'index']);
+    Route::get('/favoris/ids', [FavoriController::class, 'ids']);
+    Route::post('/favoris/{annonceId}', [FavoriController::class, 'toggle']);
 });

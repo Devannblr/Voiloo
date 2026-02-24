@@ -1,68 +1,60 @@
-// hooks/useFavoris.ts
 import { useState, useEffect, useCallback } from 'react';
+import { apiService } from '@/services/apiService';
 
-export interface Favori {
-    id: number;
-    slug: string;
-    userSlug: string;
-    titre: string;
-    prix: number;
-    ville: string;
-    description: string;
-    couleur: string;
-    image?: string;
-    categorie?: string;
-}
+export function useFavoris(isAuthenticated: boolean = false) {
+    const [favorisIds, setFavorisIds] = useState<Set<number>>(new Set());
+    const [favoris, setFavoris] = useState<any[]>([]);
+    const [loading, setLoading] = useState(false);
 
-const STORAGE_KEY = 'voiloo_favoris';
-
-export function useFavoris() {
-    const [favoris, setFavoris] = useState<Favori[]>([]);
-
+    // Charger les IDs au montage (ultra léger)
     useEffect(() => {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        setFavoris(stored ? JSON.parse(stored) : []);
-    }, []);
+        if (!isAuthenticated) return;
 
-    const save = (updated: Favori[]) => {
-        setFavoris(updated);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    };
+        apiService.getFavorisIds()
+            .then((ids: number[]) => setFavorisIds(new Set(ids)))
+            .catch(console.error);
+    }, [isAuthenticated]);
 
-    const addFavori = useCallback((fav: Favori) => {
-        setFavoris(prev => {
-            if (prev.find(f => f.id === fav.id)) return prev;
-            const updated = [...prev, fav];
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-            return updated;
+    // Charger la liste complète (à la demande sur la page /favoris)
+    const fetchFavoris = useCallback(async () => {
+        if (!isAuthenticated) return;
+        setLoading(true);
+        try {
+            const data = await apiService.getFavoris();
+            setFavoris(data);
+        } catch (err) {
+            console.error('Erreur fetchFavoris:', err);
+        } finally {
+            setLoading(false);
+        }
+    }, [isAuthenticated]);
+
+    const toggleFavori = useCallback(async (annonceId: number) => {
+        if (!isAuthenticated) return;
+
+        // Optimistic update
+        setFavorisIds(prev => {
+            const next = new Set(prev);
+            next.has(annonceId) ? next.delete(annonceId) : next.add(annonceId);
+            return next;
         });
-    }, []);
 
-    const removeFavori = useCallback((id: number) => {
-        setFavoris(prev => {
-            const updated = prev.filter(f => f.id !== id);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-            return updated;
-        });
-    }, []);
-
-    const toggleFavori = useCallback((fav: Favori) => {
-        setFavoris(prev => {
-            const exists = prev.find(f => f.id === fav.id);
-            const updated = exists ? prev.filter(f => f.id !== fav.id) : [...prev, fav];
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-            return updated;
-        });
-    }, []);
+        try {
+            await apiService.toggleFavori(annonceId);
+        } catch (err) {
+            // Rollback si erreur réseau
+            setFavorisIds(prev => {
+                const next = new Set(prev);
+                next.has(annonceId) ? next.delete(annonceId) : next.add(annonceId);
+                return next;
+            });
+            console.error('Erreur toggle favori:', err);
+        }
+    }, [isAuthenticated]);
 
     const isFavori = useCallback((id: number) => {
-        return favoris.some(f => f.id === id);
-    }, [favoris]);
+        return favorisIds.has(id);
+    }, [favorisIds]);
 
-    const clearAll = useCallback(() => {
-        setFavoris([]);
-        localStorage.removeItem(STORAGE_KEY);
-    }, []);
-
-    return { favoris, addFavori, removeFavori, toggleFavori, isFavori, clearAll };
+    return { favoris, favorisIds, toggleFavori, isFavori, fetchFavoris, loading };
 }

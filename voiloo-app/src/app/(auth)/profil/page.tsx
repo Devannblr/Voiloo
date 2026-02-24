@@ -95,11 +95,8 @@ export default function ProfilPage() {
         try {
             await request('/logout', { method: 'POST' });
         } finally {
-            // 1. On vide le localStorage
             localStorage.removeItem('voiloo_token');
-            // 2. On vide le cookie (en mettant une date d'expiration passée)
             document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-            // 3. On redirigegi
             window.location.href = "/login";
         }
     };

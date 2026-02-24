@@ -14,7 +14,7 @@ return [
     'allowed_methods' => ['*'],
 
     // ✅ MODIFICATION ICI : On autorise tout pour le développement/test
-    'allowed_origins' => ['https://voiloo.fr'],
+    'allowed_origins' => ['http://localhost:3000'],
 
     'allowed_origins_patterns' => [],
 
