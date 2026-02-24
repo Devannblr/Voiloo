@@ -8,7 +8,7 @@ import { Settings, ArrowLeft, LogIn, UserPlus, LogOut } from "lucide-react";
 import { useRouter } from 'next/navigation';
 
 export default function ProfilPage() {
-    const { request, isLoading } = useApi();
+    const { request } = useApi();
     const router = useRouter();
     const [userData, setUserData] = useState<any>(null);
     const [isAuthError, setIsAuthError] = useState(false);
@@ -22,6 +22,9 @@ export default function ProfilPage() {
 
         try {
             const data = await request('/user');
+
+            // On garde TOUT ce que le back envoie (...data) pour ne perdre aucune clé
+            // comme created_at, updated_at, etc.
             const clean = {
                 ...data,
                 name: data.name ?? "",
@@ -31,6 +34,7 @@ export default function ProfilPage() {
                 bio: data.bio ?? "",
                 avatar: data.avatar ?? "/storage/userdefault.png",
             };
+
             setUserData(clean);
 
             if (!clean.localisation) getGeoLocation();
@@ -82,7 +86,8 @@ export default function ProfilPage() {
                     body: JSON.stringify(newData)
                 });
             }
-            if (response.user) {
+            // Si le back renvoie l'utilisateur mis à jour, on refresh
+            if (response) {
                 await fetchProfil();
             }
         } catch (err) {
@@ -101,7 +106,6 @@ export default function ProfilPage() {
         }
     };
 
-    // 1. GESTION DES ERREURS D'AUTH (Ecran Login/Signup)
     if (isAuthError) {
         return (
             <main className="min-h-screen bg-white flex items-center justify-center p-6">
@@ -135,8 +139,6 @@ export default function ProfilPage() {
         );
     }
 
-    // 2. CHARGEMENT : Tant qu'on n'a pas de userData, on affiche le loader
-    // J'ai enlevé le "&& isLoading" car si userData est null, on DOIT attendre.
     if (!userData) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-white">
@@ -145,7 +147,6 @@ export default function ProfilPage() {
         );
     }
 
-    // 3. AFFICHAGE DU PROFIL : Ici, on est CERTAIN que userData n'est plus null
     return (
         <main className="min-h-screen bg-white py-12">
             <Container>
@@ -181,7 +182,6 @@ export default function ProfilPage() {
                                     Déconnexion
                                 </Button>
                             </div>
-                            {/* Désormais sécurisé : userData est forcément un objet ici */}
                             <ProfilCard user={userData} onUpdate={handleUpdate} />
                         </div>
                         <AboutSection user={userData} onUpdate={handleUpdate} />

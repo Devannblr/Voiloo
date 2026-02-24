@@ -7,7 +7,6 @@ import SignupForm from "@/components/Layouts/SignupForm";
 export default function RegisterPage() {
     return (
         <main className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
-            {/* Colonne Gauche : Visuel / Message */}
             <div className="hidden lg:flex flex-col justify-center items-center bg-yellow-400 p-12 text-white">
                 <div className="max-w-md text-center">
                     <H1 className="text-5xl font-extrabold mb-6">Rejoignez Voiloo.</H1>
@@ -17,7 +16,6 @@ export default function RegisterPage() {
                 </div>
             </div>
 
-            {/* Colonne Droite : Le Formulaire */}
             <div className="flex flex-col justify-center items-center p-8 bg-white">
                 <div className="w-full max-w-md space-y-8">
                     <div className="text-center">

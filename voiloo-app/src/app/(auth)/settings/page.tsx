@@ -5,28 +5,32 @@ import { Container, Input, Button, H2, P, Modal, ModalBody, ModalFooter, H3, Loa
 import { useApi } from '@/hooks/useApi';
 import { Check, Mail } from 'lucide-react';
 
+interface UserData {
+    username: string;
+    email: string;
+    email_verified_at: string | null;
+}
+
 export default function SettingsPage() {
     const { request } = useApi();
-    const [user, setUser] = useState<any>(null);
+    const [user, setUser] = useState<UserData | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // Forms
     const [identity, setIdentity] = useState({ username: '', email: '' });
     const [password, setPassword] = useState({ current: '', new: '', confirm: '' });
     const [deleteModal, setDeleteModal] = useState(false);
     const [deletePassword, setDeletePassword] = useState('');
 
-    // States
     const [emailSent, setEmailSent] = useState(false);
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
-        request('/user').then(data => {
+        request('/user').then((data: UserData) => {
             setUser(data);
             setIdentity({ username: data.username, email: data.email });
             setLoading(false);
         });
-    }, []);
+    }, [request]);
 
     const handleIdentityUpdate = async () => {
         setSaving(true);
@@ -92,7 +96,6 @@ export default function SettingsPage() {
             <Container className="max-w-2xl">
                 <H2 className="mb-8">Paramètres du compte</H2>
 
-                {/* Identité */}
                 <div className="bg-white p-6 rounded-2xl shadow-sm mb-6 space-y-4">
                     <H3>Identité</H3>
                     <Input label="Username" value={identity.username}
@@ -120,7 +123,6 @@ export default function SettingsPage() {
                     </Button>
                 </div>
 
-                {/* Mot de passe */}
                 <div className="bg-white p-6 rounded-2xl shadow-sm mb-6 space-y-4">
                     <H3>Mot de passe</H3>
                     <Input type="password" label="Mot de passe actuel" value={password.current}
@@ -134,7 +136,6 @@ export default function SettingsPage() {
                     </Button>
                 </div>
 
-                {/* Danger Zone */}
                 <div className="bg-red-50 p-6 rounded-2xl border border-red-200">
                     <H3 className="text-red-600">Zone de danger</H3>
                     <P className="mb-4 text-sm">Suppression irréversible. Toutes vos annonces seront supprimées.</P>

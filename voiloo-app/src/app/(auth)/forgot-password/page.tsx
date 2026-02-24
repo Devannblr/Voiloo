@@ -2,7 +2,6 @@
 
 import { Suspense, useState } from 'react';
 import { useApi } from '@/hooks/useApi';
-import { apiService } from '@/services/apiService';
 import { Button, Input, H4, P } from '@/components/Base';
 import { Mail } from 'lucide-react';
 
@@ -61,8 +60,10 @@ function ForgotPasswordForm() {
 
 export default function ForgotPasswordPage() {
     return (
-        <Suspense fallback={<div>Chargement...</div>}>
-            <ForgotPasswordForm />
-        </Suspense>
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+            <Suspense fallback={<div>Chargement...</div>}>
+                <ForgotPasswordForm />
+            </Suspense>
+        </div>
     );
 }

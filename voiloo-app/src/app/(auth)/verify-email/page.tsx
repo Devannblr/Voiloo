@@ -1,16 +1,15 @@
 'use client';
 
-import { Suspense } from 'react';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useApi } from '@/hooks/useApi';
-import { Button, H4, P } from '@/components/Base'; // J'utilise tes composants de base
+import { Button, H4, P } from '@/components/Base';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 
 function VerifyEmailContent() {
     const params = useSearchParams();
     const router = useRouter();
-    const { request, isLoading } = useApi();
+    const { request } = useApi();
     const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
 
     useEffect(() => {
@@ -24,7 +23,6 @@ function VerifyEmailContent() {
             return;
         }
 
-        // Appel API vers Laravel
         request(`/email/verify/${id}/${hash}?expires=${expires}&signature=${signature}`, {
             method: 'GET'
         })
@@ -32,7 +30,6 @@ function VerifyEmailContent() {
             .catch(() => setStatus('error'));
     }, [params, request]);
 
-    // --- ÉTAT : CHARGEMENT ---
     if (status === 'loading') {
         return (
             <div className="flex flex-col items-center justify-center p-8 text-center space-y-4">
@@ -43,7 +40,6 @@ function VerifyEmailContent() {
         );
     }
 
-    // --- ÉTAT : SUCCÈS ---
     if (status === 'success') {
         return (
             <div className="flex flex-col items-center justify-center p-8 text-center space-y-6 animate-in fade-in zoom-in duration-300">
@@ -66,7 +62,6 @@ function VerifyEmailContent() {
         );
     }
 
-    // --- ÉTAT : ERREUR ---
     return (
         <div className="flex flex-col items-center justify-center p-8 text-center space-y-6 animate-in fade-in zoom-in duration-300">
             <div className="bg-red-100 p-4 rounded-full">

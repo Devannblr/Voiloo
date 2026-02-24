@@ -389,12 +389,12 @@ export default function AjouterAnnoncePage() {
 
                     {/* NAVIGATION */}
                     <div className="flex items-center justify-between mt-12 pt-8 border-t border-beige/10">
-                        <button
+                        <Button
                             onClick={() => setStep(s => s - 1)}
                             className={`font-bold text-sm uppercase transition-colors ${step === 1 ? 'invisible' : 'text-gray-400 hover:text-dark'}`}
                         >
                             ← Retour
-                        </button>
+                        </Button>
 
                         {step < 5 ? (
                             <Button

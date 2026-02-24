@@ -3,9 +3,8 @@
 import { useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useApi } from '@/hooks/useApi';
-import { apiService } from '@/services/apiService';
 import { Button, Input, H4, P } from '@/components/Base';
-import { PasswordInput } from '@/components/Modules'; // On réutilise ton composant avec checklist
+import { PasswordInput } from '@/components/Modules';
 import { ShieldCheck, Loader2 } from 'lucide-react';
 
 function ResetPasswordContent() {
@@ -17,7 +16,6 @@ function ResetPasswordContent() {
     const [passwordConfirm, setPasswordConfirm] = useState('');
     const [isSuccess, setIsSuccess] = useState(false);
 
-    // On récupère les infos envoyées par Laravel dans l'URL
     const token = searchParams.get('token');
     const email = searchParams.get('email');
 
@@ -40,7 +38,6 @@ function ResetPasswordContent() {
                 }),
             });
             setIsSuccess(true);
-            // Redirection après 3 secondes
             setTimeout(() => router.push('/login'), 3000);
         } catch (err) {
             console.error("Erreur reset password:", err);
@@ -85,10 +82,10 @@ function ResetPasswordContent() {
             <div className="space-y-4">
                 <PasswordInput
                     label="Nouveau mot de passe"
-                    placeholder={"Mot de passe"}
+                    placeholder="Mot de passe"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    showChecklist={true} // Ta super barre de force s'affiche ici
+                    showChecklist={true}
                     required
                 />
 
@@ -119,7 +116,6 @@ function ResetPasswordContent() {
     );
 }
 
-// Composant principal avec Suspense car on utilise useSearchParams
 export default function ResetPasswordPage() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
