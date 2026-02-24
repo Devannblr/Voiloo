@@ -27,13 +27,13 @@ import {
     Trash2,
     X, Settings,
 } from "lucide-react";
-import {DisplayCard} from "@/components/Modules/DisplayCard";
+import {DisplayCard} from "@/components/Modules/(cards)/DisplayCard";
 import {StarMark} from "@/components/Modules/StarMark";
-import {CategoryCard} from "@/components/Modules/CategoryCard";
-import {CtaCard} from "@/components/Modules/CtaCard"
+import {CategoryCard} from "@/components/Modules/(cards)/CategoryCard";
+import {CtaCard} from "@/components/Modules/(cards)/CtaCard"
 import {FaqSection} from "@/components/Modules/Faq";
-import {AboutSection, ProfilCard} from "@/components/Modules/ProfilCard";
-import {QuickLinksCard} from "@/components/Modules/ProfilCard";
+import {AboutSection, ProfilCard} from "@/components/Modules/(cards)/ProfilCard";
+import {QuickLinksCard} from "@/components/Modules/(cards)/ProfilCard";
 import {Logo} from "@/components/Base/logo";
 
 export default function DemoPage() {

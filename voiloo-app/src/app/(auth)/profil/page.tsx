@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useApi } from '@/hooks/useApi';
 import { Container, Loader, Button, Link, H4, P } from '@/components/Base';
-import { ProfilCard, AboutSection, QuickLinksCard } from '@/components/Modules/ProfilCard';
+import { ProfilCard, AboutSection, QuickLinksCard } from '@/components/Modules/(cards)/ProfilCard';
 import { Settings, ArrowLeft, LogIn, UserPlus, LogOut } from "lucide-react";
 import { useRouter } from 'next/navigation';
 

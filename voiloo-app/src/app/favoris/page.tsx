@@ -5,7 +5,7 @@ import { Container, H1, H4, P, Button, Modal, ModalBody, ModalFooter, Loader } f
 import { Heart } from 'lucide-react';
 import { useFavoris } from '@/hooks/useFavoris';
 import { useAuth } from '@/context/AuthContext';
-import { ServiceCard } from '@/components/Modules/ServiceCard';
+import { ServiceCard } from '@/components/Modules/(cards)/ServiceCard';
 
 export default function FavorisPage() {
     const { isAuthenticated } = useAuth();

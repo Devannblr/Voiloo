@@ -23,17 +23,14 @@ const DynamicMap = dynamic(
 export const HeroSection = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [location, setLocation] = useState('');
-
-    // Ajout du type <any[]> pour éviter l'erreur TS2345 (never[])
     const [annonces, setAnnonces] = useState<any[]>([]);
 
     const router = useRouter();
 
     useEffect(() => {
-        // Optimisation : On ne récupère que les coordonnées lat/lng via l'endpoint dédié
+        // ✅ Vérifie que ton API renvoie bien prix, ville et titre ici !
         apiService.getMapPoints()
             .then((data) => {
-                // On s'assure que c'est un tableau avant de mettre à jour le state
                 setAnnonces(Array.isArray(data) ? data : []);
             })
             .catch((err) => {
@@ -58,8 +55,10 @@ export const HeroSection = () => {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                     <div className="relative order-2 lg:order-1 group">
-                        <div className="relative z-10 w-full aspect-square max-w-[500px] mx-auto rounded-3xl overflow-hidden border-8 border-primary/10 shadow-2xl transition-transform duration-500 group-hover:scale-[1.02]">
-                            {/* La carte reçoit maintenant des points beaucoup plus légers */}
+                        {/* ✅ FIX MOBILE : Ajout de min-h-[350px] pour éviter que la map disparaisse.
+                            On s'assure que DynamicMap reçoit les annonces chargées avec prix/ville.
+                        */}
+                        <div className="relative z-10 w-full aspect-square md:aspect-auto md:h-[500px] min-h-[350px] max-w-[500px] mx-auto rounded-3xl overflow-hidden border-8 border-primary/10 shadow-2xl transition-transform duration-500 group-hover:scale-[1.02]">
                             <DynamicMap points={annonces} />
                         </div>
                         <div className="absolute -top-10 -left-10 w-72 h-72 bg-primary/20 rounded-full blur-[100px] -z-1 opacity-50" />

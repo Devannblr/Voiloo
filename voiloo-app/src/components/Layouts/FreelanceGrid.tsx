@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { Container, H2, P, Loader, Button } from '@/components/Base';
-import { DisplayCard } from "@/components/Modules/DisplayCard";
-import { CtaCard } from "@/components/Modules/CtaCard";
+import { DisplayCard } from "@/components/Modules/(cards)/DisplayCard";
+import { CtaCard } from "@/components/Modules/(cards)/CtaCard";
 import { apiService } from "@/services/apiService";
 
 interface FreelanceGridProps {

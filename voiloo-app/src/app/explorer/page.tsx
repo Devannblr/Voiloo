@@ -4,15 +4,15 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
 import { apiService } from '@/services/apiService';
 import { Container, H1, P, Badge, Button } from '@/components/Base';
-import { ServiceCard } from "@/components/Modules/ServiceCard";
-import { X, Search, SlidersHorizontal } from 'lucide-react';
+import { ServiceCard } from "@/components/Modules/(cards)/ServiceCard";
+import { X, Search, SlidersHorizontal, Map as MapIcon, List } from 'lucide-react';
 import dynamic from "next/dynamic";
 
 const CardSkeleton = () => (
     <div className="bg-gray-50 rounded-3xl h-[450px] animate-pulse border border-gray-100" />
 );
 
-// ✅ Import dynamique propre depuis ton fichier de module
+// Import dynamique de la map
 const DynamicMap = dynamic(
     () => import('@/components/Modules/DynamicMap').then((mod) => mod.DynamicMap),
     {
@@ -36,6 +36,9 @@ function ExplorerContent() {
     const [categories, setCategories] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(true);
 
+    // État pour basculer entre liste et carte sur mobile
+    const [showMapMobile, setShowMapMobile] = useState(false);
+
     useEffect(() => {
         setLoading(true);
 
@@ -45,7 +48,7 @@ function ExplorerContent() {
             city
         })
             .then(data => {
-                setAnnonces(data.data || data); // si paginate
+                setAnnonces(data.data || data || []);
                 setLoading(false);
             })
             .catch((err) => {
@@ -71,10 +74,11 @@ function ExplorerContent() {
     const categoryLabel = categorySlug ? (categories[categorySlug] || categorySlug) : null;
 
     return (
-        <main className="bg-white overflow-hidden">
+        <main className="bg-white overflow-hidden relative">
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_500px] h-[calc(100vh-72px)]">
+
                 {/* LISTE */}
-                <div className="overflow-y-auto scrollbar-hide relative bg-white">
+                <div className={`${showMapMobile ? 'hidden' : 'block'} lg:block overflow-y-auto scrollbar-hide relative bg-white`}>
                     <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md px-6 py-4 border-b border-gray-50">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div>
@@ -119,14 +123,15 @@ function ExplorerContent() {
                                 {annonces.map((ad: any) => (
                                     <ServiceCard
                                         key={ad.id}
-                                        href={`/u/${ad.user?.slug || ad.user?.username}/${ad.slug}`}
+                                        href={`/u/${ad.user?.username}/${ad.slug}`}
                                         provider={{
                                             id: ad.id,
                                             name: ad.user?.name || "Utilisateur",
                                             job: ad.titre,
-                                            price: `${ad.prix}€`,
+                                            price: ad.prix ? `${ad.prix}€` : "Sur devis",
                                             city: ad.ville,
-                                            rating: ad.average_rating || 0,
+                                            // ✅ FIX : parseFloat pour éviter l'erreur .toFixed()
+                                            rating: parseFloat(ad.avis_avg_note || 0),
                                             nb_avis: ad.avis_count || 0,
                                             avatarSrc: ad.user?.avatar,
                                             mainPhoto: ad.vitrine_config?.header_photo,
@@ -142,17 +147,25 @@ function ExplorerContent() {
                 </div>
 
                 {/* CARTE */}
-                <div className="hidden lg:block h-full relative border-l border-gray-100">
+                <div className={`${showMapMobile ? 'block' : 'hidden'} lg:block h-full relative border-l border-gray-100 bg-stone-50`}>
                     <DynamicMap points={annonces} />
                 </div>
             </div>
+
+            {/* BOUTON SWITCH MOBILE */}
+            <button
+                onClick={() => setShowMapMobile(!showMapMobile)}
+                className="lg:hidden fixed bottom-8 left-1/2 -translate-x-1/2 z-[2000] bg-black text-white px-6 py-3 rounded-full font-bold flex items-center gap-2 shadow-2xl active:scale-95 transition-all border border-white/10"
+            >
+                {showMapMobile ? <><List size={18} /> Voir la liste</> : <><MapIcon size={18} /> Voir la carte</>}
+            </button>
         </main>
     );
 }
 
 export default function ExplorerPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-white italic font-black text-primary">VOILOO...</div>}>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-white italic font-black text-primary uppercase">Chargement Voiloo...</div>}>
             <ExplorerContent />
         </Suspense>
     );

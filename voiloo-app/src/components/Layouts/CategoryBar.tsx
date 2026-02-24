@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Container } from '@/components/Base';
-import { CategoryCard } from "@/components/Modules/CategoryCard";
+import { CategoryCard } from "@/components/Modules/(cards)/CategoryCard";
 
 export const CategoryBar = () => {
     return (

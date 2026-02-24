@@ -10,7 +10,7 @@ import {
     IconButton
 } from '@/components/Base';
 import { Link } from '@/components/Base/Link'
-import { Annonce, VitrineConfig } from './types';
+import { Annonce, VitrineConfig } from '../../Modules/types';
 
 interface HeroProps {
     annonce: Annonce;

@@ -1,7 +1,7 @@
 import { Briefcase } from "lucide-react";
 import { SectionTitle } from "./SectionTitle";
 import { P } from "@/components/Base";
-import { ParcoursItem } from "./types";
+import { ParcoursItem } from "../types";
 
 // L'interface doit définir "parcours" et non "content"
 interface SectionParcoursProps {

@@ -359,7 +359,7 @@ class AnnonceController extends Controller
         return Annonce::where('status', 'active')
             ->whereNotNull('lat')
             ->whereNotNull('lng')
-            ->select('id', 'lat', 'lng', 'titre', 'slug', 'user_id')
+            ->select('id', 'lat', 'lng', 'prix','ville', 'titre', 'slug', 'user_id')
             ->with('user:id,username')
             ->get();
     }

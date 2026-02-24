@@ -8,14 +8,14 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 // Imports des éditeurs
-import { HeaderEditor }    from "@/components/Vitrine/Headereditor";
-import { ColorsEditor }    from "@/components/Vitrine/ColorsEditor"; // <-- NOUVEAU
-import { SocialsEditor }   from "@/components/Vitrine/Socialseditor";
-import { AboutEditor }     from "@/components/Vitrine/Abouteditor";
-import { ParcoursEditor }  from "@/components/Vitrine/Parcoureditor";
-import { ServicesEditor }  from "@/components/Vitrine/Serviceseditor";
-import { PortfolioEditor } from "@/components/Vitrine/Portfolioeditor";
-import { ContactEditor }   from "@/components/Vitrine/Contacteditor";
+import { HeaderEditor }    from "@/components/Vitrine/(editor)/Headereditor";
+import { ColorsEditor }    from "@/components/Vitrine/(editor)/ColorsEditor"; // <-- NOUVEAU
+import { SocialsEditor }   from "@/components/Vitrine/(editor)/Socialseditor";
+import { AboutEditor }     from "@/components/Vitrine/(editor)/Abouteditor";
+import { ParcoursEditor }  from "@/components/Vitrine/(editor)/Parcoureditor";
+import { ServicesEditor }  from "@/components/Vitrine/(editor)/Serviceseditor";
+import { PortfolioEditor } from "@/components/Vitrine/(editor)/Portfolioeditor";
+import { ContactEditor }   from "@/components/Vitrine/(editor)/Contacteditor";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 Mo
 

@@ -7,15 +7,15 @@ import { Loader2 } from 'lucide-react';
 import { Annonce, VitrineConfig } from '@/components/Modules/types';
 
 import OwnerBar from '@/components/Modules/OwnerBar';
-import VitrineHero from '@/components/Modules/VitrineHero';
-import VitrineNav from '@/components/Modules/VitrineNav';
-import SectionAbout from '@/components/Modules/SectionAbout';
-import SectionParcours from '@/components/Modules/SectionParcours';
-import SectionServices from '@/components/Modules/SectionServices';
-import SectionPortfolio from '@/components/Modules/SectionPortfolio';
-import SectionAvis from '@/components/Modules/SectionAvis';
-import SectionContact from '@/components/Modules/SectionContact';
-import VitrineFooter from '@/components/Modules/VitrineFooter';
+import VitrineHero from '@/components/Vitrine/(vitrine)/VitrineHero';
+import VitrineNav from '@/components/Vitrine/(vitrine)/VitrineNav';
+import SectionAbout from '@/components/Modules/(section)/SectionAbout';
+import SectionParcours from '@/components/Modules/(section)/SectionParcours';
+import SectionServices from '@/components/Modules/(section)/SectionServices';
+import SectionPortfolio from '@/components/Modules/(section)/SectionPortfolio';
+import SectionAvis from '@/components/Modules/(section)/SectionAvis';
+import SectionContact from '@/components/Modules/(section)/SectionContact';
+import VitrineFooter from '@/components/Vitrine/(vitrine)/VitrineFooter';
 
 export default function VitrinePage() {
     const params = useParams();

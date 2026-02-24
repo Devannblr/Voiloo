@@ -1,6 +1,6 @@
 import { Star } from "lucide-react";
 import { SectionTitle } from "./SectionTitle";
-import { ServiceItem } from "./types";
+import { ServiceItem } from "../types";
 
 export default function SectionServices({ services, primary }: { services: ServiceItem[]; primary: string }) {
     return (
