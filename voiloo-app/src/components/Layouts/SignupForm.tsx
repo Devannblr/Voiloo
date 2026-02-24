@@ -4,11 +4,16 @@ import { useState, useEffect } from 'react';
 import { useApi } from '@/hooks/useApi';
 import { Button, Input, P } from '@/components/Base';
 import { PasswordInput } from "@/components/Modules";
-import { apiService } from "@/services/apiService"; // ✅ On utilise le service centralisé
+import { apiService } from "@/services/apiService";
+import Turnstile from 'react-turnstile';
 
 export default function SignupForm() {
     const { request, isLoading, error } = useApi();
     const [passwordConfirm, setPasswordConfirm] = useState("");
+
+    // ✅ État pour stocker le token généré par Cloudflare
+    const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -30,7 +35,6 @@ export default function SignupForm() {
             }
             setIsChecking(prev => ({ ...prev, user: true }));
             try {
-                // ✅ Utilise apiService pour pointer sur voiloo.fr ou localhost selon l'env
                 const data = await apiService.checkUsername(cleanName);
                 setIsUserAvailable(data.available);
             } catch (e) {
@@ -52,7 +56,6 @@ export default function SignupForm() {
             }
             setIsChecking(prev => ({ ...prev, email: true }));
             try {
-                // ✅ Plus de localhost ici ! On utilise apiService
                 const data = await apiService.checkEmail(formData.email);
                 setIsEmailAvailable(data.available);
             } catch (e) {
@@ -71,6 +74,12 @@ export default function SignupForm() {
 
         if (isChecking.user || isChecking.email) return;
 
+        // ✅ Vérification du Captcha avant envoi
+        if (!captchaToken) {
+            alert("Veuillez valider le test de sécurité (Captcha).");
+            return;
+        }
+
         if (isUserAvailable !== true || isEmailAvailable !== true) {
             alert("Veuillez vérifier vos identifiants et email.");
             return;
@@ -82,10 +91,13 @@ export default function SignupForm() {
         }
 
         try {
-            // ✅ Ici on appelle bien /register via le hook request pour gérer le loading
+            // ✅ On fusionne les données du formulaire avec le token du captcha
             const data = await request('/register', {
                 method: 'POST',
-                body: JSON.stringify(formData),
+                body: JSON.stringify({
+                    ...formData,
+                    cf_turnstile_token: captchaToken
+                }),
             });
 
             if (data.access_token) {
@@ -94,6 +106,7 @@ export default function SignupForm() {
             }
         } catch (err) {
             console.error("Erreur d'inscription:", err);
+            setCaptchaToken(null); // Reset en cas d'erreur
         }
     };
 
@@ -103,6 +116,7 @@ export default function SignupForm() {
         isEmailAvailable !== true ||
         formData.password !== passwordConfirm ||
         formData.password.length < 8 ||
+        !captchaToken || // ✅ Désactive le bouton tant que le captcha n'est pas prêt
         isChecking.user ||
         isChecking.email;
 
@@ -177,6 +191,16 @@ export default function SignupForm() {
                             : undefined
                     }
                     required
+                />
+            </div>
+
+            {/* ✅ Widget Cloudflare Turnstile */}
+            <div className="flex justify-center py-2">
+                <Turnstile
+                    sitekey="0x4AAAAAAChGavG4XDjC391x"
+                    onVerify={(token) => setCaptchaToken(token)}
+                    onExpire={() => setCaptchaToken(null)}
+                    onError={() => setCaptchaToken(null)}
                 />
             </div>
 
