@@ -90,7 +90,7 @@ export function ServiceCard({ provider, href, onRemove }: EnhancedServiceCardPro
 
                     <button
                         onClick={handleHeartClick}
-                        className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md transition-all duration-200 z-10
+                        className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md transition-all duration-200 z-1
                             ${favori
                             ? 'bg-white text-red-500'
                             : 'bg-black/10 text-white hover:bg-white hover:text-red-500'
