@@ -5,6 +5,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { apiService } from '@/services/apiService';
 import { Container, H1, P, Badge, Button } from '@/components/Base';
 import { ServiceCard } from "@/components/Modules/(cards)/ServiceCard";
+import { FilterDrawer } from "@/components/Modules/FilterDrawer";
 import { X, Search, SlidersHorizontal, Map as MapIcon, List } from 'lucide-react';
 import dynamic from "next/dynamic";
 
@@ -12,7 +13,6 @@ const CardSkeleton = () => (
     <div className="bg-gray-50 rounded-3xl h-[450px] animate-pulse border border-gray-100" />
 );
 
-// Import dynamique de la map
 const DynamicMap = dynamic(
     () => import('@/components/Modules/DynamicMap').then((mod) => mod.DynamicMap),
     {
@@ -28,55 +28,85 @@ const DynamicMap = dynamic(
 function ExplorerContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
-    const categorySlug = searchParams.get('category') || undefined;
-    const query = searchParams.get('query') || undefined;
-    const city = searchParams.get('city') || undefined;
+
+    const categorySlug = searchParams.get('category') || '';
+    const query        = searchParams.get('query') || undefined;
+    const city         = searchParams.get('city') || '';
+    const sort         = searchParams.get('sort') || '';
+    const lat          = searchParams.get('lat') || '';
+    const lng          = searchParams.get('lng') || '';
+    const radius       = searchParams.get('radius') || '';
 
     const [annonces, setAnnonces] = useState<any[]>([]);
     const [categories, setCategories] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(true);
-
-    // État pour basculer entre liste et carte sur mobile
     const [showMapMobile, setShowMapMobile] = useState(false);
+    const [drawerOpen, setDrawerOpen] = useState(false);
+
+    const activeFiltersCount = [categorySlug, city, sort].filter(Boolean).length;
 
     useEffect(() => {
         setLoading(true);
-
         apiService.getAnnonces({
-            category: categorySlug,
+            category: categorySlug || undefined,
             query,
-            city
+            city: (!lat && city) ? city : undefined, // ville texte seulement si pas de coords
+            sort: sort || undefined,
+            lat: lat || undefined,
+            lng: lng || undefined,
+            radius: radius || undefined,
         })
-            .then(data => {
-                setAnnonces(data.data || data || []);
-                setLoading(false);
-            })
-            .catch((err) => {
-                console.error("Erreur annonces:", err);
-                setLoading(false);
-            });
-
-    }, [categorySlug, query, city]);
+            .then(data => { setAnnonces(data.data || data || []); setLoading(false); })
+            .catch(() => setLoading(false));
+    }, [categorySlug, query, city, sort, lat, lng, radius]);
 
     useEffect(() => {
         apiService.getCategories()
             .then((cats: any[]) => {
                 const map: Record<string, string> = {};
-                cats.forEach(c => {
-                    if (c.slug && c.nom) map[c.slug] = c.nom;
-                });
+                cats.forEach(c => { if (c.slug && c.nom) map[c.slug] = c.nom; });
                 setCategories(map);
             })
             .catch(() => {});
     }, []);
 
-    const handleRemoveFilter = () => router.push('/explorer');
+    const handleApplyFilters = (f: {
+        category: string;
+        city: string;
+        sort: string;
+        lat?: string;
+        lng?: string;
+        radius?: string;
+    }) => {
+        const params = new URLSearchParams();
+        if (query)      params.set('query', query);
+        if (f.category) params.set('category', f.category);
+        if (f.city)     params.set('city', f.city);
+        if (f.sort)     params.set('sort', f.sort);
+        if (f.lat)      params.set('lat', f.lat);
+        if (f.lng)      params.set('lng', f.lng);
+        if (f.radius)   params.set('radius', f.radius);
+        router.push(`/explorer?${params.toString()}`);
+    };
+
+    const handleRemoveAllFilters = () => router.push('/explorer');
+
     const categoryLabel = categorySlug ? (categories[categorySlug] || categorySlug) : null;
+
+    // Label affiché dans le header
+    const locationLabel = radius && city ? `${city} (${radius} km)` : city || null;
 
     return (
         <main className="bg-white overflow-hidden relative">
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_500px] h-[calc(100vh-72px)]">
+            <FilterDrawer
+                isOpen={drawerOpen}
+                onClose={() => setDrawerOpen(false)}
+                categories={categories}
+                filters={{ category: categorySlug, city, sort, lat, lng, radius }}
+                onApply={handleApplyFilters}
+            />
 
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_500px] h-[calc(100vh-72px)]">
                 {/* LISTE */}
                 <div className={`${showMapMobile ? 'hidden' : 'block'} lg:block overflow-y-auto scrollbar-hide relative bg-white`}>
                     <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md px-6 py-4 border-b border-gray-50">
@@ -90,15 +120,27 @@ function ExplorerContent() {
                                     </P>
                                 </div>
                                 <H1 className="text-2xl font-black italic tracking-tight leading-none uppercase">
-                                    {categoryLabel ? categoryLabel : "Tous les prestataires"}
+                                    {locationLabel
+                                        ? `Autour de ${locationLabel}`
+                                        : categoryLabel
+                                            ? categoryLabel
+                                            : "Tous les prestataires"}
                                 </H1>
                             </div>
                             <div className="flex gap-2">
-                                <button className="p-2.5 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors">
+                                <button
+                                    onClick={() => setDrawerOpen(true)}
+                                    className="relative p-2.5 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors"
+                                >
                                     <SlidersHorizontal size={18} className="text-gray-500" />
+                                    {activeFiltersCount > 0 && (
+                                        <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-primary text-white text-[10px] font-black rounded-full flex items-center justify-center">
+                                            {activeFiltersCount}
+                                        </span>
+                                    )}
                                 </button>
-                                {categoryLabel && (
-                                    <button onClick={handleRemoveFilter} className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-800 transition-all">
+                                {activeFiltersCount > 0 && (
+                                    <button onClick={handleRemoveAllFilters} className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-800 transition-all">
                                         Effacer <X size={14} />
                                     </button>
                                 )}
@@ -115,8 +157,8 @@ function ExplorerContent() {
                             <div className="flex flex-col items-center py-32 text-center max-w-sm mx-auto">
                                 <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-6 text-gray-300"><Search size={32} /></div>
                                 <H1 className="text-xl mb-2">Aucun talent trouvé</H1>
-                                <P className="text-gray-400 text-sm mb-8">Nous n'avons pas trouvé de prestataires dans la catégorie "{categoryLabel}".</P>
-                                <Button onClick={handleRemoveFilter} variant="primary" className="w-full">Réinitialiser la recherche</Button>
+                                <P className="text-gray-400 text-sm mb-8">Essayez de modifier vos filtres.</P>
+                                <Button onClick={handleRemoveAllFilters} variant="primary" className="w-full">Réinitialiser la recherche</Button>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-12">
@@ -130,7 +172,6 @@ function ExplorerContent() {
                                             job: ad.titre,
                                             price: ad.prix ? `${ad.prix}€` : "Sur devis",
                                             city: ad.ville,
-                                            // ✅ FIX : parseFloat pour éviter l'erreur .toFixed()
                                             rating: parseFloat(ad.avis_avg_note || 0),
                                             nb_avis: ad.avis_count || 0,
                                             avatarSrc: ad.user?.avatar,

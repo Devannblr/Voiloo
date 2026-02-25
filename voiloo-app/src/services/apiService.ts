@@ -40,19 +40,24 @@ export const apiService = {
             : '/annonces/recommended';
         return apiFetch(url);
     },
+
     getAnnonces: (params?: {
         category?: string;
         city?: string;
         query?: string;
         sort?: string;
+        lat?: string;
+        lng?: string;
+        radius?: string;
     }) => {
         const query = new URLSearchParams();
-
         if (params?.category) query.append('category', params.category);
-        if (params?.city) query.append('city', params.city);
-        if (params?.query) query.append('query', params.query);
-        if (params?.sort) query.append('sort', params.sort);
-
+        if (params?.city)     query.append('city', params.city);
+        if (params?.query)    query.append('query', params.query);
+        if (params?.sort)     query.append('sort', params.sort);
+        if (params?.lat)      query.append('lat', params.lat);
+        if (params?.lng)      query.append('lng', params.lng);
+        if (params?.radius)   query.append('radius', params.radius);
         return apiFetch(`/annonces?${query.toString()}`);
     },
 

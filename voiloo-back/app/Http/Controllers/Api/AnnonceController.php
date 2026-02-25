@@ -35,12 +35,10 @@ class AnnonceController extends Controller
                 });
             }
 
-            // 🔎 Recherche globale (CORRIGÉ ICI)
+            // 🔎 Recherche globale
             if ($request->filled('query')) {
-                // On récupère la valeur en string, pas l'objet InputBag
                 $searchValue = $request->query('query');
                 $search = is_string($searchValue) ? strtolower($searchValue) : '';
-
                 if (!empty($search)) {
                     $query->where(function ($q) use ($search) {
                         $q->whereRaw('LOWER(titre) LIKE ?', ["%{$search}%"])
@@ -50,8 +48,27 @@ class AnnonceController extends Controller
                 }
             }
 
-            // 🏙 Ville spécifique
-            if ($request->filled('city')) {
+            // 🌍 Filtre par rayon (Haversine) — prioritaire sur le filtre ville simple
+            if ($request->filled('lat') && $request->filled('lng') && $request->filled('radius')) {
+                $lat    = (float) $request->lat;
+                $lng    = (float) $request->lng;
+                $radius = (float) $request->radius; // en km
+
+                // Formule Haversine en SQL
+                // On filtre seulement les annonces qui ont des coordonnées
+                // Les autres (sans lat/lng) sont exclues du filtre rayon
+                $query->whereNotNull('lat')
+                    ->whereNotNull('lng')
+                    ->whereRaw("
+                      (6371 * ACOS(
+                          COS(RADIANS(?)) * COS(RADIANS(lat)) *
+                          COS(RADIANS(lng) - RADIANS(?)) +
+                          SIN(RADIANS(?)) * SIN(RADIANS(lat))
+                      )) <= ?
+                  ", [$lat, $lng, $lat, $radius]);
+
+            } elseif ($request->filled('city')) {
+                // Filtre ville simple (texte) si pas de coords
                 $cityValue = $request->query('city');
                 $city = is_string($cityValue) ? strtolower($cityValue) : '';
                 $query->whereRaw('LOWER(ville) LIKE ?', ["%{$city}%"]);
@@ -66,8 +83,12 @@ class AnnonceController extends Controller
                     case 'price_desc':
                         $query->orderBy('prix', 'desc');
                         break;
+                    case 'rating':
                     case 'rating_desc':
-                        $query->orderBy('avis_avg_note', 'desc');
+                        $query->orderByDesc('avis_avg_note');
+                        break;
+                    case 'recent':
+                        $query->latest();
                         break;
                     default:
                         $query->latest();
