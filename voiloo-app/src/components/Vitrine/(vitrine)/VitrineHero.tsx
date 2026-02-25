@@ -19,9 +19,11 @@ interface HeroProps {
     textColor: string;
     bgColor: string;
     onContactClick: () => void;
+    onMessageClick?: () => void;
+    isContacting?: boolean;
 }
 
-export default function VitrineHero({ annonce, config, primary, textColor, bgColor, onContactClick }: HeroProps) {
+export default function VitrineHero({ annonce, config, primary, textColor, bgColor, onContactClick, onMessageClick, isContacting }: HeroProps) {
     // ✅ Récupération de l'URL de stockage depuis le .env
     const STORAGE_URL = process.env.NEXT_PUBLIC_STORAGE_URL;
 
@@ -161,12 +163,39 @@ export default function VitrineHero({ annonce, config, primary, textColor, bgCol
                                 style={{ borderColor: primary, color: textColor } as any}
                             />
 
-                            {config.show_contact_form && (
+                            {/* Bouton messagerie — visible si pas owner */}
+                            {onMessageClick && (
+                                <Button
+                                    onClick={onMessageClick}
+                                    variant="primary"
+                                    leftIcon={<MessageCircle size={18} />}
+                                    isLoading={isContacting}
+                                    className="hover:brightness-95 active:scale-95 transition-all text-dark font-bold"
+                                    style={{ backgroundColor: primary } as any}
+                                >
+                                    Contacter
+                                </Button>
+                            )}
+
+                            {/* Bouton scroll formulaire — garde l'existant en secondaire si les deux sont là */}
+                            {config.show_contact_form && onMessageClick && (
+                                <Button
+                                    onClick={onContactClick}
+                                    variant="ghost"
+                                    className="border-2 transition-all hover:scale-105 active:scale-95"
+                                    style={{ borderColor: primary, color: textColor } as any}
+                                >
+                                    Formulaire
+                                </Button>
+                            )}
+
+                            {/* Si pas de messagerie (owner), on garde l'ancien bouton seul */}
+                            {config.show_contact_form && !onMessageClick && (
                                 <Button
                                     onClick={onContactClick}
                                     variant="primary"
                                     leftIcon={<MessageCircle size={18} />}
-                                    className="hover:brightness-95 active:scale-95 transition-all text-dark bg-custom font-bold"
+                                    className="hover:brightness-95 active:scale-95 transition-all text-dark font-bold"
                                     style={{ backgroundColor: primary } as any}
                                 >
                                     Contacter

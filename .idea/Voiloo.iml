@@ -122,6 +122,20 @@
       <excludeFolder url="file://$MODULE_DIR$/voiloo-back/vendor/tijsverkoyen/css-to-inline-styles" />
       <excludeFolder url="file://$MODULE_DIR$/voiloo-back/vendor/vlucas/phpdotenv" />
       <excludeFolder url="file://$MODULE_DIR$/voiloo-back/vendor/voku/portable-ascii" />
+      <excludeFolder url="file://$MODULE_DIR$/voiloo-back/vendor/clue/redis-protocol" />
+      <excludeFolder url="file://$MODULE_DIR$/voiloo-back/vendor/clue/redis-react" />
+      <excludeFolder url="file://$MODULE_DIR$/voiloo-back/vendor/evenement/evenement" />
+      <excludeFolder url="file://$MODULE_DIR$/voiloo-back/vendor/laravel/reverb" />
+      <excludeFolder url="file://$MODULE_DIR$/voiloo-back/vendor/paragonie/sodium_compat" />
+      <excludeFolder url="file://$MODULE_DIR$/voiloo-back/vendor/pusher/pusher-php-server" />
+      <excludeFolder url="file://$MODULE_DIR$/voiloo-back/vendor/ratchet/rfc6455" />
+      <excludeFolder url="file://$MODULE_DIR$/voiloo-back/vendor/react/cache" />
+      <excludeFolder url="file://$MODULE_DIR$/voiloo-back/vendor/react/dns" />
+      <excludeFolder url="file://$MODULE_DIR$/voiloo-back/vendor/react/event-loop" />
+      <excludeFolder url="file://$MODULE_DIR$/voiloo-back/vendor/react/promise" />
+      <excludeFolder url="file://$MODULE_DIR$/voiloo-back/vendor/react/promise-timer" />
+      <excludeFolder url="file://$MODULE_DIR$/voiloo-back/vendor/react/socket" />
+      <excludeFolder url="file://$MODULE_DIR$/voiloo-back/vendor/react/stream" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

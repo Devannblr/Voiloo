@@ -1,71 +1,94 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { apiService } from '@/services/apiService';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { apiFetch } from '@/lib/api';
+
+interface User {
+    id: number;
+    name: string;
+    email: string;
+    username: string;
+    avatar: string | null;
+}
 
 interface AuthContextType {
-    user: any | null;
+    user: User | null;
     isAuthenticated: boolean;
     isLoading: boolean;
-    login: (token: string, userData: any) => void;
-    logout: () => void;
+    login: (email: string, password: string) => Promise<void>;
+    logout: () => Promise<void>;
     refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-    const [user, setUser] = useState<any | null>(null);
+    const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    const logout = useCallback(() => {
-        // On nettoie tout
-        localStorage.removeItem('voiloo_token');
-        document.cookie = "voiloo_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-        document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-        setUser(null);
-
-        // On ne redirige que si nécessaire pour éviter les boucles infinies en dev
-        if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
-            window.location.href = "/login";
-        }
-    }, []);
-
     const refreshUser = useCallback(async () => {
-        const token = localStorage.getItem('voiloo_token');
-
-        if (!token) {
-            setUser(null);
-            setIsLoading(false);
-            return;
-        }
-
         try {
-            const data = await apiService.getUser();
-            setUser(data);
-        } catch (err: any) {
-            console.error("Erreur de récupération utilisateur", err);
-
-            // ✅ CRITIQUE : On ne déconnecte QUE si c'est une erreur 401 (Non autorisé)
-            // Si c'est une erreur 500 ou réseau, on garde l'état actuel pour éviter de vider la session
-            if (err.status === 401 || err.response?.status === 401) {
-                logout();
-            }
+            // ✅ Utilise /me qui retourne { user: {...} }
+            const data = await apiFetch('/me');
+            setUser(data.user);
+        } catch (error) {
+            console.error('Failed to fetch user:', error);
+            setUser(null);
+            // ✅ Nettoyer le token si invalide
+            localStorage.removeItem('voiloo_token');
         } finally {
             setIsLoading(false);
         }
-    }, [logout]);
+    }, []);
 
-    useEffect(() => {
-        refreshUser();
+    const login = useCallback(async (email: string, password: string) => {
+        try {
+            const response = await apiFetch('/login', {
+                method: 'POST',
+                body: JSON.stringify({ email, password }),
+            });
+
+            // ✅ CRITIQUE : Stocker le token pour Echo/Reverb
+            if (response.access_token) {
+                localStorage.setItem('voiloo_token', response.access_token);
+            }
+
+            // ✅ Le cookie HttpOnly est automatiquement défini par Laravel
+            // On récupère maintenant l'utilisateur complet
+            await refreshUser();
+        } catch (err) {
+            throw err;
+        }
     }, [refreshUser]);
 
-    const login = (token: string, userData: any) => {
-        localStorage.setItem('voiloo_token', token);
-        // On définit voiloo_token pour matcher ton middleware
-        document.cookie = `voiloo_token=${token}; path=/; max-age=604800; SameSite=Lax`;
-        setUser(userData);
-    };
+    const logout = useCallback(async () => {
+        try {
+            await apiFetch('/logout', { method: 'POST' });
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            // ✅ Nettoyer TOUT : token + state
+            localStorage.removeItem('voiloo_token');
+            setUser(null);
+
+            // ✅ Rediriger vers login
+            if (typeof window !== 'undefined') {
+                window.location.href = '/login';
+            }
+        }
+    }, []);
+
+    // ✅ Au montage : vérifier si un token existe
+    useEffect(() => {
+        const token = localStorage.getItem('voiloo_token');
+        if (token) {
+            // Token existe → récupérer l'user
+            refreshUser();
+        } else {
+            // Pas de token → pas authentifié
+            setIsLoading(false);
+        }
+    }, [refreshUser]);
 
     return (
         <AuthContext.Provider value={{
@@ -83,8 +106,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 export const useAuth = () => {
     const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error('useAuth doit être utilisé à l\'intérieur d\'un AuthProvider');
+    if (!context) {
+        throw new Error("useAuth doit être utilisé à l'intérieur d'un AuthProvider");
     }
     return context;
 };

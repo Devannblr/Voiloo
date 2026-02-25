@@ -7,6 +7,7 @@ import {
     Link,
     Button,
     IconButton,
+    Badge,
 } from '@/components/Base';
 import {
     Search,
@@ -20,11 +21,12 @@ import {
 import { Logo } from "@/components/Base/logo";
 import { apiService } from '@/services/apiService';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext'; // ✅ Import du hook
+import { useAuth } from '@/context/AuthContext';
+import { useChat } from '@/context/ChatContext';
 
 function HeaderContent() {
-    // ✅ Utilisation du hook useAuth
     const { isAuthenticated, user, logout } = useAuth();
+    const { unreadTotal } = useChat(); // Récupère les messages non lus globalement
 
     const [visible, setVisible] = useState(true);
     const [categories, setCategories] = useState<any[]>([]);
@@ -44,7 +46,6 @@ function HeaderContent() {
     const [showSuggestions, setShowSuggestions] = useState(false);
     const suggestionsRef = useRef<HTMLDivElement>(null);
 
-    // Chargement des catégories & gestion clic extérieur
     useEffect(() => {
         apiService.getCategories()
             .then(setCategories)
@@ -69,7 +70,6 @@ function HeaderContent() {
         }
     };
 
-    // Suggestions de recherche
     useEffect(() => {
         if (!searchValue || searchValue.length < 2) {
             setSuggestions([]);
@@ -89,7 +89,6 @@ function HeaderContent() {
         return () => clearTimeout(timeout);
     }, [searchValue]);
 
-    // Logique de scroll (Show/Hide Header)
     useEffect(() => {
         const handleScroll = () => {
             const currentY = window.scrollY;
@@ -124,7 +123,6 @@ function HeaderContent() {
             <Container>
                 <div className="grid grid-cols-[auto_1fr_auto] items-center gap-4 md:gap-8">
 
-                    {/* 1. Logo & Menu */}
                     <div className="flex items-center gap-6">
                         <Logo voilColor="var(--color-white)" ooColor="var(--color-primary)" href={"/"} />
 
@@ -169,7 +167,6 @@ function HeaderContent() {
                         </div>
                     </div>
 
-                    {/* 2. CENTRE : Recherche + Suggestions */}
                     <div className="flex justify-center w-full" ref={suggestionsRef}>
                         <div className="relative w-full max-w-xl">
                             <Input
@@ -221,7 +218,6 @@ function HeaderContent() {
                         </div>
                     </div>
 
-                    {/* 3. Actions & Auth (Utilise maintenant le hook ✅) */}
                     <div className="flex items-center gap-4 md:gap-6">
                         <Link href="/ajouter" className="text-white whitespace-nowrap" rightIcon={<Plus className="text-primary" size={20} />}>
                             Ajouter une annonce
@@ -229,9 +225,25 @@ function HeaderContent() {
 
                         {isAuthenticated ? (
                             <div className="flex items-center gap-2">
-                                <IconButton label="Messages" icon={<MessageSquare size={22} />} variant="ghost" className="text-white hover:text-primary" href="/messages" />
+                                <div className="relative">
+                                    <IconButton
+                                        label="Messages"
+                                        icon={<MessageSquare size={22} />}
+                                        variant="ghost"
+                                        className="text-white hover:text-primary"
+                                        href="/messages"
+                                    />
+                                    {unreadTotal > 0 && (
+                                        <Badge
+                                            variant="primary"
+                                            size="sm"
+                                            className="absolute -top-1 -right-1 px-1.5 min-w-[18px] h-[18px] border-2 border-dark"
+                                        >
+                                            {unreadTotal}
+                                        </Badge>
+                                    )}
+                                </div>
 
-                                {/* Tu peux même afficher le nom de l'utilisateur ici si tu veux */}
                                 <IconButton
                                     label={user?.username || "Mon Profil"}
                                     icon={<User size={22} />}
@@ -245,7 +257,7 @@ function HeaderContent() {
                                     icon={<LogOut size={20} />}
                                     variant="ghost"
                                     className="text-white hover:text-red-500"
-                                    onClick={logout} // ✅ Utilise la fonction logout du hook
+                                    onClick={logout}
                                 />
                             </div>
                         ) : (

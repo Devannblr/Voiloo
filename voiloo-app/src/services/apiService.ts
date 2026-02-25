@@ -161,5 +161,44 @@ export const apiService = {
     toggleFavori: (annonceId: number) =>
         apiFetch(`/favoris/${annonceId}`, { method: 'POST' }),
 
+    // --- MESSAGES ---
+    getConversations: () =>
+        apiFetch('/conversations'),
+
+    getMessages: (conversationId: number) =>
+        apiFetch(`/conversations/${conversationId}/messages`),
+
+    markAsRead: (conversationId: number) =>
+        apiFetch(`/conversations/${conversationId}/read`, { method: 'POST' }),
+
+    startConversation: (data: { recipient_id: number; body: string; annonce_id?: number }) =>
+        apiFetch('/conversations', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
+
+    sendMessage: (conversationId: number, body: string) =>
+        apiFetch(`/conversations/${conversationId}/messages`, {
+            method: 'POST',
+            body: JSON.stringify({ body }),
+        }),
+
+    sendTyping: (conversationId: number) =>
+        apiFetch(`/conversations/${conversationId}/typing`, { method: 'POST' }),
+
+    getUnreadCount: () =>
+        apiFetch('/messages/unread-count'),
+
+    /**
+     * Supprime un message spécifique
+     */
+    deleteMessage: (messageId: number) =>
+        apiFetch(`/messages/${messageId}`, { method: 'DELETE' }),
+
+    /**
+     * Supprime une conversation entière
+     */
+    deleteConversation: (conversationId: number) =>
+        apiFetch(`/conversations/${conversationId}`, { method: 'DELETE' }),
 
 };

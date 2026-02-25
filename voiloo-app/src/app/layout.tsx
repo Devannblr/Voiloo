@@ -6,7 +6,8 @@ import { Footer } from "@/components/Layouts/Footer";
 import { ToastProvider } from "@/components/Layouts/Toastprovider";
 import { Preloader } from "@/components/Modules/Preloader";
 import CookieBanner from "@/components/Layouts/CookieBanner";
-import { AuthProvider } from '@/context/AuthContext'; // Import du nouveau context
+import { AuthProvider } from '@/context/AuthContext';
+import {ChatProvider} from "@/context/ChatContext"; // Import du nouveau context
 
 export const metadata: Metadata = {
     title: "Voiloo - Freelances & Services locaux",
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </head>
         <body className="antialiased pb-8 md:pb-0 relative">
         <AuthProvider>
+        <ChatProvider>
             <ToastProvider>
                 <Header />
                 <Preloader>
@@ -36,6 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <Footer />
                 <HeaderMobile />
             </ToastProvider>
+        </ChatProvider>
         </AuthProvider>
         </body>
         </html>

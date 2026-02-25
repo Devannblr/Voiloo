@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { useParams } from 'next/navigation';
+import {useParams, useRouter} from 'next/navigation';
 import { apiService } from '@/services/apiService';
-import { useAuth } from '@/context/AuthContext'; // ✅ Ton nouveau contexte
+import { useAuth } from '@/context/AuthContext';
 
 // Tes composants Base
 import { Loader, Container, P, Button } from '@/components/Base';
@@ -20,13 +20,14 @@ import SectionPortfolio from '@/components/Modules/(section)/SectionPortfolio';
 import SectionAvis from '@/components/Modules/(section)/SectionAvis';
 import SectionContact from '@/components/Modules/(section)/SectionContact';
 import VitrineFooter from '@/components/Vitrine/(vitrine)/VitrineFooter';
+import {useToast} from "@/components/Layouts/Toastprovider";
 
 export default function VitrinePage() {
     const params = useParams();
     const userSlug = params.userSlug as string;
     const annonceSlug = params.annonceSlug as string;
 
-    // ✅ Utilisation du hook global (plus d'appel API manuel pour le user)
+    // ✅ Utilisation du hook global
     const { user: currentUser, isLoading: authLoading } = useAuth();
 
     const [annonce, setAnnonce] = useState<Annonce | null>(null);
@@ -39,6 +40,31 @@ export default function VitrinePage() {
     const lastScrollY = useRef(0);
     const scrollDownAccum = useRef(0);
     const HIDE_THRESHOLD = 200;
+    const router = useRouter();
+    const { toast } = useToast();
+    const [contacting, setContacting] = useState(false);
+
+    const handleContact = async () => {
+        if (!currentUser) {
+            router.push('/login');
+            return;
+        }
+        if (!annonce) return;
+
+        setContacting(true);
+        try {
+            await apiService.startConversation({
+                recipient_id: annonce.user_id,
+                annonce_id: annonce.id,
+                body: `Bonjour, je suis intéressé par votre service "${annonce.titre}" !`,
+            });
+            router.push('/messages');
+        } catch (err) {
+            toast.error('Impossible de démarrer la conversation');
+        } finally {
+            setContacting(false);
+        }
+    };
 
     // Gestion du scroll et resize
     useEffect(() => {
@@ -93,9 +119,9 @@ export default function VitrinePage() {
         fetchVitrine();
     }, [userSlug, annonceSlug]);
 
-    // ✅ Déduction de isOwner via le contexte (instantané)
+    // ✅ FIX TS2322 : Forçage en booléen strict
     const isOwner = useMemo(() => {
-        return currentUser && annonce && currentUser.id === annonce.user_id;
+        return !!(currentUser && annonce && currentUser.id === annonce.user_id);
     }, [currentUser, annonce]);
 
     if (loading || authLoading) return (
@@ -146,7 +172,6 @@ export default function VitrinePage() {
     return (
         <main style={{ backgroundColor: bgColor, color: textColor }} className="min-h-screen relative">
 
-            {/* 1. OWNER BAR (Conditionnée par isOwner du contexte) */}
             {isOwner && (
                 <div
                     className="sticky z-[90] transition-transform duration-300 border-b border-black/5"
@@ -170,9 +195,10 @@ export default function VitrinePage() {
                 textColor={textColor}
                 bgColor={bgColor}
                 onContactClick={() => scrollTo('contact')}
+                onMessageClick={!isOwner ? handleContact : undefined}
+                isContacting={contacting}
             />
 
-            {/* 2. VITRINE NAV */}
             <div
                 className="sticky z-[80] transition-transform duration-300 shadow-sm"
                 style={{
@@ -190,7 +216,6 @@ export default function VitrinePage() {
                 />
             </div>
 
-            {/* Contenu principal restreint pour la lisibilité */}
             <div className="max-w-3xl mx-auto px-6 py-12 space-y-24">
                 {sections.about && (
                     <SectionAbout content={sections.about} primary={primary} />

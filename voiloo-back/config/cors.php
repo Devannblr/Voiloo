@@ -8,13 +8,23 @@ return [
     |--------------------------------------------------------------------------
     */
 
-    // On garde '*' pour les chemins pour être large sur l'API
-    'paths' => ['api/*', 'sanctum/csrf-cookie', '*'],
+    'paths' => [
+        'api/*',
+        'broadcasting/auth',
+        'sanctum/csrf-cookie',
+        'login',
+        'logout',
+        'register'
+    ],
 
     'allowed_methods' => ['*'],
 
-    // ✅ MODIFICATION ICI : On autorise tout pour le développement/test
-    'allowed_origins' => ['http://localhost:3000'],
+    // On met les variantes sans slash final pour éviter les échecs de matching
+    'allowed_origins' => [
+        'https://voiloo.fr',
+        'https://www.voiloo.fr',
+        'http://localhost:3000'
+    ],
 
     'allowed_origins_patterns' => [],
 

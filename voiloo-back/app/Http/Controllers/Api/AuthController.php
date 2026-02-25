@@ -85,19 +85,20 @@ class AuthController extends Controller
      */
     private function generateAuthCookie($token)
     {
+        $isProduction = app()->environment('production');
+
         return cookie(
-            'voiloo_token', // Nom plus précis
+            'voiloo_token',
             $token,
-            60 * 24 * 7,    // 7 jours
+            60 * 24 * 7,
             '/',
             null,
-            true,           // Toujours Secure en 2026
-            true,           // HttpOnly (empêche le JS de le voler)
+            $isProduction,
+            true,
             false,
             'Lax'
         );
     }
-
     private function formatUserResponse(User $user): array
     {
         return [

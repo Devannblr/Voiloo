@@ -1,11 +1,14 @@
 'use client';
 
 import React from 'react';
-import { IconButton, Small } from '@/components/Base';
-import { Home, Search, Heart, Plus, MessageSquare, User } from "lucide-react";
+import { IconButton, Small, Badge } from '@/components/Base';
+import { Home, Search, Plus, MessageSquare, User } from "lucide-react";
 import Link from "next/link";
+import { useChat } from '@/context/ChatContext';
 
 export const HeaderMobile = () => {
+    const { unreadTotal } = useChat(); // Récupère les notifications non lues
+
     const iconBase = "text-primary pointer-events-none";
     const textBase = "capitalize -mt-1 tracking-tighter text-white";
     const itemContainer = "flex flex-col items-center flex-1 rounded-lg active:bg-white/10 transition-colors hover:bg-beige active:bg-beige";
@@ -24,15 +27,24 @@ export const HeaderMobile = () => {
                     <Small className={textBase}>Explorer</Small>
                 </Link>
 
-                {/* BOUTON CENTRAL SANS TEXTE */}
+                {/* BOUTON CENTRAL */}
                 <Link href="/ajouter" className="flex flex-col items-center flex-1">
                     <button className="bg-primary p-4 rounded-full shadow-lg border-4 border-dark flex items-center justify-center active:scale-90 transition-transform" aria-label="Ajouter une annonce">
                         <Plus size={22} className="text-dark" />
                     </button>
                 </Link>
 
-                <Link href="/messages" className={itemContainer}>
+                <Link href="/messages" className={`${itemContainer} relative`}>
                     <IconButton label="Messages" icon={<MessageSquare size={22} />} variant="ghost" className={iconBase} />
+                    {unreadTotal > 0 && (
+                        <Badge
+                            variant="primary"
+                            size="sm"
+                            className="absolute top-1 right-2 px-1 min-w-[16px] h-[16px] border border-dark text-[9px]"
+                        >
+                            {unreadTotal}
+                        </Badge>
+                    )}
                     <Small className={textBase}>Message</Small>
                 </Link>
 

@@ -1,37 +1,40 @@
 'use client';
 
-import React, {useState} from 'react';
-import {Button, Card, CardBody, Divider, H2, Link, P} from '@/components/Base';
-import {MailInput, PasswordInput} from "@/components/Modules";
-import {Logo} from "@/components/Base/logo";
-import {useApi} from '@/hooks/useApi';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button, Card, CardBody, Divider, H2, Link, P } from '@/components/Base';
+import { MailInput, PasswordInput } from "@/components/Modules";
+import { Logo } from "@/components/Base/logo";
+import { useAuth } from '@/context/AuthContext';
 
 export const LoginForm = () => {
+    const router = useRouter();
+    const { login } = useAuth();
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const { request, isLoading, error } = useApi();
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        try {
-            const data = await request('/login', {
-                method: 'POST',
-                body: JSON.stringify({ email, password }),
-            });
+        setIsLoading(true);
+        setError(null);
 
-            if (data.access_token) {
-                // 1. Stockage pour les appels API classiques (Header Authorization)
-                localStorage.setItem('voiloo_token', data.access_token);
-                // 2. Stockage dans un COOKIE pour le middleware Next.js
-                // On utilise 'token' car c'est ce que ton middleware.ts cherche
-                // On met path=/ pour qu'il soit accessible sur tout le site
-                document.cookie = `token=${data.access_token}; path=/; max-age=604800; SameSite=Lax`;
-                // 3. Redirection vers la page demandée ou le profil
-                const params = new URLSearchParams(window.location.search);
-                window.location.href = params.get('callbackUrl') || "/profil";
-            }
-        } catch (err) {
-            console.error("Échec de la connexion", err);
+        try {
+            // ✅ Le AuthContext gère TOUT : token localStorage + cookie + user state
+            await login(email, password);
+
+            // ✅ Redirection après succès
+            const params = new URLSearchParams(window.location.search);
+            const callbackUrl = params.get('callbackUrl') || '/profil';
+            router.push(callbackUrl);
+
+        } catch (err: any) {
+            console.error('Login failed:', err);
+            setError(err.message || 'Identifiants invalides');
+        } finally {
+            setIsLoading(false);
         }
     };
 

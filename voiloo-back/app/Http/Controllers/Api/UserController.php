@@ -35,6 +35,21 @@ class UserController extends Controller
         }
         return response()->json($user);
     }
+    public function me(Request $request)
+    {
+        $user = $request->user();
+        if ($user->avatar && !str_starts_with($user->avatar, 'http')) {
+            $user->avatar = url('storage/' . $user->avatar);
+        }
+
+        $token = $request->bearerToken()
+            ?? $request->cookie('voiloo_token');
+
+        return response()->json([
+            'user' => $user,
+            'token' => $token,
+        ]);
+    }
 
     public function update(Request $request)
     {
