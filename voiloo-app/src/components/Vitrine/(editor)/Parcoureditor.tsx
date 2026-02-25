@@ -1,4 +1,4 @@
-import { Card, CardBody, H3, P, Button } from '@/components/Base';
+import { Card, CardBody, H3, P, Button, Input, Textarea, Small, IconButton } from '@/components/Base';
 import { Plus, Trash2 } from 'lucide-react';
 
 export function ParcoursEditor({ draft, setDraft }: any) {
@@ -39,55 +39,51 @@ export function ParcoursEditor({ draft, setDraft }: any) {
                         <H3 className="text-lg font-black">Parcours</H3>
                         <P className="text-sm text-gray-500">Étapes clés de votre carrière</P>
                     </div>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        leftIcon={<Plus size={16} />}
-                        onClick={add}
-                    >
+                    <Button variant="ghost" size="sm" leftIcon={<Plus size={16} />} onClick={add}>
                         Ajouter
                     </Button>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-6">
                     {parcours.map((item: any, i: number) => (
-                        <div key={i} className="p-4 bg-gray-50 rounded-xl border border-gray-200 relative">
-                            <button
+                        <div key={i} className="relative">
+                            <IconButton
+                                label="Supprimer"
+                                icon={<Trash2 size={12} />}
+                                variant="danger"
                                 onClick={() => remove(i)}
-                                className="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition-colors"
-                            >
-                                <Trash2 size={16} />
-                            </button>
+                                size="sm"
+                                className="absolute -top-3 -right-3 z-10"
+                            />
 
-                            <div className="grid grid-cols-[100px_1fr] gap-3 mb-3">
-                                <input
-                                    type="text"
-                                    value={item.year}
-                                    onChange={(e) => update(i, 'year', e.target.value)}
-                                    placeholder="2020"
-                                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-primary outline-none"
-                                />
-                                <input
-                                    type="text"
-                                    value={item.title}
-                                    onChange={(e) => update(i, 'title', e.target.value)}
-                                    placeholder="Diplôme obtenu"
-                                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-semibold focus:border-primary outline-none"
+                            <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                                <div className="grid grid-cols-[100px_1fr] gap-3 mb-3">
+                                    <Input
+                                        value={item.year}
+                                        onChange={(e) => update(i, 'year', e.target.value)}
+                                        placeholder="2020"
+                                    />
+                                    <Input
+                                        value={item.title}
+                                        onChange={(e) => update(i, 'title', e.target.value)}
+                                        placeholder="Diplôme obtenu"
+                                    />
+                                </div>
+                                <Textarea
+                                    value={item.description}
+                                    onChange={(e) => update(i, 'description', e.target.value)}
+                                    placeholder="Description"
+                                    rows={2}
                                 />
                             </div>
-                            <textarea
-                                value={item.description}
-                                onChange={(e) => update(i, 'description', e.target.value)}
-                                placeholder="Description"
-                                rows={2}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-primary outline-none resize-none"
-                            />
                         </div>
                     ))}
 
                     {parcours.length === 0 && (
-                        <div className="text-center py-8 text-gray-400 text-sm">
-                            Aucune étape ajoutée. Cliquez sur "Ajouter" pour commencer.
+                        <div className="text-center py-8">
+                            <Small className="text-gray-400">
+                                Aucune étape ajoutée. Cliquez sur "Ajouter" pour commencer.
+                            </Small>
                         </div>
                     )}
                 </div>

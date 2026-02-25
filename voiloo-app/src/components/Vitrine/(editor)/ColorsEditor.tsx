@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, CardBody, H3, P } from '@/components/Base';
+import { Card, CardBody, H3, P, Label, Small } from '@/components/Base';
 import { Palette } from 'lucide-react';
 
 export function ColorsEditor({ draft, setDraft }: any) {
@@ -25,9 +25,9 @@ export function ColorsEditor({ draft, setDraft }: any) {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {colorFields.map((field) => (
                         <div key={field.key} className="space-y-3 p-4 rounded-xl border-2 border-gray-100 hover:border-primary/20 transition-colors">
-                            <div>
-                                <label className="text-sm font-bold block">{field.label}</label>
-                                <P className="text-xs text-gray-500">{field.description}</P>
+                            <div className={"flex gap-2 items-baseline"}>
+                                <Label>{field.label}</Label>
+                                <Small className="text-gray-500">{field.description}</Small>
                             </div>
                             <div className="flex items-center gap-3">
                                 <input

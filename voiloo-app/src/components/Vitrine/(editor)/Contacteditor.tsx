@@ -1,4 +1,4 @@
-import { Card, CardBody, H3, P } from '@/components/Base';
+import { Card, CardBody, H3, P, Label } from '@/components/Base';
 import { Mail } from 'lucide-react';
 
 export function ContactEditor({ draft, setDraft }: any) {
@@ -22,8 +22,8 @@ export function ContactEditor({ draft, setDraft }: any) {
                             <Mail size={18} className="text-primary" />
                         </div>
                         <div>
-                            <p className="text-sm font-semibold text-dark">Afficher le formulaire de contact</p>
-                            <p className="text-xs text-gray-500">Les messages seront envoyés à votre email</p>
+                            <Label>Afficher le formulaire de contact</Label>
+                            <P className="text-xs text-gray-500">Les messages seront envoyés à votre email</P>
                         </div>
                     </div>
                 </label>

@@ -22,12 +22,10 @@ export const LoginForm = () => {
             if (data.access_token) {
                 // 1. Stockage pour les appels API classiques (Header Authorization)
                 localStorage.setItem('voiloo_token', data.access_token);
-
                 // 2. Stockage dans un COOKIE pour le middleware Next.js
                 // On utilise 'token' car c'est ce que ton middleware.ts cherche
                 // On met path=/ pour qu'il soit accessible sur tout le site
                 document.cookie = `token=${data.access_token}; path=/; max-age=604800; SameSite=Lax`;
-
                 // 3. Redirection vers la page demandée ou le profil
                 const params = new URLSearchParams(window.location.search);
                 window.location.href = params.get('callbackUrl') || "/profil";

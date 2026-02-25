@@ -1,14 +1,13 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { apiService } from '@/services/apiService';
-import { useAuth } from '@/context/AuthContext'; // ✅ Ton nouveau contexte
-import { Container, Button, P, Badge, Loader } from '@/components/Base';
+import { useAuth } from '@/context/AuthContext';
+import { Container, Button, P, Badge, Loader, Modal, ModalBody, ModalFooter } from '@/components/Base';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
-// Imports des éditeurs
 import { HeaderEditor }    from "@/components/Vitrine/(editor)/Headereditor";
 import { ColorsEditor }    from "@/components/Vitrine/(editor)/ColorsEditor";
 import { SocialsEditor }   from "@/components/Vitrine/(editor)/Socialseditor";
@@ -24,7 +23,6 @@ export default function VitrineEditPage() {
     const userSlug    = params.userSlug    as string;
     const annonceSlug = params.annonceSlug as string;
 
-    // ✅ On récupère l'utilisateur global
     const { user: currentUser, isLoading: authLoading } = useAuth();
 
     const [annonce, setAnnonce] = useState<any>(null);
@@ -34,26 +32,24 @@ export default function VitrineEditPage() {
     const [saving, setSaving]   = useState(false);
     const [saved, setSaved]     = useState(false);
 
+    const [showLeaveModal, setShowLeaveModal] = useState(false);
+    const [pendingUrl, setPendingUrl]         = useState<string | null>(null);
+
     useEffect(() => {
-        // Si l'auth a fini de charger et qu'il n'y a pas de user
         if (!authLoading && !currentUser) {
             router.push('/login');
             return;
         }
-
         const loadData = async () => {
             try {
                 const [annonceData, configData] = await Promise.all([
                     apiService.getAnnonceBySlug(userSlug, annonceSlug),
                     apiService.getVitrineConfig(userSlug, annonceSlug),
                 ]);
-
-                // ✅ Sécurité : Vérifier si c'est bien le propriétaire
                 if (currentUser && annonceData.user_id !== currentUser.id) {
                     router.push(`/u/${userSlug}/${annonceSlug}`);
                     return;
                 }
-
                 setAnnonce(annonceData);
                 setConfig(configData);
                 setDraft({
@@ -68,11 +64,9 @@ export default function VitrineEditPage() {
                 setLoading(false);
             }
         };
-
         if (!authLoading) loadData();
     }, [userSlug, annonceSlug, router, currentUser, authLoading]);
 
-    // ✅ Optimisé avec useMemo pour éviter les calculs lourds à chaque frappe au clavier
     const hasChanges = useMemo(() => {
         if (!draft || !config) return false;
         return JSON.stringify(draft) !== JSON.stringify({
@@ -83,11 +77,55 @@ export default function VitrineEditPage() {
         });
     }, [draft, config]);
 
+    // 1. Bloquer refresh / fermeture onglet
+    useEffect(() => {
+        if (!hasChanges) return;
+        const handler = (e: BeforeUnloadEvent) => {
+            e.preventDefault();
+            e.returnValue = '';
+        };
+        window.addEventListener('beforeunload', handler);
+        return () => window.removeEventListener('beforeunload', handler);
+    }, [hasChanges]);
+
+    // 2. Intercepter TOUS les clics sur des liens <a> dans la page
+    useEffect(() => {
+        if (!hasChanges) return;
+
+        const handleClick = (e: MouseEvent) => {
+            const target = (e.target as HTMLElement).closest('a');
+            if (!target) return;
+
+            const href = target.getAttribute('href');
+            if (!href || href.startsWith('#')) return;
+
+            // Lien externe → on laisse faire
+            if (href.startsWith('http') && !href.includes(window.location.hostname)) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+            setPendingUrl(href);
+            setShowLeaveModal(true);
+        };
+
+        document.addEventListener('click', handleClick, true); // capture phase
+        return () => document.removeEventListener('click', handleClick, true);
+    }, [hasChanges]);
+
+    const handleConfirmLeave = () => {
+        setShowLeaveModal(false);
+        if (pendingUrl) window.location.href = pendingUrl;
+    };
+
+    const handleCancelLeave = () => {
+        setShowLeaveModal(false);
+        setPendingUrl(null);
+    };
+
     const handleSave = async () => {
         setSaving(true);
         try {
             const formData = new FormData();
-            // Laravel/Symfony ont souvent besoin de ce spoofing pour le multipart en PUT
             formData.append('_method', 'PUT');
 
             const plainStringKeys = [
@@ -99,26 +137,19 @@ export default function VitrineEditPage() {
             Object.keys(draft).forEach(key => {
                 if (key === 'new_portfolio_files') return;
                 const value = draft[key];
-
                 if (key === 'header_photo') {
                     if (value instanceof File) formData.append(key, value);
-                }
-                else if (key === 'delete_header_photo') {
+                } else if (key === 'delete_header_photo') {
                     formData.append(key, value ? '1' : '0');
-                }
-                else if (key === 'portfolio_images_to_delete') {
+                } else if (key === 'portfolio_images_to_delete') {
                     formData.append(key, JSON.stringify(value || []));
-                }
-                else if (key === 'show_contact_form') {
+                } else if (key === 'show_contact_form') {
                     formData.append(key, value ? '1' : '0');
-                }
-                else if (plainStringKeys.includes(key)) {
+                } else if (plainStringKeys.includes(key)) {
                     formData.append(key, value || '');
-                }
-                else if (typeof value === 'object' && value !== null && !(value instanceof File)) {
+                } else if (typeof value === 'object' && value !== null && !(value instanceof File)) {
                     formData.append(key, JSON.stringify(value));
-                }
-                else if (value !== null && value !== undefined) {
+                } else if (value !== null && value !== undefined) {
                     formData.append(key, value);
                 }
             });
@@ -130,7 +161,6 @@ export default function VitrineEditPage() {
             }
 
             const data = await apiService.updateVitrineConfig(annonce.id, formData);
-
             setConfig(data.config);
             setDraft({
                 ...data.config,
@@ -138,7 +168,6 @@ export default function VitrineEditPage() {
                 portfolio_images_to_delete: [],
                 delete_header_photo: false
             });
-
             if (data.annonce) setAnnonce(data.annonce);
             setSaved(true);
             setTimeout(() => setSaved(false), 2000);
@@ -158,10 +187,28 @@ export default function VitrineEditPage() {
 
     return (
         <main className="min-h-screen bg-gray-50">
-            {/* Header d'édition collé en haut */}
+            <Modal
+                isOpen={showLeaveModal}
+                onClose={handleCancelLeave}
+                title="Quitter sans sauvegarder ?"
+                size="sm"
+            >
+                <ModalBody>
+                    <P>Vous avez des modifications non sauvegardées. Si vous quittez maintenant, elles seront perdues.</P>
+                </ModalBody>
+                <ModalFooter>
+                    <Button variant="ghost" onClick={handleCancelLeave}>
+                        Rester
+                    </Button>
+                    <Button variant="danger" onClick={handleConfirmLeave}>
+                        Quitter quand même
+                    </Button>
+                </ModalFooter>
+            </Modal>
+
             <div className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
                 <Container>
-                    <div className="flex items-center justify-between py-4">
+                    <div className="flex md:items-center justify-between py-4 md:flex-row flex-col gap-4 items-end">
                         <div className="flex items-center gap-4">
                             <Link href={`/u/${userSlug}/${annonceSlug}`} className="flex items-center gap-2 text-sm text-gray-500 hover:text-dark transition-colors font-bold">
                                 <ArrowLeft size={16} /> Quitter l'édition
@@ -172,7 +219,7 @@ export default function VitrineEditPage() {
                                 <P className="text-[10px] text-gray-400 font-bold uppercase">Mode Éditeur</P>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 justify-between w-full md:w-max">
                             {hasChanges && <Badge variant="warning" size="sm" className="animate-pulse">Modifications en cours</Badge>}
                             <Button
                                 variant="primary"
@@ -180,7 +227,7 @@ export default function VitrineEditPage() {
                                 onClick={handleSave}
                                 disabled={!hasChanges || saving}
                                 isLoading={saving}
-                                className="font-bold italic uppercase"
+                                className="font-bold italic uppercase ml-auto"
                             >
                                 {saved ? 'Enregistré !' : 'Enregistrer'}
                             </Button>
@@ -190,7 +237,6 @@ export default function VitrineEditPage() {
             </div>
 
             <Container className="py-12 max-w-4xl mx-auto space-y-12">
-                {/* Ordre des sections d'édition utilisant tes composants */}
                 <section className="space-y-8">
                     <HeaderEditor    draft={draft} setDraft={setDraft} />
                     <ColorsEditor    draft={draft} setDraft={setDraft} />
