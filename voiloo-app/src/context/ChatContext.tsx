@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { usePathname } from 'next/navigation';
 import { getEcho } from '@/lib/echo';
 import { apiService } from '@/services/apiService';
 
@@ -11,21 +12,24 @@ interface ChatContextType {
     refreshConversations: () => Promise<void>;
     markAsSeen: (conversationId: number) => void;
     loading: boolean;
+    activeConversationId: number | null;
+    setActiveConversationId: (id: number | null) => void;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     const { user, isAuthenticated } = useAuth();
+    const pathname = usePathname();
     const [conversations, setConversations] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
+    const [activeConversationId, setActiveConversationId] = useState<number | null>(null);
 
     const refreshConversations = useCallback(async () => {
         if (!isAuthenticated) return;
         try {
             setLoading(true);
             const data = await apiService.getConversations();
-            // On s'assure que les données reçues sont bien un tableau
             setConversations(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error("Erreur rafraîchissement convs:", err);
@@ -39,6 +43,14 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
             conv.id === conversationId ? { ...conv, unread_count: 0 } : conv
         ));
     }, []);
+
+    // ✅ Reset activeConversationId quand on quitte /messages
+    useEffect(() => {
+        if (pathname !== '/messages') {
+            console.log('🔄 Quitte /messages, reset activeConversationId');
+            setActiveConversationId(null);
+        }
+    }, [pathname]);
 
     useEffect(() => {
         if (!isAuthenticated || !user) {
@@ -55,25 +67,31 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
         userChannel.listen('.MessageSent', (e: any) => {
             console.log("🔔 Nouveau message reçu globalement");
+            console.log("📍 Pathname:", pathname);
+            console.log("🎯 Conversation active:", activeConversationId);
+            console.log("📨 Message dans conversation:", e.message?.conversation_id);
 
-            /**
-             * ✅ FIX : On ajoute un léger délai (300ms) avant de refresh.
-             * Cela laisse le temps au Backend de finir de marquer le message
-             * comme "sent" et de mettre à jour les compteurs avant qu'on ne les demande.
-             */
-            setTimeout(() => {
-                refreshConversations();
-            }, 300);
+            // ✅ Refresh SAUF si le message arrive dans la conversation actuellement ouverte
+            const isInActiveConversation =
+                pathname === '/messages' &&
+                activeConversationId !== null &&
+                e.message?.conversation_id === activeConversationId;
+
+            if (!isInActiveConversation) {
+                console.log("♻️ Refresh des conversations");
+                setTimeout(() => {
+                    refreshConversations();
+                }, 300);
+            } else {
+                console.log("⏭️ Message dans conversation active, skip refresh");
+            }
         });
 
         return () => {
             userChannel.stopListening('.MessageSent');
         };
-    }, [isAuthenticated, user, refreshConversations]);
+    }, [isAuthenticated, user, refreshConversations, pathname, activeConversationId]);
 
-    /**
-     * ✅ Calcul du total avec une sécurité parseInt
-     */
     const unreadTotal = conversations.reduce((acc, conv) => {
         const count = parseInt(conv.unread_count) || 0;
         return acc + count;
@@ -85,7 +103,9 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
             unreadTotal,
             refreshConversations,
             markAsSeen,
-            loading
+            loading,
+            activeConversationId,
+            setActiveConversationId
         }}>
             {children}
         </ChatContext.Provider>

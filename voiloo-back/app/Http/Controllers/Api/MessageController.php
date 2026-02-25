@@ -53,12 +53,6 @@ class MessageController extends Controller
 
         abort_if($conv->user_one_id !== $userId && $conv->user_two_id !== $userId, 403);
 
-        // On marque comme lu quand on ouvre la conversation
-        Message::where('conversation_id', $conversationId)
-            ->where('sender_id', '!=', $userId)
-            ->whereNull('read_at')
-            ->update(['read_at' => now()]);
-
         $messages = $conv->messages()->with('sender:id,name,avatar')->get();
 
         return response()->json($messages);
@@ -66,13 +60,14 @@ class MessageController extends Controller
 
     /**
      * POST /conversations — Créer ou récupérer une conversation
+     * ✅ Gère maintenant le retour complet pour l'affichage direct
      */
     public function startOrGet(Request $request)
     {
         $request->validate([
             'recipient_id' => 'required|exists:users,id',
             'annonce_id'   => 'nullable|exists:annonces,id',
-            'body'         => 'required|string|max:2000',
+            'body'         => 'nullable|string|max:2000',
         ]);
 
         $userId      = $request->user()->id;
@@ -85,14 +80,30 @@ class MessageController extends Controller
         return DB::transaction(function () use ($userId, $recipientId, $request) {
             [$one, $two] = $userId < $recipientId ? [$userId, $recipientId] : [$recipientId, $userId];
 
+            // On trouve ou crée la conversation
+            // Si elle existe déjà mais pour une autre annonce, on peut décider d'en créer une nouvelle
+            // ou de rester sur la même. Ici on reste sur l'existant.
             $conv = Conversation::firstOrCreate(
                 ['user_one_id' => $one, 'user_two_id' => $two],
-                ['annonce_id' => $request->annonce_id]
+                ['annonce_id' => $request->annonce_id, 'last_message_at' => now()]
             );
 
-            $conv->update(['last_message_at' => now()]);
+            // Si un message est fourni (premier contact avec texte)
+            if ($request->filled('body')) {
+                $conv->update(['last_message_at' => now()]);
+                return $this->send($request, $conv->id);
+            }
 
-            return $this->send($request, $conv->id);
+            // Si pas de message (ouverture directe via "Contacter")
+            // On s'assure de charger l'annonce et les utilisateurs pour le frontend
+            return response()->json([
+                'id'           => $conv->id,
+                'other_user'   => $conv->otherUser($userId),
+                'annonce'      => $conv->annonce()->select('id', 'titre', 'slug')->first(),
+                'last_message' => null,
+                'unread_count' => 0,
+                'updated_at'   => $conv->last_message_at,
+            ]);
         });
     }
 
@@ -112,6 +123,7 @@ class MessageController extends Controller
             'conversation_id' => $conv->id,
             'sender_id'       => $userId,
             'body'            => $request->body,
+            'read_at'         => null,
         ]);
 
         $conv->update(['last_message_at' => now()]);
@@ -120,14 +132,14 @@ class MessageController extends Controller
         try {
             broadcast(new MessageSent($message))->toOthers();
         } catch (\Exception $e) {
-            Log::error("Broadcast failed (SSL/Pusher): " . $e->getMessage());
+            Log::error("Broadcast failed: " . $e->getMessage());
         }
 
         return response()->json($message, 201);
     }
 
     /**
-     * POST /conversations/{id}/read — Marquer une conversation comme lue
+     * POST /conversations/{id}/read
      */
     public function markAsRead(int $id)
     {

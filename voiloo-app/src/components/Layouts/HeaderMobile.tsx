@@ -4,17 +4,25 @@ import React from 'react';
 import { IconButton, Small, Badge } from '@/components/Base';
 import { Home, Search, Plus, MessageSquare, User } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useChat } from '@/context/ChatContext';
 
 export const HeaderMobile = () => {
-    const { unreadTotal } = useChat(); // Récupère les notifications non lues
+    const { unreadTotal, activeConversationId } = useChat(); // On récupère l'ID de la conv active
+    const pathname = usePathname();
+
+    // ✅ On masque le header si on est sur la page messages ET qu'une conversation est ouverte
+    const isChatOpen = pathname.startsWith('/messages') && activeConversationId !== null;
 
     const iconBase = "text-primary pointer-events-none";
     const textBase = "capitalize -mt-1 tracking-tighter text-white";
     const itemContainer = "flex flex-col items-center flex-1 rounded-lg active:bg-white/10 transition-colors hover:bg-beige active:bg-beige";
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 w-full bg-dark text-white border-t border-white/10 py-2 z-[100] md:hidden">
+        <nav className={`
+            fixed bottom-0 left-0 right-0 w-full bg-dark text-white border-t border-white/10 py-2 z-[100] md:hidden transition-transform duration-300
+            ${isChatOpen ? 'translate-y-full' : 'translate-y-0'}
+        `}>
             <div className="flex justify-around items-center w-full relative px-2">
 
                 <Link href="/" className={itemContainer}>

@@ -1,0 +1,14 @@
+'use client';
+
+import { usePathname } from 'next/navigation';
+import { Footer } from "@/components/Layouts/Footer";
+
+export function ConditionalFooter() {
+    const pathname = usePathname();
+
+    if (pathname === '/messages') {
+        return null;
+    }
+
+    return <Footer />;
+}

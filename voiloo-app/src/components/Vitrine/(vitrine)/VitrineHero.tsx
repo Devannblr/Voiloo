@@ -24,7 +24,6 @@ interface HeroProps {
 }
 
 export default function VitrineHero({ annonce, config, primary, textColor, bgColor, onContactClick, onMessageClick, isContacting }: HeroProps) {
-    // ✅ Récupération de l'URL de stockage depuis le .env
     const STORAGE_URL = process.env.NEXT_PUBLIC_STORAGE_URL;
 
     const socials = [
@@ -83,10 +82,8 @@ export default function VitrineHero({ annonce, config, primary, textColor, bgCol
 
     return (
         <section className="relative">
-            {/* Header Photo / Cover */}
             {config.header_photo ? (
                 <div className="relative w-full aspect-[3/1] max-h-72 overflow-hidden">
-                    {/* ✅ Concaténation propre : URL du back + path de la BDD */}
                     <img
                         src={`${STORAGE_URL}/${config.header_photo}`}
                         alt="Couverture"
@@ -163,7 +160,6 @@ export default function VitrineHero({ annonce, config, primary, textColor, bgCol
                                 style={{ borderColor: primary, color: textColor } as any}
                             />
 
-                            {/* Bouton messagerie — visible si pas owner */}
                             {onMessageClick && (
                                 <Button
                                     onClick={onMessageClick}
@@ -177,7 +173,6 @@ export default function VitrineHero({ annonce, config, primary, textColor, bgCol
                                 </Button>
                             )}
 
-                            {/* Bouton scroll formulaire — garde l'existant en secondaire si les deux sont là */}
                             {config.show_contact_form && onMessageClick && (
                                 <Button
                                     onClick={onContactClick}
@@ -189,7 +184,6 @@ export default function VitrineHero({ annonce, config, primary, textColor, bgCol
                                 </Button>
                             )}
 
-                            {/* Si pas de messagerie (owner), on garde l'ancien bouton seul */}
                             {config.show_contact_form && !onMessageClick && (
                                 <Button
                                     onClick={onContactClick}

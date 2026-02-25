@@ -50,7 +50,7 @@ function ExplorerContent() {
         apiService.getAnnonces({
             category: categorySlug || undefined,
             query,
-            city: (!lat && city) ? city : undefined, // ville texte seulement si pas de coords
+            city: (!lat && city) ? city : undefined,
             sort: sort || undefined,
             lat: lat || undefined,
             lng: lng || undefined,
@@ -92,8 +92,6 @@ function ExplorerContent() {
     const handleRemoveAllFilters = () => router.push('/explorer');
 
     const categoryLabel = categorySlug ? (categories[categorySlug] || categorySlug) : null;
-
-    // Label affiché dans le header
     const locationLabel = radius && city ? `${city} (${radius} km)` : city || null;
 
     return (
@@ -187,16 +185,16 @@ function ExplorerContent() {
                     </Container>
                 </div>
 
-                {/* CARTE */}
-                <div className={`${showMapMobile ? 'block' : 'hidden'} lg:block h-full relative border-l border-gray-100 bg-stone-50`}>
+                {/* CARTE : Ajout d'une hauteur forcée sur mobile pour éviter le bug d'affichage */}
+                <div className={`${showMapMobile ? 'block h-[calc(100vh-150px)]' : 'hidden'} lg:block lg:h-full relative border-l border-gray-100 bg-stone-50`}>
                     <DynamicMap points={annonces} />
                 </div>
             </div>
 
-            {/* BOUTON SWITCH MOBILE */}
+            {/* BOUTON SWITCH MOBILE : bottom-24 pour laisser passer ta navbar Insta */}
             <button
                 onClick={() => setShowMapMobile(!showMapMobile)}
-                className="lg:hidden fixed bottom-8 left-1/2 -translate-x-1/2 z-[2000] bg-black text-white px-6 py-3 rounded-full font-bold flex items-center gap-2 shadow-2xl active:scale-95 transition-all border border-white/10"
+                className="lg:hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-[2000] bg-black text-white px-6 py-3 rounded-full font-bold flex items-center gap-2 shadow-2xl active:scale-95 transition-all border border-white/10"
             >
                 {showMapMobile ? <><List size={18} /> Voir la liste</> : <><MapIcon size={18} /> Voir la carte</>}
             </button>

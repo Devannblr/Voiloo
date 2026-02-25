@@ -1,3 +1,5 @@
+'use client';
+
 import { apiFetch } from "@/lib/api";
 
 export interface ServiceCardProvider {
@@ -19,6 +21,10 @@ export const apiService = {
     // --- UTILISATEURS ---
     getUser: () => apiFetch('/user'),
 
+    // Ajouté pour récupérer les infos d'un prestataire par son ID (utilisé dans MessagesPage)
+    getUserById: (id: string | number) =>
+        apiFetch(`/users/by-id/${id}`),
+
     checkUsername: (cleanName: string) =>
         apiFetch(`/check-username/${cleanName}`),
 
@@ -30,10 +36,8 @@ export const apiService = {
         apiFetch(`/search/suggestions?query=${encodeURIComponent(query)}`),
 
     // --- ANNONCES ---
-    // Pour la carte de la HeroSection
     getMapPoints: () => apiFetch('/annonces/map'),
 
-    // Pour la FreelanceGrid de l'accueil
     getRecommendedAnnonces: (city?: string) => {
         const url = city
             ? `/annonces/recommended?city=${encodeURIComponent(city)}`
@@ -183,21 +187,26 @@ export const apiService = {
             body: JSON.stringify({ body }),
         }),
 
+    // Ajouté pour créer une conversation au premier message envoyé depuis "Contacter"
+    sendMessageToUser: (recipientId: number, body: string, annonceId?: number) =>
+        apiFetch('/conversations', {
+            method: 'POST',
+            body: JSON.stringify({
+                recipient_id: recipientId,
+                body: body,
+                annonce_id: annonceId
+            }),
+        }),
+
     sendTyping: (conversationId: number) =>
         apiFetch(`/conversations/${conversationId}/typing`, { method: 'POST' }),
 
     getUnreadCount: () =>
         apiFetch('/messages/unread-count'),
 
-    /**
-     * Supprime un message spécifique
-     */
     deleteMessage: (messageId: number) =>
         apiFetch(`/messages/${messageId}`, { method: 'DELETE' }),
 
-    /**
-     * Supprime une conversation entière
-     */
     deleteConversation: (conversationId: number) =>
         apiFetch(`/conversations/${conversationId}`, { method: 'DELETE' }),
 

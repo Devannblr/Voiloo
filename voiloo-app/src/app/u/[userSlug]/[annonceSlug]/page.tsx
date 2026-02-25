@@ -27,7 +27,6 @@ export default function VitrinePage() {
     const userSlug = params.userSlug as string;
     const annonceSlug = params.annonceSlug as string;
 
-    // ✅ Utilisation du hook global
     const { user: currentUser, isLoading: authLoading } = useAuth();
 
     const [annonce, setAnnonce] = useState<Annonce | null>(null);
@@ -35,7 +34,6 @@ export default function VitrinePage() {
     const [loading, setLoading] = useState(true);
     const [isMobile, setIsMobile] = useState(false);
 
-    // Synchronisation Header
     const [headerVisible, setHeaderVisible] = useState(true);
     const lastScrollY = useRef(0);
     const scrollDownAccum = useRef(0);
@@ -44,26 +42,19 @@ export default function VitrinePage() {
     const { toast } = useToast();
     const [contacting, setContacting] = useState(false);
 
-    const handleContact = async () => {
+    /**
+     * ✅ MODIFICATION : Redirection simple vers la messagerie
+     * On ne crée plus de conversation côté serveur ici pour éviter le message automatique.
+     */
+    const handleContact = () => {
         if (!currentUser) {
             router.push('/login');
             return;
         }
         if (!annonce) return;
 
-        setContacting(true);
-        try {
-            await apiService.startConversation({
-                recipient_id: annonce.user_id,
-                annonce_id: annonce.id,
-                body: `Bonjour, je suis intéressé par votre service "${annonce.titre}" !`,
-            });
-            router.push('/messages');
-        } catch (err) {
-            toast.error('Impossible de démarrer la conversation');
-        } finally {
-            setContacting(false);
-        }
+        // On redirige avec les paramètres. MessagesPage s'occupera du reste.
+        router.push(`/messages?user_id=${annonce.user_id}&annonce_id=${annonce.id}`);
     };
 
     // Gestion du scroll et resize
@@ -119,7 +110,6 @@ export default function VitrinePage() {
         fetchVitrine();
     }, [userSlug, annonceSlug]);
 
-    // ✅ FIX TS2322 : Forçage en booléen strict
     const isOwner = useMemo(() => {
         return !!(currentUser && annonce && currentUser.id === annonce.user_id);
     }, [currentUser, annonce]);
@@ -137,13 +127,11 @@ export default function VitrinePage() {
         </Container>
     );
 
-    // Configuration des styles
     const primary = config.couleur_principale || '#FFD359';
     const textColor = config.couleur_texte || '#1A1A1A';
     const bgColor = config.couleur_fond || '#FFFFFF';
     const sections = config.sections || {};
 
-    // Calculs des positions pour le scroll smooth
     const DESKTOP_HEADER_H = 64;
     const currentHeaderH = isMobile ? 0 : DESKTOP_HEADER_H;
     const ownerBarH = isMobile ? 48 : 54;
