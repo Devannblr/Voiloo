@@ -63,7 +63,7 @@ Ce projet s'inscrit dans ma volonté de **maîtriser l'ensemble de la stack mode
 
 ### Objectifs d'apprentissage
 1. **Approfondir React/Next.js** : Après avoir découvert Vue.js en cours, je voulais explorer l'écosystème React qui domine actuellement le marché
-2. **Maîtriser Laravel 11** : Framework PHP moderne avec une architecture propre (MVC, Eloquent ORM, Events/Broadcasting)
+2. **Maîtriser Laravel 12** : Framework PHP moderne avec une architecture propre (MVC, Eloquent ORM, Events/Broadcasting)
 3. **WebSocket en production** : Comprendre les défis du temps réel (latence, reconnexion, gestion d'état)
 4. **Architecture scalable** : Concevoir une structure qui puisse évoluer (séparation API/frontend, tokens stateless)
 
@@ -109,7 +109,7 @@ echo.private(`conversation.${conversationId}`)
 **Difficulté** : Découplage complet frontend/backend
 
 **Stack** :
-- **Backend** : Laravel 11 API-only (aucune vue Blade pour l'instant)
+- **Backend** : Laravel 12 API-only (aucune vue Blade pour l'instant)
 - **Frontend** : Next.js 14 App Router en mode SSR/CSR hybride
 - **Communication** : Headers `Authorization: Bearer` + CORS configuré
 
@@ -215,7 +215,7 @@ public function join(User $user, int $conversationId): bool {
 
 | Technologie | Usage |
 |-------------|-------|
-| **Laravel 11** | Framework PHP |
+| **Laravel 12** | Framework PHP |
 | **Sanctum** | Authentification API |
 | **Reverb** | WebSocket server |
 | **MySQL** | Base de données |
@@ -245,7 +245,7 @@ public function join(User $user, int $conversationId): bool {
 - Interactions avancées (drag & drop, live search)
 
 ### ✅ Développement web (PHP)
-- Laravel 11 avec architecture MVC
+- Laravel 12 avec architecture MVC
 - API RESTful (CRUD complet)
 - Middleware et policies
 
