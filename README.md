@@ -1,6 +1,6 @@
 # Voiloo
 
-![Voiloo Logo](./logo.svg)
+![Voiloo Logo](./logoDark.svg)
 
 ## 📋 Description
 
