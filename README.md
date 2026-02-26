@@ -13,7 +13,7 @@ Voiloo est une application web moderne développée avec une architecture full-s
 ### Frontend (`voiloo-app`)
 - **Next.js** - Framework React pour le rendu hybride et les performances.
 - **TypeScript** - Langage principal pour un code typé et sécurisé.
-- **Tailwind CSS** - (Si utilisé) Pour une interface moderne et responsive.
+- **Tailwind CSS** - Pour une interface moderne et responsive.
 - **npm** - Gestion des dépendances.
 
 ### Backend (`voiloo-back`)
