@@ -1,56 +1,60 @@
-# Voiloo
+# Voiloo 🚗
 
-![Voiloo Logo](./logoDark.svg)
+![Voiloo Logo](./logoWhite.svg)
+
+> **Projet Universitaire — 3ème année de BUT MMI (Métiers du Multimédia et de l'Internet)**
 
 ## 📋 Description
 
-Voiloo est une application web moderne développée avec une architecture full-stack combinant un frontend en TypeScript et un backend en PHP/Laravel.
+Voiloo est une application web moderne développée avec une architecture full-stack. Ce projet met en œuvre un frontend performant avec **Next.js** (TypeScript) et une API robuste propulsée par **Laravel 11**, le tout conçu pour offrir une expérience utilisateur fluide et sécurisée.
 
 ## 🛠️ Technologies Utilisées
 
-### Frontend (voiloo-app)
-- **TypeScript** - Langage principal
-- Framework JavaScript moderne (React/Vue/Angular)
-- Build tools et bundlers
+### Frontend (`voiloo-app`)
+- **Next.js** - Framework React pour le rendu hybride et les performances.
+- **TypeScript** - Langage principal pour un code typé et sécurisé.
+- **Tailwind CSS** - (Si utilisé) Pour une interface moderne et responsive.
+- **npm** - Gestion des dépendances.
 
-### Backend (voiloo-back)
-- **PHP** - Langage backend
-- **Laravel** - Framework PHP (utilisation de Blade templates)
-- API RESTful
+### Backend (`voiloo-back`)
+- **PHP 8.2+** - Langage serveur.
+- **Laravel 11** - Framework PHP (Utilisation de l'ORM Eloquent et des API routes).
+- **MySQL** - Base de données (Hébergée sur Infomaniak).
+- **API RESTful** - Communication asynchrone avec le frontend.
+
+---
 
 ## 📁 Structure du Projet
 
-```
+```text
 Voiloo/
-├── voiloo-app/          # Application frontend
-├── voiloo-back/         # API backend
-├── .idea/               # Configuration IDE
-├── Pages.txt            # Documentation des pages
-├── logoDark.svg         # Logo version sombre
-├── logoFullblack.svg    # Logo complet noir
-└── logoOnly.svg         # Logo seul
+├── voiloo-app/          # Frontend Next.js (TypeScript)
+├── voiloo-back/         # API backend (Laravel 11)
+├── .idea/               # Configuration IDE (PHPStorm / WebStorm)
+├── Pages.txt            # Documentation des vues et du routing
+├── logoDark.svg         # Identité visuelle (version sombre)
+├── logoFullblack.svg    # Identité visuelle (version complète)
+└── logoOnly.svg         # Identité visuelle (icône seule)
 ```
+
+---
 
 ## 🚀 Installation
 
 ### Prérequis
-
-- Node.js (version 16+ recommandée)
-- npm ou yarn
-- PHP (version 8.0+)
+- Node.js (version 18+ recommandée)
+- PHP (version 8.2+)
 - Composer
-- MySQL ou PostgreSQL
+- MySQL
 
-### Installation du Frontend
-
+### Installation du Frontend (Next.js)
 ```bash
 cd voiloo-app
 npm install
 npm run dev
 ```
 
-### Installation du Backend
-
+### Installation du Backend (Laravel)
 ```bash
 cd voiloo-back
 composer install
@@ -60,60 +64,68 @@ php artisan migrate
 php artisan serve
 ```
 
+---
+
 ## ⚙️ Configuration
 
-1. Configurez votre base de données dans le fichier `.env` du backend
-2. Configurez l'URL de l'API dans le fichier de configuration du frontend
-3. Lancez les deux serveurs (frontend et backend)
-
-## 🎯 Fonctionnalités
-
-- 🔐 Authentification des utilisateurs
-- 📱 Interface responsive
-- 🔄 API RESTful
-- 💾 Gestion de base de données
-- 🎨 Interface utilisateur moderne
-
-## 📝 Scripts Disponibles
-
-### Frontend
-```bash
-npm run dev      # Démarrer en mode développement
-npm run build    # Build pour la production
-npm run test     # Lancer les tests
-```
-
-### Backend
-```bash
-php artisan serve              # Démarrer le serveur
-php artisan migrate           # Exécuter les migrations
-php artisan db:seed           # Seed la base de données
-php artisan test              # Lancer les tests
-```
-
-## 🤝 Contribution
-
-Les contributions sont les bienvenues ! Pour contribuer :
-
-1. Forkez le projet
-2. Créez une branche pour votre fonctionnalité (`git checkout -b feature/AmazingFeature`)
-3. Committez vos changements (`git commit -m 'Add some AmazingFeature'`)
-4. Poussez vers la branche (`git push origin feature/AmazingFeature`)
-5. Ouvrez une Pull Request
-
-## 📄 Licence
-
-Ce projet est sous licence [MIT](LICENSE) - voir le fichier LICENSE pour plus de détails.
-
-## 👤 Auteur
-
-**Devannblr**
-- GitHub: [@Devannblr](https://github.com/Devannblr)
-
-## 📞 Support
-
-Pour toute question ou problème, n'hésitez pas à ouvrir une [issue](https://github.com/Devannblr/Voiloo/issues).
+1. Configurez votre base de données dans le fichier `.env` du backend (`voiloo-back`).
+2. Configurez l'URL de l'API (généralement `NEXT_PUBLIC_API_URL`) dans le fichier `.env.local` du frontend.
+3. Lancez les deux serveurs simultanément.
 
 ---
 
+## 🎯 Fonctionnalités
+
+- 🔐 **Authentification :** Gestion sécurisée des sessions et comptes utilisateurs.
+- 📱 **Interface Responsive :** Design optimisé pour Desktop, Tablette et Mobile.
+- 🔄 **API RESTful :** Architecture découplée entre Next.js et Laravel.
+- 💾 **Gestion de données :** Persistance rigoureuse via l'ORM Eloquent.
+- 🎨 **UI Moderne :** Interface épurée et typographie soignée.
+
+---
+
+## 📝 Scripts Disponibles
+
+### Frontend (Next.js)
+- `npm run dev` : Démarrer le serveur de développement Next.js.
+- `npm run build` : Compiler le projet pour la production.
+- `npm run start` : Lancer le serveur de production compilé.
+
+### Backend (Laravel)
+- `php artisan serve` : Lancer le serveur local Laravel.
+- `php artisan migrate` : Exécuter les migrations de base de données.
+- `php artisan db:seed` : Remplir la base avec des données de test.
+
+---
+
+## 🤝 Contribution
+
+Les contributions sont les bienvenues pour améliorer le projet !
+1. Ouvrez une **Issue** pour discuter d'un bug ou d'une amélioration.
+2. Forkez le projet.
+3. Créez une branche (`git checkout -b feature/AmazingFeature`).
+4. Committez vos changements (`git commit -m 'Add some AmazingFeature'`).
+5. Ouvrez une **Pull Request**.
+
+---
+
+## 🔒 Licence et Propriété
+
+**Copyright (c) 2026 Devannblr. Tous droits réservés.**
+
+Ce projet est réalisé dans un but pédagogique pour le cursus **BUT MMI**. 
+- La consultation du code est autorisée à des fins de démonstration (Portfolio) uniquement.
+- **Toute reproduction, revente ou utilisation commerciale du code source est strictement interdite** sans l'accord écrit préalable de l'auteur.
+- Les contributions acceptées seront soumises à ce même régime de propriété.
+
+---
+
+## 👤 Auteur
+**Devannblr** — Étudiant en 3ème année de BUT MMI  
+GitHub: [@Devannblr](https://github.com/Devannblr)
+
+## 📞 Support
+Pour toute question, n'hésitez pas à ouvrir une [issue](https://github.com/Devannblr/Voiloo/issues).
+
+---
 ⭐ N'oubliez pas de mettre une étoile si ce projet vous plaît !
