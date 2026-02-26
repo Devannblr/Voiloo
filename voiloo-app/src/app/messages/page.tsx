@@ -42,7 +42,8 @@ export default function MessagesPage() {
     const echoChannel = useRef<any>(null);
     const activeConvIdRef = useRef<number | null>(null);
 
-    const isSyncing = useRef(false);
+    // ✅ FIX : Tracker si on a déjà traité les params URL
+    const hasProcessedUrl = useRef(false);
 
     useEffect(() => {
         activeConvIdRef.current = activeConv?.id || null;
@@ -142,16 +143,19 @@ export default function MessagesPage() {
         }
     }, [user?.id, markAsSeen, setActiveConversationId]);
 
-    // ✅ LOGIQUE DE NAVIGATION SIMPLIFIÉE : Sync puis nettoyage URL
+    // ✅ FIX : Traiter les params URL une seule fois
     useEffect(() => {
-        if (isLoading || !urlUserId || isSyncing.current) return;
+        // Si pas de params OU déjà traité OU en cours de chargement auth → skip
+        if (!urlUserId || hasProcessedUrl.current || isLoading) return;
 
         const syncAndClean = async () => {
-            isSyncing.current = true;
+            // Marquer comme traité IMMÉDIATEMENT pour éviter les re-renders
+            hasProcessedUrl.current = true;
+
             const targetAnnonceId = urlAnnonceId ? Number(urlAnnonceId) : null;
             const targetUserId = Number(urlUserId);
 
-            // On cherche localement
+            // Chercher localement
             const existing = conversations.find((c: any) => {
                 const matchUser = Number(c.other_user?.id) === targetUserId;
                 const matchAnnonce = targetAnnonceId ? Number(c.annonce_id) === targetAnnonceId : true;
@@ -159,14 +163,14 @@ export default function MessagesPage() {
             });
 
             if (existing) {
-                // On nettoie l'URL avant d'ouvrir pour casser la boucle
+                // Ouvrir la conversation
+                await openConversation(existing);
+                // Nettoyer l'URL APRÈS (pas de setState donc pas de re-render)
                 router.replace('/messages', { scroll: false });
-                openConversation(existing);
-                isSyncing.current = false;
                 return;
             }
 
-            // Sinon on crée
+            // Créer une nouvelle conversation
             setLoadingMsgs(true);
             try {
                 const newConv = await apiService.startConversation({
@@ -176,21 +180,26 @@ export default function MessagesPage() {
                 });
 
                 await refreshConversations();
-                // Nettoyage URL
+                await openConversation(newConv);
+                // Nettoyer l'URL
                 router.replace('/messages', { scroll: false });
-                openConversation(newConv);
             } catch (err) {
                 console.error("Erreur sync:", err);
-                // En cas d'erreur 500 ou autre, on nettoie quand même pour éviter de boucler à l'infini
                 router.replace('/messages', { scroll: false });
             } finally {
                 setLoadingMsgs(false);
-                isSyncing.current = false;
             }
         };
 
         syncAndClean();
     }, [urlUserId, urlAnnonceId, conversations, isLoading, router, openConversation, refreshConversations]);
+
+    // ✅ Reset le flag quand les params disparaissent
+    useEffect(() => {
+        if (!urlUserId && !urlAnnonceId) {
+            hasProcessedUrl.current = false;
+        }
+    }, [urlUserId, urlAnnonceId]);
 
     const sendMessage = async () => {
         if (!input.trim() || !activeConv?.id || sending) return;

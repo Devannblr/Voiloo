@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import {useParams, useRouter} from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { apiService } from '@/services/apiService';
 import { useToast } from "@/components/Layouts/Toastprovider";
@@ -16,8 +16,10 @@ import {
 import { StorageImage } from '@/components/Base/StorageImage';
 
 // Icones
-import { MapPin, Trash2, Edit, Plus, AlertTriangle, ArrowLeft } from 'lucide-react';
+import { MapPin, Trash2, Edit, Plus, AlertTriangle, ArrowLeft, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
+import {router} from "next/client";
+import {Annonce} from "@/components/Modules/types";
 
 export default function UserProfilePage() {
     const params = useParams();
@@ -32,7 +34,18 @@ export default function UserProfilePage() {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [adToDelete, setAdToDelete] = useState<any>(null);
     const [deleting, setDeleting] = useState(false);
+    const [annonce, setAnnonce] = useState<Annonce | null>(null);
+    const router = useRouter();
+    const handleContactUser = () => {
+        if (!currentUser) {
+            router.push('/login?callbackUrl=' + encodeURIComponent(window.location.pathname));
+            return;
+        }
+        if (!profileUser) return;
 
+        // Redirection vers messages avec SEULEMENT user_id (pas d'annonce_id)
+        router.push(`/messages?user_id=${profileUser.id}`);
+    };
     useEffect(() => {
         const loadProfile = async () => {
             try {
@@ -98,9 +111,17 @@ export default function UserProfilePage() {
                                 </div>
                             )}
                         </div>
-                        {isOwner && (
+                        {isOwner ? (
                             <Button href="/ajouter" variant="primary" leftIcon={<Plus size={16} />}>
                                 Nouvelle annonce
+                            </Button>
+                        ) : (
+                            <Button
+                                onClick={handleContactUser}
+                                variant="primary"
+                                leftIcon={<MessageSquare size={16} />}
+                            >
+                                Contacter
                             </Button>
                         )}
                     </div>
