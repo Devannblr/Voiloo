@@ -1,28 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" remoteFilesAllowedToDisappearOnAutoupload="false">
+  <component name="PublishConfigData">
     <serverData>
       <paths name="infomaniak">
         <serverdata>
           <mappings>
-            <mapping deploy="/sites/api.voiloo.fr" local="$PROJECT_DIR$/voiloo-back" web="/" />
+            <mapping local="$PROJECT_DIR$" web="/" />
           </mappings>
-          <excludedPaths>
-            <excludedPath path="/sites/api.voiloo.fr/vendor" />
-            <excludedPath local="true" path="$PROJECT_DIR$/voiloo-back/vendor" />
-            <excludedPath local="true" path="$PROJECT_DIR$/voiloo-back/node_modules" />
-          </excludedPaths>
         </serverdata>
       </paths>
       <paths name="node">
         <serverdata>
           <mappings>
-            <mapping deploy="/sites/voiloo.fr" local="$PROJECT_DIR$/voiloo-app" web="/" />
+            <mapping local="$PROJECT_DIR$" web="/" />
           </mappings>
-          <excludedPaths>
-            <excludedPath local="true" path="$PROJECT_DIR$/voiloo-app/node_modules" />
-            <excludedPath local="true" path="$PROJECT_DIR$/voiloo-app/.next" />
-          </excludedPaths>
         </serverdata>
       </paths>
     </serverData>
