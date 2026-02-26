@@ -6,7 +6,7 @@
 
 ## 📋 Description
 
-Voiloo est une application web moderne développée avec une architecture full-stack. Ce projet met en œuvre un frontend performant avec **Next.js** (TypeScript) et une API robuste propulsée par **Laravel 11**, le tout conçu pour offrir une expérience utilisateur fluide et sécurisée.
+Voiloo est une application web moderne développée avec une architecture full-stack. Ce projet met en œuvre un frontend performant avec **Next.js** (TypeScript) et une API robuste propulsée par **Laravel 12**, le tout conçu pour offrir une expérience utilisateur fluide et sécurisée.
 
 ## 🛠️ Technologies Utilisées
 
@@ -17,8 +17,8 @@ Voiloo est une application web moderne développée avec une architecture full-s
 - **npm** - Gestion des dépendances.
 
 ### Backend (`voiloo-back`)
-- **PHP 8.2+** - Langage serveur.
-- **Laravel 11** - Framework PHP (Utilisation de l'ORM Eloquent et des API routes).
+- **PHP 8.4+** - Langage serveur.
+- **Laravel 12** - Framework PHP (Utilisation de l'ORM Eloquent et des API routes).
 - **MySQL** - Base de données (Hébergée sur Infomaniak).
 - **API RESTful** - Communication asynchrone avec le frontend.
 
@@ -29,7 +29,7 @@ Voiloo est une application web moderne développée avec une architecture full-s
 ```text
 Voiloo/
 ├── voiloo-app/          # Frontend Next.js (TypeScript)
-├── voiloo-back/         # API backend (Laravel 11)
+├── voiloo-back/         # API backend (Laravel 12)
 ├── .idea/               # Configuration IDE (PHPStorm / WebStorm)
 ├── Pages.txt            # Documentation des vues et du routing
 ├── logoDark.svg         # Identité visuelle (version sombre)
