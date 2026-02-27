@@ -6,13 +6,16 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Loader } from '@/components/Base';
 
-export function ProtectedRoute({ children }: { children: React.ReactNode }) {
+export function ProtectedRoute({ children, redirectTo = '/login' }: {
+    children: React.ReactNode;
+    redirectTo?: string;
+}) {
     const { user, isLoading } = useAuth();
     const router = useRouter();
 
     useEffect(() => {
         if (!isLoading && !user) {
-            router.replace('/login');
+            router.replace(redirectTo);
         }
     }, [user, isLoading, router]);
 

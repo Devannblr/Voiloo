@@ -251,7 +251,7 @@ export default function MessagesPage() {
     if (isLoading) return <div className="flex h-screen items-center justify-center"><Loader variant="spinner" color="primary" /></div>;
 
     return (
-        <ProtectedRoute>
+        <ProtectedRoute redirectTo="/login?callbackUrl=/messages">
         <div className="bg-white md:bg-gray-50/50 h-[100dvh] md:h-screen">
             <div className="h-full md:flex md:items-center md:justify-center md:p-4">
                 <Container className="max-w-6xl w-full h-full md:h-auto !px-0">
