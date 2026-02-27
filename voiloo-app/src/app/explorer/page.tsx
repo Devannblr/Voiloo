@@ -186,7 +186,7 @@ function ExplorerContent() {
                 </div>
 
                 {/* CARTE : Ajout d'une hauteur forcée sur mobile pour éviter le bug d'affichage */}
-                <div className={`${showMapMobile ? 'block h-[calc(100vh-150px)]' : 'hidden'} lg:block lg:h-full relative border-l border-gray-100 bg-stone-50`}>
+                <div className={`${showMapMobile ? 'block h-[calc(100vh-150px)]' : 'hidden'} lg:block lg:h-full relative border-l border-gray-100 bg-stone-50 z-1`}>
                     <DynamicMap points={annonces} />
                 </div>
             </div>
