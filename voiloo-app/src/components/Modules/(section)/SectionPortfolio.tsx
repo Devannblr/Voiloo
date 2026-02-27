@@ -21,7 +21,7 @@ export default function SectionPortfolio({ images, primary, note }: SectionPortf
             {/* Affichage de la note si elle existe */}
             {note && (
                 <div className="mt-4 mb-6">
-                    <P className="text-sm text-gray-500 italic leading-relaxed">
+                    <P className="text-md text-gray-300 italic leading-relaxed">
                         {note}
                     </P>
                 </div>

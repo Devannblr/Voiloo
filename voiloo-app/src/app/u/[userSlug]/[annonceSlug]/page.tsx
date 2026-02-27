@@ -229,6 +229,7 @@ export default function VitrinePage() {
                     avis={annonce.avis || []}
                     primary={primary}
                     annonceId={annonce.id}
+                    textColor={textColor}
                 />
 
                 {config.show_contact_form && (

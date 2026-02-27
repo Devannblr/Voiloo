@@ -22,10 +22,11 @@ interface SectionAvisProps {
     avis: Avis[];
     primary: string;
     annonceId: number;
-    onAvisPosté?: () => void;
+    onAvisPoste?: () => void;
+    textColor?: string;
 }
 
-export default function SectionAvis({ avis, primary, annonceId, onAvisPosté }: SectionAvisProps) {
+export default function SectionAvis({ avis, primary, annonceId, onAvisPoste, textColor }: SectionAvisProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [note, setNote] = useState(0);
     const [commentaire, setCommentaire] = useState('');
@@ -51,7 +52,7 @@ export default function SectionAvis({ avis, primary, annonceId, onAvisPosté }: 
             setCommentaire('');
 
             // On prévient le parent pour recharger la liste
-            if (onAvisPosté) onAvisPosté();
+            if (onAvisPoste) onAvisPoste();
 
             alert("Merci ! Votre avis a été publié.");
             window.location.reload(); // Solution simple pour voir l'avis immédiatement
@@ -125,7 +126,7 @@ export default function SectionAvis({ avis, primary, annonceId, onAvisPosté }: 
                                 </div>
                                 <StarMark variant="display" value={item.note} size="sm" />
                             </div>
-                            <P className="text-sm text-gray-700 italic">"{item.commentaire}"</P>
+                            <P className="text-sm italic" style={{color: textColor} as any}>"{item.commentaire}"</P>
                         </CardBody>
                     </Card>
                 ))}
