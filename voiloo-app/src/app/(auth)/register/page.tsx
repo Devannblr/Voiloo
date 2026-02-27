@@ -3,8 +3,22 @@
 import { H1, P } from '@/components/Base';
 import Link from 'next/link';
 import SignupForm from "@/components/Layouts/SignupForm";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function RegisterPage() {
+    const { user, isLoading } = useAuth();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!isLoading && user) {
+            router.replace('/');
+        }
+    }, [user, isLoading, router]);
+
+    if (isLoading || user) return null;
+
     return (
         <main className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
             <div className="hidden lg:flex flex-col justify-center items-center bg-yellow-400 p-12 text-white">

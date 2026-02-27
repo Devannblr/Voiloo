@@ -4,7 +4,8 @@ import { Button, H1, P, Link } from '@/components/Base';
 interface CtaCardProps {
     title: string;
     description: string;
-    href: string; // L'url de destination pour le bouton
+    href: string;
+    buttonText?: string;
     className?: string;
 }
 
@@ -12,6 +13,7 @@ export const CtaCard = ({
                             title,
                             description,
                             href,
+                            buttonText = "Créer mon compte",
                             className = ""
                         }: CtaCardProps) => {
     return (
@@ -31,10 +33,9 @@ export const CtaCard = ({
                 {description}
             </P>
 
-            {/* Le lien enveloppe uniquement le bouton */}
             <Link href={href} className={"cursor-pointer"}>
                 <Button variant="secondary" size="lg" className="px-8 shadow-md">
-                    Créer mon compte
+                    {buttonText}
                 </Button>
             </Link>
         </div>

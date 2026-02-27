@@ -5,6 +5,7 @@ import { Container, H2, P, Loader, Button } from '@/components/Base';
 import { DisplayCard } from "@/components/Modules/(cards)/DisplayCard";
 import { CtaCard } from "@/components/Modules/(cards)/CtaCard";
 import { apiService } from "@/services/apiService";
+import {useAuth} from "@/context/AuthContext";
 
 interface FreelanceGridProps {
     userCity: string | null;
@@ -15,7 +16,7 @@ export const FreelanceGrid = ({ userCity }: FreelanceGridProps) => {
     const [isLoading, setIsLoading] = useState(true);
     const [mode, setMode] = useState<'city' | 'global'>('global');
     const [loadingGlobal, setLoadingGlobal] = useState(false);
-
+    const { user } = useAuth();
     const fetchRecommended = useCallback(async (city: string | null) => {
         setIsLoading(true);
         try {
@@ -120,11 +121,20 @@ export const FreelanceGrid = ({ userCity }: FreelanceGridProps) => {
                 )}
 
                 <div className="max-w-4xl mx-auto">
-                    <CtaCard
-                        title="Rejoignez Voiloo"
-                        description="Trouvez ou proposez des services près de chez vous, simplement et en toute confiance."
-                        href="/register"
-                    />
+                    {user ? (
+                        <CtaCard
+                            title="Proposez vos services"
+                            description="Créez votre vitrine en quelques minutes et faites-vous connaître près de chez vous."
+                            href="/ajouter"
+                            buttonText="Créer une annonce"
+                        />
+                    ) : (
+                        <CtaCard
+                            title="Rejoignez Voiloo"
+                            description="Trouvez ou proposez des services près de chez vous, simplement et en toute confiance."
+                            href="/register"
+                        />
+                    )}
                 </div>
             </Container>
         </section>
