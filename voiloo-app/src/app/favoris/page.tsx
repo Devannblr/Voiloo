@@ -6,6 +6,7 @@ import { Heart } from 'lucide-react';
 import { useFavoris } from '@/hooks/useFavoris';
 import { useAuth } from '@/context/AuthContext';
 import { ServiceCard } from '@/components/Modules/(cards)/ServiceCard';
+import {ProtectedRoute} from "@/components/ProtectedRoute";
 
 export default function FavorisPage() {
     const { isAuthenticated } = useAuth();
@@ -24,6 +25,7 @@ export default function FavorisPage() {
     };
 
     return (
+        <ProtectedRoute redirectTo="/login?callbackUrl=/favoris">
         <main className="min-h-screen bg-white py-12">
             <Container>
                 <div className="max-w-7xl mx-auto">
@@ -120,5 +122,6 @@ export default function FavorisPage() {
                 </ModalFooter>
             </Modal>
         </main>
+        </ProtectedRoute>
     );
 }

@@ -14,14 +14,13 @@ export const FreelanceGrid = ({ userCity }: FreelanceGridProps) => {
     const [freelances, setFreelances] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [mode, setMode] = useState<'city' | 'global'>('global');
+    const [loadingGlobal, setLoadingGlobal] = useState(false);
 
     const fetchRecommended = useCallback(async (city: string | null) => {
         setIsLoading(true);
         try {
-            // Utilisation de l'endpoint ultra-léger
             const data = await apiService.getRecommendedAnnonces(city || undefined);
             const results = Array.isArray(data) ? data : (data?.data || []);
-
             setFreelances(results);
             setMode(city && results.length > 0 ? 'city' : 'global');
         } catch (error) {
@@ -31,16 +30,27 @@ export const FreelanceGrid = ({ userCity }: FreelanceGridProps) => {
         }
     }, []);
 
-    useEffect(() => {
-        // Si on a la ville, on fonce, sinon on attend 2s la géoloc avant de mettre le global
-        let timeout: NodeJS.Timeout;
+    const handleShowGlobal = async () => {
+        setLoadingGlobal(true);
+        try {
+            const data = await apiService.getRecommendedAnnonces(undefined);
+            const results = Array.isArray(data) ? data : (data?.data || []);
+            setFreelances(results);
+            setMode('global');
+        } catch (error) {
+            console.error("Erreur global:", error);
+        } finally {
+            setLoadingGlobal(false);
+        }
+    };
 
+    useEffect(() => {
+        let timeout: NodeJS.Timeout;
         if (userCity) {
             fetchRecommended(userCity);
         } else {
             timeout = setTimeout(() => fetchRecommended(null), 2000);
         }
-
         return () => clearTimeout(timeout);
     }, [userCity, fetchRecommended]);
 
@@ -76,22 +86,35 @@ export const FreelanceGrid = ({ userCity }: FreelanceGridProps) => {
                     </div>
                 ) : (
                     <>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-                            {freelances.map((annonce) => (
-                                <DisplayCard
-                                    key={annonce.id}
-                                    {...mapToCard(annonce)}
-                                    userSlug={annonce.user?.username}
-                                    annonceSlug={annonce.slug}
-                                    couleurPrincipale={annonce.vitrine_config?.couleur_principale}
-                                />
-                            ))}
-                        </div>
+                        {/* Ville détectée mais 0 résultats locaux */}
+                        {userCity && mode === 'global' && freelances.length === 0 && (
+                            <div className="text-center py-12 mb-8">
+                                <P className="text-gray-400 italic mb-6">
+                                    Pas encore de prestataires à <strong>{userCity}</strong> pour le moment.
+                                </P>
+                                <Button
+                                    variant="outline"
+                                    onClick={handleShowGlobal}
+                                    isLoading={loadingGlobal}
+                                >
+                                    Voir les meilleurs prestataires du moment →
+                                </Button>
+                            </div>
+                        )}
 
-                        {mode === 'global' && userCity && freelances.length === 0 && (
-                            <P className="text-center text-gray-400 mb-8 italic">
-                                Pas encore de prestataires à {userCity}, voici les meilleurs ailleurs !
-                            </P>
+                        {/* Grille principale */}
+                        {freelances.length > 0 && (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+                                {freelances.map((annonce) => (
+                                    <DisplayCard
+                                        key={annonce.id}
+                                        {...mapToCard(annonce)}
+                                        userSlug={annonce.user?.username}
+                                        annonceSlug={annonce.slug}
+                                        couleurPrincipale={annonce.vitrine_config?.couleur_principale}
+                                    />
+                                ))}
+                            </div>
                         )}
                     </>
                 )}

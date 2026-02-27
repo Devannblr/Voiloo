@@ -121,7 +121,7 @@ export default function VitrineHero({ annonce, config, primary, textColor, bgCol
                         {annonce.user?.username && (
                             <Link
                                 href={`/u/${annonce.user.username}`}
-                                className="text-sm font-bold mt-1"
+                                className="text-md font-bold mt-1"
                                 style={{ color: primary } as any}
                             >
                                 @{annonce.user.username}
@@ -134,7 +134,7 @@ export default function VitrineHero({ annonce, config, primary, textColor, bgCol
                             {annonce.categorie?.nom && (
                                 <>
                                     <span className="mx-1">·</span>
-                                    <Badge variant="outline" size="sm">
+                                    <Badge variant="outline" size="sm" style={{ color: textColor} as any}>
                                         {annonce.categorie.nom}
                                     </Badge>
                                 </>

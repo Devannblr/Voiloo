@@ -14,6 +14,7 @@ import {
     Image as ImageIcon, Search, Eye
 } from 'lucide-react';
 import AddressInput from "@/components/Modules/AdresseInput";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 // Types pour la structure du formulaire
 interface AnnonceForm {
@@ -72,8 +73,6 @@ export default function AjouterAnnoncePage() {
 
     // Restauration LocalStorage
     useEffect(() => {
-        if (!authLoading && !isAuthenticated) router.push('/login?callbackUrl=/ajouter');
-
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
             try {
@@ -154,6 +153,7 @@ export default function AjouterAnnoncePage() {
     if (authLoading) return <div className="h-screen flex items-center justify-center"><Loader /></div>;
 
     return (
+        <ProtectedRoute redirectTo="/login?callbackUrl=/ajouter">
         <main className="min-h-screen bg-gray-50/60 py-12">
             <Container className="max-w-2xl">
                 <div className="mb-10 text-center">
@@ -418,5 +418,6 @@ export default function AjouterAnnoncePage() {
                 </div>
             </Container>
         </main>
+        </ProtectedRoute>
     );
 }
