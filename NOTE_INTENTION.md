@@ -1,24 +1,24 @@
 # Note d'intention — Projet Portfolio S6
-**Parcours Développement Web**
+**Parcours Développement Web — BUT MMI**
 
 ---
 
-## 📋 Informations générales
+## Informations générales
 
 | | |
 |---|---|
 | **Étudiant** | Devann Billereau |
 | **Email** | devann.billereau@gmail.com |
 | **Date** | Février 2026 |
-| **URL CV en ligne** | [https://devann.billereau.fr](https://devann-billereau.fr) |
-| **URL projet** | [https://voiloo.fr](https://voiloo.fr) |
-| **Dépôt Git** | [https://github.com/devann/voiloo](https://github.com/Devannblr/Voiloo/) |
+| **URL CV en ligne** | https://devann-billereau.fr |
+| **URL projet** | https://voiloo.fr |
+| **Dépôt Git** | https://github.com/Devannblr/Voiloo/ |
 
 ---
 
-## 🎯 Quoi — Description du projet
+## Quoi — Description du projet
 
-**Voiloo** est une plateforme web de mise en relation entre particuliers et freelances pour des services locaux. Le projet se positionne comme une alternative moderne aux plateformes existantes, avec une approche centrée sur l'expérience utilisateur et la personnalisation.
+**Voiloo** est une plateforme web de mise en relation entre particuliers et freelances pour des services locaux. L'idée est simple : permettre à n'importe qui de se créer une présence en ligne propre et professionnelle, sans avoir à coder ou passer par Facebook.
 
 ### Fonctionnalités principales
 
@@ -40,8 +40,7 @@
 - Inscription sécurisée avec Cloudflare Turnstile (anti-bot)
 - Laravel Sanctum (token Bearer + cookie HttpOnly)
 - Validation des formulaires côté client et serveur
-- Vérification email
-- Réinitialisation mot de passe
+- Vérification email et réinitialisation mot de passe
 
 #### 4. Recherche & découverte
 - Carte interactive avec localisation des services
@@ -50,16 +49,18 @@
 - Services recommandés par géolocalisation
 
 #### 5. Système d'avis
-- Notation 5 étoiles
-- Commentaires textuels
+- Notation 5 étoiles avec commentaires textuels
 - Moyenne globale par annonce
 
 ---
 
-## 💡 Pourquoi — Motivation personnelle
+## Pourquoi — Motivation personnelle
 
-### Contexte professionnel
-Ce projet s'inscrit dans ma volonté de **maîtriser l'ensemble de la stack moderne full-stack** en conditions réelles. Plutôt que de réaliser plusieurs petits projets déconnectés, j'ai choisi de construire une application complète, de la conception à la mise en production.
+L'idée m'est venue d'une situation concrète : ma copine veut se lancer comme prothésiste ongulaire, et je me suis demandé comment elle pourrait se faire connaître sur internet sans payer une agence, un développeur web ou bricoler un Wix. En cherchant autour de moi, j'ai remarqué que beaucoup de petits commerces et indépendants que ce soit dans ma ville ou celle de ma copine n'ont aucune présence en ligne digne de ce nom. Soit ils ont une page Facebook, soit rien. Et si t'as pas de compte Facebook, tu passes à côté.
+
+Voiloo répond à ça : une vitrine simple, rapide à créer, accessible à tous. C'est un projet qui a du sens pour moi parce qu'il part d'un vrai besoin que j'ai observé.
+
+D'un point de vue technique, je voulais aussi me challenger sur une vraie stack full-stack en conditions réelles — pas un projet qu'on ferme le jour du rendu, mais quelque chose de déployé, utilisable, qui continue d'évoluer.
 
 ### Objectifs d'apprentissage
 1. **Approfondir React/Next.js** : Après avoir découvert Vue.js en cours, je voulais explorer l'écosystème React qui domine actuellement le marché
@@ -67,14 +68,11 @@ Ce projet s'inscrit dans ma volonté de **maîtriser l'ensemble de la stack mode
 3. **WebSocket en production** : Comprendre les défis du temps réel (latence, reconnexion, gestion d'état)
 4. **Architecture scalable** : Concevoir une structure qui puisse évoluer (séparation API/frontend, tokens stateless)
 
-### Dimension personnelle
-Je recherche régulièrement des services locaux (bricolage, cours particuliers, aide déménagement) et j'ai constaté que les plateformes existantes sont souvent **trop complexes ou peu ergonomiques**. Voiloo répond à ce besoin avec une interface épurée et intuitive.
-C'est aussi pour créer une plateforme qui serait pour moi utile à beaucoup de personne qui souhaite avoir une visibilité facile sur internet.
 ---
 
-## 🏆 Challenge — Difficultés techniques & fonctionnalités avancées
+## Challenge — Difficultés techniques & fonctionnalités avancées
 
-### 1. WebSocket temps réel avec Laravel Reverb ⚡
+### 1. WebSocket temps réel avec Laravel Reverb
 
 **Difficulté** : Mise en place d'un système de messagerie instantanée fiable
 
@@ -104,13 +102,13 @@ echo.private(`conversation.${conversationId}`)
     });
 ```
 
-### 2. Architecture API REST + Separation of Concerns 🏗️
+### 2. Architecture API REST + Separation of Concerns
 
 **Difficulté** : Découplage complet frontend/backend
 
 **Stack** :
-- **Backend** : Laravel 12 API-only (aucune vue Blade pour l'instant)
-- **Frontend** : Next.js 14 App Router en mode SSR/CSR hybride
+- **Backend** : Laravel 12 API-only (aucune vue Blade)
+- **Frontend** : Next.js 16 App Router en mode SSR/CSR hybride
 - **Communication** : Headers `Authorization: Bearer` + CORS configuré
 
 **Défis** :
@@ -119,7 +117,7 @@ echo.private(`conversation.${conversationId}`)
 - Typage TypeScript des réponses API
 - Rate limiting sur les endpoints sensibles
 
-### 3. Géolocalisation & recherche par proximité 📍
+### 3. Géolocalisation & recherche par proximité
 
 **Difficulté** : Calcul de distance et performances
 
@@ -129,7 +127,6 @@ echo.private(`conversation.${conversationId}`)
 - Indexation des colonnes lat/lng pour optimiser les requêtes
 - Fallback sur recherche par ville si géolocalisation refusée
 
-**Code SQL optimisé** :
 ```sql
 SELECT *, 
     (6371 * acos(
@@ -142,7 +139,7 @@ HAVING distance < ?
 ORDER BY distance;
 ```
 
-### 4. Upload & gestion d'images optimisées 🖼️
+### 4. Upload & gestion d'images optimisées
 
 **Difficulté** : Performances et UX
 
@@ -153,14 +150,13 @@ ORDER BY distance;
 - Composant `StorageImage` custom pour gestion des erreurs 404
 - Drag & drop + suppression d'images
 
-### 5. Système de permissions granulaires 🔐
+### 5. Système de permissions granulaires
 
 **Difficulté** : Sécuriser les actions utilisateur
 
 **Logique métier** :
 - Un utilisateur ne peut **modifier/supprimer** que ses propres annonces
 - Les conversations sont **privées** (vérification `user_one_id` ou `user_two_id`)
-- Broadcasting Policy pour Echo :
 
 ```php
 public function join(User $user, int $conversationId): bool {
@@ -170,7 +166,7 @@ public function join(User $user, int $conversationId): bool {
 }
 ```
 
-### 6. Vitrine personnalisable par annonce 🎨
+### 6. Vitrine personnalisable par annonce
 
 **Difficulté** : Permettre la customisation sans compromettre la cohérence
 
@@ -178,7 +174,7 @@ public function join(User $user, int $conversationId): bool {
 - Table `vitrine_configs` liée aux annonces
 - Sélecteur de couleurs (couleur principale, texte, fond)
 - Preview en temps réel
-- CSS variables dynamiques :
+- CSS variables dynamiques
 
 ```tsx
 <div style={{
@@ -187,7 +183,7 @@ public function join(User $user, int $conversationId): bool {
 } as React.CSSProperties}>
 ```
 
-### 7. Gestion d'état complexe côté frontend 🔄
+### 7. Gestion d'état complexe côté frontend
 
 **Difficulté** : Synchroniser état local + API + WebSocket
 
@@ -199,13 +195,13 @@ public function join(User $user, int $conversationId): bool {
 
 ---
 
-## 🛠️ Stack technique complète
+## Stack technique complète
 
 ### Frontend
 
 | Technologie | Usage |
 |-------------|-------|
-| **Next.js 14** | Framework React SSR/CSR |
+| **Next.js 16** | Framework React SSR/CSR |
 | **TypeScript** | Typage statique |
 | **Tailwind CSS** | Styling utility-first |
 | **Laravel Echo** | Client WebSocket |
@@ -218,7 +214,7 @@ public function join(User $user, int $conversationId): bool {
 | **Laravel 12** | Framework PHP |
 | **Sanctum** | Authentification API |
 | **Reverb** | WebSocket server |
-| **MySQL** | Base de données |
+| **MariaDB** | Base de données |
 | **Eloquent ORM** | Gestion BDD |
 
 ### DevOps
@@ -232,35 +228,35 @@ public function join(User $user, int $conversationId): bool {
 
 ---
 
-## 📊 Compétences mobilisées (référentiel BUT)
+## Compétences mobilisées (référentiel BUT)
 
-### ✅ Algorithmique et programmation
+### Algorithmique et programmation
 - Algorithme de Haversine pour calcul de distance
 - Gestion de files d'attente (queue system)
 - Logique métier complexe (conversations, permissions)
 
-### ✅ Intégration web (HTML/CSS/JS)
+### Intégration web (HTML/CSS/JS)
 - Interface responsive mobile-first
 - Animations CSS (typing indicator, loaders)
 - Interactions avancées (drag & drop, live search)
 
-### ✅ Développement web (PHP)
+### Développement web (PHP)
 - Laravel 12 avec architecture MVC
 - API RESTful (CRUD complet)
 - Middleware et policies
 
-### ✅ Programmation Orientée Objet
+### Programmation Orientée Objet
 - Models Eloquent avec relations (hasMany, belongsTo)
 - Events & Listeners
 - Service classes (ex: GeocodingService)
 
-### ✅ Base de données
+### Base de données
 - Schéma relationnel normalisé (3NF)
 - Migrations Laravel
 - Requêtes optimisées (eager loading, indexation)
 - Soft deletes et timestamps
 
-### ✅ Hébergement
+### Hébergement
 - Déploiement sur serveur Linux
 - Configuration NGINX/Apache
 - HTTPS avec certificat SSL
@@ -268,30 +264,26 @@ public function join(User $user, int $conversationId): bool {
 
 ---
 
-## 🌐 Accès au projet
+## Accès au projet
 
 ### URL de production
-- **Site web** : [https://voiloo.fr](https://voiloo.fr)
-- **API** : [https://api.voiloo.fr](https://api.voiloo.fr)
+- **Site web** : https://voiloo.fr
+- **API** : https://api.voiloo.fr
 
 ### Dépôt Git
-- **Repository** : [https://github.com/devann/voiloo](https://github.com/Devannblr/Voiloo)
+- **Repository** : https://github.com/Devannblr/Voiloo
 - **Accès** : Public
 
 ### Identifiants de test
-Pour tester le système de messagerie, vous pouvez utiliser :
 - **Compte 1** : `devann.test@voiloo.fr` / `Password123*`
 - **Compte 2** : `user.test@voiloo.fr` / `Password123*`
-Ou vous pouvez aussi créer le votre :
-- **Compte 3** : `votre@mail.fr` / `VotrePassword123*`
-
-*(Ces comptes permettent de tester le chat en temps réel entre 2 utilisateurs)*
+- **Ou créez le vôtre** avec n'importe quelle adresse mail valide
 
 ### Installation locale
 
 ```bash
 # Backend Laravel
-git clone [repo-url]
+git clone https://github.com/Devannblr/Voiloo/
 cd voiloo-back
 composer install
 cp .env.example .env
@@ -314,13 +306,13 @@ npm run dev
 
 ---
 
-## 📈 Évolutions futures
+## Évolutions futures
 
 1. **Système de paiement** : Intégration Stripe pour transactions sécurisées
 2. **Notifications push** : Firebase Cloud Messaging pour alertes mobiles
 3. **Calendrier de disponibilités** : Réservation de créneaux horaires
 4. **Système de badges** : Utilisateurs vérifiés, top prestataires
-5. **Système de commande** : Ajout d'une commande pour voir l'avancée
+5. **Système de commande** : Suivi de l'avancement d'une prestation
 6. **Export PDF** : Génération automatique de factures
 7. **Multilingue** : i18n (FR/EN/ES)
 8. **Application mobile** : React Native pour iOS/Android
@@ -328,7 +320,7 @@ npm run dev
 
 ---
 
-## ✅ État d'avancement
+## État d'avancement
 
 - [x] Authentification complète (inscription, login, reset password, vérification email)
 - [x] CRUD annonces avec upload multi-images
@@ -344,14 +336,11 @@ npm run dev
 
 ---
 
+## Conclusion
 
-## 🎓 Conclusion
+Voiloo c'est le projet dont je suis le plus fier depuis le début de ma formation. Pas seulement parce qu'il est mis en ligne, mais parce que chaque fonctionnalité a été un vrai défi à résoudre : la messagerie temps réel avec Reverb m'a donné du fil à retordre, la gestion de l'authentification et la protection des pages aussi. Mais au final, voir l'ensemble tenir debout l'architecture, les composants, la mise en page, le système de chat c'est satisfaisant d'une façon qu'aucun projet de cours ne m'avait donné jusqu'ici.
 
-Ce projet m'a permis de mettre en pratique l'ensemble des compétences acquises durant le BUT MMI, tout en allant au-delà du programme avec des technologies modernes demandées par le marché (React, TypeScript, WebSocket).
-
-La réalisation de Voiloo m'a confronté à des **problématiques réelles** : architecture scalable, performance, sécurité, expérience utilisateur. Chaque fonctionnalité a nécessité une réflexion approfondie et une implémentation rigoureuse.
-
-Je suis particulièrement fier du **système de messagerie temps réel**, qui représente le défi technique le plus complexe du projet, et de l'**architecture API REST** qui permet une évolution future vers une application mobile.
+Ce projet prouve que je suis capable de concevoir, développer et déployer une application complète de A à Z. C'est ça que je voulais démontrer.
 
 ---
 
@@ -360,4 +349,4 @@ Je suis particulièrement fier du **système de messagerie temps réel**, qui re
 
 ---
 
-> 💡 **Note aux correcteurs** : Ce document est hébergé sur GitHub à l'adresse [lien-github](https://github.com/Devannblr/Voiloo/) et peut être consulté avec une mise en forme optimale. Le code source complet est accessible.
+> **Note aux correcteurs** : Le code source complet est accessible sur https://github.com/Devannblr/Voiloo/ — accès public.
