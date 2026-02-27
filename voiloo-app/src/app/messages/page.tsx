@@ -15,6 +15,7 @@ import { ArrowLeft, MessageSquare, MoreVertical, AlertTriangle } from 'lucide-re
 import { ConversationList } from '@/components/Messages/ConversationList';
 import { MessageBubble } from '@/components/Messages/MessageBubble';
 import { ChatInput } from '@/components/Messages/ChatInput';
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 export default function MessagesPage() {
     const { user, isLoading } = useAuth();
@@ -250,6 +251,7 @@ export default function MessagesPage() {
     if (isLoading) return <div className="flex h-screen items-center justify-center"><Loader variant="spinner" color="primary" /></div>;
 
     return (
+        <ProtectedRoute>
         <div className="bg-white md:bg-gray-50/50 h-[100dvh] md:h-screen">
             <div className="h-full md:flex md:items-center md:justify-center md:p-4">
                 <Container className="max-w-6xl w-full h-full md:h-auto !px-0">
@@ -371,5 +373,6 @@ export default function MessagesPage() {
                 </ModalFooter>
             </Modal>
         </div>
+        </ProtectedRoute>
     );
 }
