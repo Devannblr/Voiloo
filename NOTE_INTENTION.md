@@ -349,4 +349,4 @@ Ce projet prouve que je suis capable de concevoir, développer et déployer une 
 
 ---
 
-> **Note aux correcteurs** : Le code source complet est accessible sur https://github.com/Devannblr/Voiloo/ — accès public.
+> Le code source complet est accessible sur https://github.com/Devannblr/Voiloo/ 
