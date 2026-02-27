@@ -71,7 +71,7 @@ export const MessageBubble = ({ msg, isMe, showAvatar, formatTime, onDelete, isL
                     )}
 
                     <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm transition-transform ${
-                        isMe ? 'bg-primary text-white rounded-br-none' : 'bg-gray-100 text-dark rounded-bl-none'
+                        isMe ? 'bg-primary text-black rounded-br-none' : 'bg-gray-100 text-dark rounded-bl-none'
                     } ${isLongPressing ? 'scale-95' : 'scale-100'}`}>
                         {msg.body}
                     </div>
