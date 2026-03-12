@@ -1,6 +1,5 @@
 # Voiloo 🚗
 
-![Voiloo Logo](./logoWhite.svg)
 ![Voiloo Logo](./logoWhite.svg#gh-dark-mode-only)
 ![Voiloo Logo](./logoDark.svg#gh-light-mode-only)
 > **Projet Universitaire — 3ème année de BUT MMI (Métiers du Multimédia et de l'Internet)**
